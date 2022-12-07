@@ -1,0 +1,73 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        
+         {
+            "name": "Flutter",
+            "type": "dart",
+            "request": "launch",
+            "program": "main.dart",
+            "flutterMode": "release"
+        },
+        {
+            "name": "Flutter",
+            "type": "dart",
+            "request": "launch",
+            "program": "main.dart",
+            "flutterMode": "profile"
+        },
+        {
+            "name": "Flutter: Attach to Device",
+            "type": "dart",
+            "request": "attach"
+        },
+        {
+            "name": "Launch Chrome",
+            "request": "launch",
+            "type": "chrome",
+            "url": "http://localhost:8080",
+            "webRoot": "${workspaceFolder}"
+        },
+        {
+            "name": "djparty",
+            "cwd": "djparty",
+            "request": "launch",
+            "type": "dart"
+        },
+        {
+            "name": "djparty (profile mode)",
+            "cwd": "djparty",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "profile"
+        },
+        {
+            "name": "djparty (release mode)",
+            "cwd": "djparty",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "release"
+        },
+        {
+            "name": "Flutter (main.dart)",
+            "type": "dart",
+            "request": "launch",
+            "cwd": "djparty",
+            "program": "main.dart"
+        },
+        {
+            "name": "Flutter Tests",
+            "program": "test",
+            "cwd": "djparty",
+            "request": "launch",
+            "type": "dart"
+        },
+        {
+            "name": "Flutter (lib\\main.dart)",
+            "type": "dart",
+            "request": "launch",
+            "cwd": "djparty",
+            "program": "lib\\main.dart"
+        }
+    ]
+}
