@@ -12,7 +12,8 @@ class SignUpPage extends StatelessWidget {
 
     return Scaffold(
       body: Container(
-        padding: EdgeInsets.only(left: 20, right: 20, top: 35, bottom: 30),
+        padding:
+            const EdgeInsets.only(left: 20, right: 20, top: 35, bottom: 30),
         width: double.infinity,
         height: double.infinity,
         color: Colors.white70,
@@ -22,7 +23,7 @@ class SignUpPage extends StatelessWidget {
               flex: 1,
               child: InkWell(
                 child: Container(
-                  child: Align(
+                  child: const Align(
                     alignment: Alignment.topLeft,
                     child: Icon(Icons.close),
                   ),

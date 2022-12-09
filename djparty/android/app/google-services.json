@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "781206785155",
+    "project_id": "djparty-a9d99",
+    "storage_bucket": "djparty-a9d99.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:781206785155:android:1d861d4373d30d90ce9fb6",
+        "android_client_info": {
+          "package_name": "com.example.djparty"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "781206785155-v3mnuqp18tmdk3kju74tvfcdsue13leu.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCP-72aa0NP_Rz3zl3hZaL-XH2NtTtAPxU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "781206785155-v3mnuqp18tmdk3kju74tvfcdsue13leu.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
