@@ -49,6 +49,7 @@ class _SignInPageState extends State<SignInPage> {
       required String password,
       required BuildContext contex}) async {
     FirebaseAuth auth = FirebaseAuth.instance;
+
     User? user;
     try {
       UserCredential userCredential = await auth.signInWithEmailAndPassword(
