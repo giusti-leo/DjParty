@@ -1,24 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/container.dart';
-import 'package:flutter/src/widgets/framework.dart';
-import 'package:djparty/page/JoinOptions.dart';
-import 'package:djparty/page/GenerateShare.dart';
 
-class Home extends StatefulWidget {
-  const Home({super.key});
+import 'package:djparty/page/InsertCode.dart';
+import 'package:djparty/page/Scanner.dart';
 
-  @override
-  State<Home> createState() => _HomeState();
-}
+class JoinOptions extends StatelessWidget {
+  const JoinOptions({super.key});
 
-class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color.fromRGBO(25, 20, 20, 0.9),
       appBar: AppBar(
         backgroundColor: const Color.fromRGBO(30, 215, 96, 0.9),
-        title: const Text('SpotiParty'),
+        title: const Text('Join a Party'),
         centerTitle: true,
       ),
       body: Center(
@@ -36,14 +30,14 @@ class _HomeState extends State<Home> {
                     ),
                   ),
                 ),
-                child: const Text('Create your Party',
-                    style: TextStyle(fontSize: 17)),
+                child:
+                    const Text('Scan Qr-Code', style: TextStyle(fontSize: 17)),
                 onPressed: () {
                   Navigator.push(
                       context,
                       MaterialPageRoute(
                           builder: (context) =>
-                              GeneratorScreen(title: 'Create your Party')));
+                              ScannerScreen(title: 'Join Party')));
                 }),
           ),
           const SizedBox(height: 30),
@@ -61,10 +55,13 @@ class _HomeState extends State<Home> {
                   ),
                 ),
                 child:
-                    const Text('Join a Party', style: TextStyle(fontSize: 17)),
+                    const Text('Insert Code', style: TextStyle(fontSize: 17)),
                 onPressed: () {
-                  Navigator.push(context,
-                      MaterialPageRoute(builder: (context) => JoinOptions()));
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              InsertCode(title: 'Join a Party')));
                 }),
           ),
         ]),
