@@ -34,7 +34,7 @@ class _GeneratorScreenState extends State<GeneratorScreen> {
       backgroundColor: const Color.fromRGBO(25, 20, 20, 0.4),
       appBar: AppBar(
         backgroundColor: const Color.fromRGBO(30, 215, 96, 0.9),
-        title: Text('Create your Party'),
+        title: const Text('Create your Party'),
         centerTitle: true,
       ),
       body: Center(
@@ -59,11 +59,11 @@ class _GeneratorScreenState extends State<GeneratorScreen> {
                 child: (controller.text != null)
                     ? Text(
                         '${controller.text}',
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: Colors.white,
                         ),
                       )
-                    : Text(
+                    : const Text(
                         'Scan a code',
                         style: TextStyle(
                           color: Colors.white,
@@ -76,7 +76,7 @@ class _GeneratorScreenState extends State<GeneratorScreen> {
                 width: 170,
                 child: ElevatedButton(
                     style: ButtonStyle(
-                      backgroundColor: MaterialStatePropertyAll<Color>(
+                      backgroundColor: const MaterialStatePropertyAll<Color>(
                           Color.fromRGBO(30, 215, 96, 0.9)),
                       shape: MaterialStateProperty.all<RoundedRectangleBorder>(
                         RoundedRectangleBorder(
@@ -97,7 +97,7 @@ class _GeneratorScreenState extends State<GeneratorScreen> {
                 width: 170,
                 child: ElevatedButton(
                     style: ButtonStyle(
-                      backgroundColor: MaterialStatePropertyAll<Color>(
+                      backgroundColor: const MaterialStatePropertyAll<Color>(
                           Color.fromRGBO(30, 215, 96, 0.9)),
                       shape: MaterialStateProperty.all<RoundedRectangleBorder>(
                         RoundedRectangleBorder(
