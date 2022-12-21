@@ -1,5 +1,3 @@
-// ignore_for_file: avoid_print
-
 import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:djparty/page/SignInPage.dart';
 import 'package:flutter/material.dart';
@@ -12,14 +10,14 @@ String initialroute = '';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  FirebaseApp firebaseApp = await Firebase.initializeApp();
+  await Firebase.initializeApp();
   await isUserLoggedIn();
   runApp(const Main());
 }
 
 Future<void> isUserLoggedIn() async {
   FirebaseAuth.instance.authStateChanges().listen((User? user) {
-    if (user == null) {
+    if (user == null || (user.uid == '')) {
       print('User is currently signed out!');
       initialroute = 'login';
     } else {
@@ -49,10 +47,16 @@ class _Splashscreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        title: 'swd',
+        title: '',
         home: AnimatedSplashScreen(
+            splashIconSize: 200,
             duration: 3000,
-            splash: Image.asset('assets/images/logo.jpg'),
+            splash: Image.asset(
+              'assets/images/logo.jpg',
+              width: 10000,
+              height: 10000,
+              colorBlendMode: BlendMode.hardLight,
+            ),
             nextScreen: const SecondScreen(),
             splashTransition: SplashTransition.fadeTransition,
             backgroundColor: Colors.black));

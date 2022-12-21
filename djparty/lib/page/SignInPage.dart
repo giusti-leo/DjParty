@@ -39,9 +39,7 @@ class _SignInPageState extends State<SignInPage> {
       child: MaterialApp(
         home: Scaffold(
           key: _scaffoldKey,
-          // backgroundColor:  Colors.transparent,
-          backgroundColor: Colors.blueGrey[900],
-          // backgroundColor: Colors.black45,
+          backgroundColor: Colors.black12,
           body: SingleChildScrollView(
             child: Form(
               key: _formKey,
@@ -51,65 +49,61 @@ class _SignInPageState extends State<SignInPage> {
                     padding: const EdgeInsets.only(top: 0, bottom: 50.0),
                     child: Center(
                       child: Container(
-                          //padding:
-                          //  const EdgeInsets.only(top: 30.0, bottom: 30.0),
                           width: 200,
                           height: 150,
                           decoration: BoxDecoration(
-                              //color: Colors.white10,
                               borderRadius: BorderRadius.circular(10.0)),
                           child:
                               Image.asset('assets/images/logo.jpg', scale: 4)),
                     ),
                   ),
                   Padding(
-                    //padding: const EdgeInsets.only(left:15.0,right: 15.0,top:0,bottom: 0),
                     padding: const EdgeInsets.symmetric(horizontal: 15),
                     child: TextFormField(
                       controller: _emailidController,
                       keyboardType: TextInputType.emailAddress,
                       style: const TextStyle(color: Colors.white),
                       decoration: const InputDecoration(
+                          focusColor: Colors.greenAccent,
                           prefixIcon: Icon(
                             Icons.mail_outline_rounded,
-                            color: Colors.white70,
+                            color: Colors.greenAccent,
                           ),
                           filled: true,
-                          fillColor: Colors.black12,
                           enabledBorder: OutlineInputBorder(
-                            //borderRadius: BorderRadius.all(Radius.circular(5.0)),
-                            borderSide:
-                                BorderSide(color: Colors.white, width: 0.5),
+                            borderSide: BorderSide(
+                                color: Colors.greenAccent, width: 1.5),
                           ),
                           focusedBorder: OutlineInputBorder(
-                            //borderRadius: BorderRadius.all(Radius.circular(5.0)),
-                            borderSide:
-                                BorderSide(color: Colors.white, width: 1.5),
+                            borderSide: BorderSide(
+                                color: Colors.greenAccent, width: 1.5),
                           ),
                           labelText: 'Email',
+                          labelStyle: TextStyle(
+                              color: Colors.greenAccent, fontSize: 16),
+                          iconColor: Colors.greenAccent,
                           hintText: ''),
                     ),
                   ),
                   Padding(
                     padding: const EdgeInsets.only(
                         left: 15.0, right: 15.0, top: 10.0, bottom: 30.0),
-                    //padding: EdgeInsets.symmetric(horizontal: 15, vertical: 15),
                     child: TextFormField(
                       controller: _passwordController,
                       obscureText: !_passwordVisible,
                       keyboardType: TextInputType.visiblePassword,
-                      style: const TextStyle(color: Colors.white),
+                      style: const TextStyle(color: Colors.greenAccent),
                       decoration: InputDecoration(
                           prefixIcon: const Icon(
                             Icons.lock_outline_rounded,
-                            color: Colors.white70,
+                            color: Colors.greenAccent,
                           ),
                           suffixIcon: IconButton(
                               icon: Icon(
                                 _passwordVisible
                                     ? Icons.visibility
                                     : Icons.visibility_off,
-                                color: Colors.white70,
+                                color: Colors.greenAccent,
                               ),
                               onPressed: () {
                                 setState(() {
@@ -121,33 +115,36 @@ class _SignInPageState extends State<SignInPage> {
                           enabledBorder: const OutlineInputBorder(
                             borderRadius:
                                 BorderRadius.all(Radius.circular(5.0)),
-                            borderSide:
-                                BorderSide(color: Colors.white, width: 0.5),
+                            borderSide: BorderSide(
+                                color: Colors.greenAccent, width: 1.5),
                           ),
                           focusedBorder: const OutlineInputBorder(
                             borderRadius:
                                 BorderRadius.all(Radius.circular(5.0)),
-                            borderSide:
-                                BorderSide(color: Colors.white, width: 2),
+                            borderSide: BorderSide(
+                              color: Colors.greenAccent,
+                              width: 2,
+                            ),
                           ),
                           labelText: 'Password',
+                          labelStyle: const TextStyle(
+                              color: Colors.greenAccent, fontSize: 16),
                           hintText: ''),
                     ),
                   ),
                   SizedBox(
                     height: 50,
                     width: 350,
-                    // decoration: BoxDecoration(
-                    //     color: Colors.deepPurple[900],
-                    //     borderRadius: BorderRadius.circular(30)),
                     child: ElevatedButton(
                       onPressed: () {
                         if (!_emailidController.text.contains('@')) {
                           displayToastMessage('Invalid Email-ID', context);
+                          return;
                         } else if (_passwordController.text.length < 8) {
                           displayToastMessage(
                               'Password should be a minimum of 8 characters',
                               context);
+                          return;
                         } else {
                           setState(() {
                             visible = load(visible);
@@ -156,20 +153,24 @@ class _SignInPageState extends State<SignInPage> {
                         }
                       },
                       style: ElevatedButton.styleFrom(
-                        primary: Colors.black45,
-                        onPrimary: Colors.white,
-                        shadowColor: Colors.black45,
+                        backgroundColor: Colors.black,
+                        surfaceTintColor: Colors.greenAccent,
+                        foregroundColor: Colors.greenAccent,
+                        shadowColor: Colors.greenAccent,
                         elevation: 8,
-                        //side: BorderSide(color: Colors.white70),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10.0),
+                          borderRadius: BorderRadius.circular(15.0),
                           side: const BorderSide(
-                            color: Colors.white70,
-                            width: 2,
+                            color: Colors.greenAccent,
+                            width: 5,
                           ),
                         ),
                       ),
-                      child: const Text('Login'),
+                      child: const Text(
+                        'Login',
+                        selectionColor: Colors.greenAccent,
+                        style: TextStyle(fontSize: 20),
+                      ),
                     ),
                   ),
                   Visibility(
@@ -181,13 +182,14 @@ class _SignInPageState extends State<SignInPage> {
                           borderRadius:
                               const BorderRadius.all(Radius.circular(10)),
                           child: Container(
+                              color: Colors.greenAccent,
                               width: 320,
                               margin: const EdgeInsets.only(),
-                              child: LinearProgressIndicator(
+                              child: const LinearProgressIndicator(
                                 minHeight: 2,
-                                backgroundColor: Colors.blueGrey[800],
+                                backgroundColor: Colors.black12,
                                 valueColor:
-                                    const AlwaysStoppedAnimation(Colors.white),
+                                    AlwaysStoppedAnimation(Colors.white),
                               )))),
                   SizedBox(
                     height: 30,
@@ -203,68 +205,14 @@ class _SignInPageState extends State<SignInPage> {
                           //ResetPass()));
                         });
                       },
-                      child: const Text('Forgot Password?'),
-                    ),
-                  ),
-                  /*
-                  Container(
-                    height: 60,
-                    width: 350,
-                    padding: const EdgeInsets.only(top: 10),
-                    // decoration: BoxDecoration(
-                    //     color: Colors.deepPurple[900],
-                    //     borderRadius: BorderRadius.circular(30)),
-                    child: ElevatedButton(
-                      onPressed: () {
-                        setState(() {
-                          gvisible = load(gvisible);
-                        });
-                        googleSignIn(context);
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(0, 10, 0, 10),
-                        child: Row(
-                          children: <Widget>[
-                            Image(
-                              image: AssetImage("assets/google_logo.png"),
-                              height: 30.0,
-                            ),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.only(left: 40, right: 55),
-                              child: Text(
-                                'Sign in with Google',
-                                style: GoogleFonts.workSans(
-                                  fontSize: 19,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w500,
-                                  backgroundColor: Colors.transparent,
-                                  letterSpacing: 0.0,
-                                  // fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            )
-                          ],
-                        ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        // primary: Colors.black45,
-                        primary: Colors.transparent,
-                        onPrimary: Colors.white,
-                        shadowColor: Colors.black45,
-                        elevation: 8,
-                        //side: BorderSide(color: Colors.white70,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10.0),
-                          side: BorderSide(
-                            color: Colors.white70,
-                            width: 2,
-                          ),
-                        ),
+                      child: const Text(
+                        'Forgot Password?',
+                        selectionColor: Colors.white,
+                        style:
+                            TextStyle(fontSize: 14, color: Colors.greenAccent),
                       ),
                     ),
                   ),
-                  */
                   Visibility(
                       maintainSize: true,
                       maintainAnimation: true,
@@ -276,11 +224,11 @@ class _SignInPageState extends State<SignInPage> {
                           child: Container(
                               width: 320,
                               margin: const EdgeInsets.only(),
-                              child: LinearProgressIndicator(
+                              child: const LinearProgressIndicator(
                                 minHeight: 2,
-                                backgroundColor: Colors.blueGrey[800],
+                                backgroundColor: Colors.white,
                                 valueColor:
-                                    const AlwaysStoppedAnimation(Colors.white),
+                                    AlwaysStoppedAnimation(Colors.white),
                               )))),
                   SizedBox(
                     height: 30,
@@ -294,6 +242,9 @@ class _SignInPageState extends State<SignInPage> {
                       },
                       child: const Text(
                         'New User? Create Account',
+                        selectionColor: Colors.white,
+                        style:
+                            TextStyle(fontSize: 14, color: Colors.greenAccent),
                       ),
                     ),
                   ),
@@ -307,7 +258,6 @@ class _SignInPageState extends State<SignInPage> {
   }
 
   FirebaseAuth auth = FirebaseAuth.instance;
-  DatabaseReference dbRef = FirebaseDatabase.instance.ref().child("users");
 
   Future<void> login() async {
     final formState = _formKey.currentState;

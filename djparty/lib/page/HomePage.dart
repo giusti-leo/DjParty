@@ -8,7 +8,7 @@ class HomePage extends StatefulWidget {
   Widget build(BuildContext context) {
     return MaterialApp(initialRoute: '/', routes: {
       'homepage': (context) => HomePage(),
-      'login': (context) => SignInPage(),
+      'login': (context) => const SignInPage(),
     });
   }
 
@@ -22,13 +22,6 @@ class _HomePageState extends State<HomePage> {
   Future<FirebaseApp> _initializeFirebase() async {
     FirebaseApp firebaseApp = await Firebase.initializeApp();
     return firebaseApp;
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    //WidgetsBinding.instance
-    //    .addPostFrameCallback((_) => _refreshIndicatorKey.currentState!.show());
   }
 
   @override

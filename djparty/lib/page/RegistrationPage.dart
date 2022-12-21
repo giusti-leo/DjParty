@@ -1,15 +1,18 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:djparty/main.dart';
 import 'package:flutter/material.dart';
-//import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:email_validator/email_validator.dart';
 
 import './SignInPage.dart';
 import './HomePage.dart';
 
-FirebaseAuth auth = FirebaseAuth.instance;
-DatabaseReference dbRef = FirebaseDatabase.instance.ref().child("users");
+DatabaseReference dbRef = FirebaseDatabase.instance.ref();
+CollectionReference users = FirebaseFirestore.instance.collection('users');
+final FirebaseAuth auth = FirebaseAuth.instance;
 
 class Register extends StatelessWidget {
   const Register({super.key});
@@ -32,6 +35,7 @@ class _RegisterPageState extends State<_RegisterPage> {
   bool _passwordVisible1 = false;
   bool _passwordVisible2 = false;
   static bool visible = false;
+  bool err = false;
 
   @override
   void initState() {
@@ -55,245 +59,271 @@ class _RegisterPageState extends State<_RegisterPage> {
 
     return SafeArea(
       child: Scaffold(
-        body: Scaffold(
-          backgroundColor: Colors.blueGrey[900],
-          body: SingleChildScrollView(
-            child: Form(
-              key: _formKey,
-              child: Column(
-                children: <Widget>[
-                  Container(
-                    padding: const EdgeInsets.only(top: 150.0, bottom: 50),
-                    child: const Text('Create Account'),
+        backgroundColor: Colors.black,
+        appBar: AppBar(
+          backgroundColor: const Color.fromRGBO(30, 215, 96, 0.9),
+          title: const Text('Registration'),
+          centerTitle: true,
+          leading: GestureDetector(
+            child: const Icon(
+              Icons.arrow_back_ios_new,
+              color: Colors.black,
+            ),
+            onTap: () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (BuildContext context) => const SignInPage()));
+            },
+          ),
+        ),
+        body: SingleChildScrollView(
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: <Widget>[
+                Container(
+                  padding: const EdgeInsets.only(top: 150.0, bottom: 50),
+                  child: const Text(
+                    'Create Account',
+                    style: TextStyle(
+                        fontSize: 25,
+                        color: Colors.greenAccent,
+                        fontStyle: FontStyle.normal),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.only(
-                        left: 15.0, right: 15.0, top: 20, bottom: 0),
-                    //  padding: EdgeInsets.symmetric(horizontal: 15),
-                    child: TextFormField(
-                      controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      style: const TextStyle(color: Colors.white),
-                      decoration: const InputDecoration(
-                          prefixIcon: Icon(
-                            // Based on passwordVisible state choose the icon
-                            Icons.mail_outline_rounded,
-                            color: Colors.white70,
-                          ),
-                          filled: true,
-                          fillColor: Colors.black12,
-                          hintStyle: TextStyle(color: Colors.white54),
-                          enabledBorder: OutlineInputBorder(
-                            //gapPadding: 4.0,
-                            //borderRadius: BorderRadius.all(Radius.circular(5.0)),
-                            borderSide:
-                                BorderSide(color: Colors.white, width: 0.5),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            //gapPadding: .0,
-                            //borderRadius: BorderRadius.all(Radius.circular(5.0)),
-                            borderSide:
-                                BorderSide(color: Colors.white, width: 1.5),
-                          ),
-                          labelText: 'Email',
-                          hintText: ''),
-                    ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(
+                      left: 15.0, right: 15.0, top: 20, bottom: 0),
+                  child: TextFormField(
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: const InputDecoration(
+                        prefixIcon: Icon(
+                          // Based on passwordVisible state choose the icon
+                          Icons.mail_outline_rounded,
+                          color: Colors.greenAccent,
+                        ),
+                        filled: true,
+                        fillColor: Colors.black12,
+                        hintStyle: TextStyle(color: Colors.black),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide:
+                              BorderSide(color: Colors.greenAccent, width: 1.5),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide:
+                              BorderSide(color: Colors.greenAccent, width: 1.5),
+                        ),
+                        labelText: 'Email',
+                        labelStyle:
+                            TextStyle(fontSize: 14, color: Colors.greenAccent),
+                        hintText: ''),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.only(
-                        left: 15.0, right: 15.0, top: 10, bottom: 0),
-                    //  padding: EdgeInsets.symmetric(horizontal: 15),
-                    child: TextFormField(
-                      controller: _usernameController,
-                      keyboardType: TextInputType.name,
-                      style: const TextStyle(color: Colors.white),
-                      decoration: const InputDecoration(
-                          prefixIcon: Icon(
-                            // Based on passwordVisible state choose the icon
-                            Icons.account_circle_outlined,
-                            color: Colors.white70,
-                          ),
-                          filled: true,
-                          fillColor: Colors.black12,
-                          hintStyle: TextStyle(color: Colors.white54),
-                          enabledBorder: OutlineInputBorder(
-                            //gapPadding: 4.0,
-                            //borderRadius: BorderRadius.all(Radius.circular(5.0)),
-                            borderSide:
-                                BorderSide(color: Colors.white, width: 0.5),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            //gapPadding: .0,
-                            //borderRadius: BorderRadius.all(Radius.circular(5.0)),
-                            borderSide:
-                                BorderSide(color: Colors.white, width: 1.5),
-                          ),
-                          labelText: 'Full Name',
-                          hintText: ''),
-                    ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(
+                      left: 15.0, right: 15.0, top: 10, bottom: 0),
+                  child: TextFormField(
+                    controller: _usernameController,
+                    keyboardType: TextInputType.name,
+                    style: const TextStyle(color: Colors.greenAccent),
+                    decoration: const InputDecoration(
+                        prefixIcon: Icon(
+                          // Based on passwordVisible state choose the icon
+                          Icons.account_circle_outlined,
+                          color: Colors.greenAccent,
+                        ),
+                        filled: true,
+                        fillColor: Colors.black12,
+                        hintStyle: TextStyle(color: Colors.greenAccent),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide:
+                              BorderSide(color: Colors.greenAccent, width: 1.5),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide:
+                              BorderSide(color: Colors.greenAccent, width: 1.5),
+                        ),
+                        labelText: 'Full Name',
+                        labelStyle:
+                            TextStyle(fontSize: 16, color: Colors.greenAccent),
+                        hintText: ''),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.only(
-                        left: 15.0, right: 15.0, top: 10.0, bottom: 0.0),
-                    //padding: EdgeInsets.symmetric(horizontal: 15, vertical: 15),
-                    child: TextFormField(
-                      keyboardType: TextInputType.visiblePassword,
-                      controller: _userPasswordController1,
-                      obscureText: !_passwordVisible1,
-                      style: const TextStyle(color: Colors.white),
-                      decoration: InputDecoration(
-                          prefixIcon: const Icon(
-                            // Based on passwordVisible state choose the icon
-                            Icons.lock_outline_rounded,
-                            color: Colors.white70,
-                          ),
-                          suffixIcon: IconButton(
-                              icon: Icon(
-                                // Based on passwordVisible state choose the icon
-                                _passwordVisible1
-                                    ? Icons.visibility
-                                    : Icons.visibility_off,
-                                color: Colors.white70,
-                              ),
-                              onPressed: () {
-                                // Update the state i.e. toogle the state of passwordVisible variable
-                                setState(() {
-                                  _passwordVisible1 = !_passwordVisible1;
-                                });
-                              }),
-                          filled: true,
-                          fillColor: Colors.black12,
-                          hintStyle: const TextStyle(color: Colors.white54),
-                          enabledBorder: const OutlineInputBorder(
-                            borderRadius:
-                                BorderRadius.all(Radius.circular(5.0)),
-                            borderSide:
-                                BorderSide(color: Colors.white, width: 0.5),
-                          ),
-                          focusedBorder: const OutlineInputBorder(
-                            borderRadius:
-                                BorderRadius.all(Radius.circular(5.0)),
-                            borderSide:
-                                BorderSide(color: Colors.white, width: 1.5),
-                          ),
-                          labelText: 'New Password',
-                          hintText: ''),
-                    ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(
+                      left: 15.0, right: 15.0, top: 10.0, bottom: 0.0),
+                  child: TextFormField(
+                    keyboardType: TextInputType.visiblePassword,
+                    controller: _userPasswordController1,
+                    obscureText: !_passwordVisible1,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                        prefixIcon: const Icon(
+                          // Based on passwordVisible state choose the icon
+                          Icons.lock_outline_rounded,
+                          color: Colors.greenAccent,
+                        ),
+                        suffixIcon: IconButton(
+                            icon: Icon(
+                              // Based on passwordVisible state choose the icon
+                              _passwordVisible1
+                                  ? Icons.visibility
+                                  : Icons.visibility_off,
+                              color: Colors.greenAccent,
+                            ),
+                            onPressed: () {
+                              // Update the state i.e. toogle the state of passwordVisible variable
+                              setState(() {
+                                _passwordVisible1 = !_passwordVisible1;
+                              });
+                            }),
+                        filled: true,
+                        fillColor: Colors.black12,
+                        hintStyle: const TextStyle(color: Colors.greenAccent),
+                        enabledBorder: const OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(5.0)),
+                          borderSide:
+                              BorderSide(color: Colors.greenAccent, width: 1.5),
+                        ),
+                        focusedBorder: const OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(5.0)),
+                          borderSide:
+                              BorderSide(color: Colors.greenAccent, width: 1.5),
+                        ),
+                        labelText: 'New Password',
+                        labelStyle: const TextStyle(
+                            fontSize: 16, color: Colors.greenAccent),
+                        hintText: ''),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.only(
-                        left: 15.0, right: 15.0, top: 10.0, bottom: 40.0),
-                    //padding: EdgeInsets.symmetric(horizontal: 15, vertical: 15),
-                    child: TextFormField(
-                      controller: _userPasswordController2,
-                      obscureText: !_passwordVisible2,
-                      keyboardType: TextInputType.visiblePassword,
-                      style: const TextStyle(color: Colors.white),
-                      decoration: InputDecoration(
-                          prefixIcon: const Icon(
-                            // Based on passwordVisible state choose the icon
-                            Icons.lock_outline_rounded,
-                            color: Colors.white70,
-                          ),
-                          suffixIcon: IconButton(
-                              icon: Icon(
-                                _passwordVisible2
-                                    ? Icons.visibility
-                                    : Icons
-                                        .visibility_off, // Based on passwordVisible state choose the icon
-                                color: Colors.white70,
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  _passwordVisible2 =
-                                      !_passwordVisible2; // Update the state i.e. toogle the state of passwordVisible variable
-                                });
-                              }),
-                          filled: true,
-                          fillColor: Colors.black12,
-                          hintStyle: const TextStyle(color: Colors.white54),
-                          enabledBorder: const OutlineInputBorder(
-                            borderRadius:
-                                BorderRadius.all(Radius.circular(5.0)),
-                            borderSide:
-                                BorderSide(color: Colors.white, width: 0.5),
-                          ),
-                          focusedBorder: const OutlineInputBorder(
-                            borderRadius:
-                                BorderRadius.all(Radius.circular(5.0)),
-                            borderSide:
-                                BorderSide(color: Colors.white, width: 1.5),
-                          ),
-                          labelText: 'Confirm New Password',
-                          hintText: ''),
-                    ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(
+                      left: 15.0, right: 15.0, top: 10.0, bottom: 40.0),
+                  child: TextFormField(
+                    controller: _userPasswordController2,
+                    obscureText: !_passwordVisible2,
+                    keyboardType: TextInputType.visiblePassword,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                        prefixIcon: const Icon(
+                          // Based on passwordVisible state choose the icon
+                          Icons.lock_outline_rounded,
+                          color: Colors.greenAccent,
+                        ),
+                        suffixIcon: IconButton(
+                            icon: Icon(
+                              _passwordVisible2
+                                  ? Icons.visibility
+                                  : Icons
+                                      .visibility_off, // Based on passwordVisible state choose the icon
+                              color: Colors.greenAccent,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _passwordVisible2 =
+                                    !_passwordVisible2; // Update the state i.e. toogle the state of passwordVisible variable
+                              });
+                            }),
+                        filled: true,
+                        fillColor: Colors.black12,
+                        hintStyle: const TextStyle(color: Colors.white54),
+                        enabledBorder: const OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(5.0)),
+                          borderSide:
+                              BorderSide(color: Colors.greenAccent, width: 1.5),
+                        ),
+                        focusedBorder: const OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(5.0)),
+                          borderSide:
+                              BorderSide(color: Colors.greenAccent, width: 1.5),
+                        ),
+                        labelText: 'Confirm New Password',
+                        labelStyle:
+                            TextStyle(fontSize: 16, color: Colors.greenAccent),
+                        hintText: ''),
                   ),
-                  SizedBox(
-                    height: 50,
-                    width: 350,
-                    //padding: const EdgeInsets.only(bottom: 50.0),
-                    // decoration: BoxDecoration(
-                    //     color: Colors.deepPurple[900],
-                    //     borderRadius: BorderRadius.circular(30)),
-                    child: ElevatedButton(
-                      onPressed: () {
-                        if (!_emailController.text.contains('@')) {
-                          displayToastMessage('Enter a valid Email', context);
-                        } else if (_usernameController.text.isEmpty) {
-                          displayToastMessage('Enter your name', context);
-                        } else if (_userPasswordController1.text.length < 8) {
-                          displayToastMessage(
-                              'Password should be a minimum of 8 characters',
-                              context);
-                        } else if (_userPasswordController1.text !=
-                            _userPasswordController2.text) {
-                          displayToastMessage(
-                              'Passwords don\'t match', context);
-                        } else {
-                          setState(() {
-                            load();
-                            //   showInSnackBar('Processing...',context);
-                          });
-                          registerNewUser(context);
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        primary: Colors.black45,
-                        onPrimary: Colors.white,
-                        shadowColor: Colors.black45,
-                        elevation: 8,
-                        //side: BorderSide(color: Colors.white70),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10.0),
-                          side: const BorderSide(
-                            color: Colors.white70,
-                            width: 2,
-                          ),
+                ),
+                SizedBox(
+                  height: 50,
+                  width: 350,
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      if (!EmailValidator.validate(
+                          _emailController.text, true)) {
+                        displayToastMessage('Enter a valid Email', context);
+                        err = true;
+                      } else if (_usernameController.text.isEmpty) {
+                        displayToastMessage('Enter your name', context);
+                        err = true;
+                      } else if (_userPasswordController1.text.length < 8) {
+                        displayToastMessage(
+                            'Password should be a minimum of 8 characters',
+                            context);
+                        err = true;
+                      } else if (_userPasswordController1.text !=
+                          _userPasswordController2.text) {
+                        displayToastMessage('Passwords don\'t match', context);
+                        err = true;
+                      } else {
+                        setState(() {
+                          load();
+                          err = false;
+                        });
+                      }
+                      if (err == false) {
+                        print('a');
+                        registerNewUser(context);
+                        print('end');
+
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const SignInPage()),
+                        );
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.black,
+                      surfaceTintColor: Colors.greenAccent,
+                      foregroundColor: Colors.greenAccent,
+                      shadowColor: Colors.greenAccent,
+                      elevation: 8,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15.0),
+                        side: const BorderSide(
+                          color: Colors.greenAccent,
+                          width: 5,
                         ),
                       ),
-                      child: const Text('Register'),
+                    ),
+                    child: const Text(
+                      'Register',
+                      selectionColor: Colors.greenAccent,
+                      style: TextStyle(fontSize: 20),
                     ),
                   ),
-                  Visibility(
-                    maintainSize: true,
-                    maintainAnimation: true,
-                    maintainState: true,
-                    visible: visible,
-                    child: ClipRRect(
-                        borderRadius:
-                            const BorderRadius.all(Radius.circular(10)),
-                        child: Container(
-                            width: 290,
-                            margin: const EdgeInsets.only(),
-                            child: LinearProgressIndicator(
-                              minHeight: 2,
-                              backgroundColor: Colors.blueGrey[800],
-                              valueColor:
-                                  const AlwaysStoppedAnimation(Colors.white),
-                            ))),
-                  ),
-                ],
-              ),
+                ),
+                Visibility(
+                  maintainSize: true,
+                  maintainAnimation: true,
+                  maintainState: true,
+                  visible: visible,
+                  child: ClipRRect(
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
+                      child: Container(
+                          width: 290,
+                          margin: const EdgeInsets.only(),
+                          child: LinearProgressIndicator(
+                            minHeight: 2,
+                            backgroundColor: Colors.blueGrey[800],
+                            valueColor:
+                                const AlwaysStoppedAnimation(Colors.white),
+                          ))),
+                ),
+              ],
             ),
           ),
         ),
@@ -311,8 +341,6 @@ class _RegisterPageState extends State<_RegisterPage> {
     super.dispose();
   }
 
-  final FirebaseAuth auth = FirebaseAuth.instance;
-
   Future<void> registerNewUser(BuildContext context) async {
     User? currentuser;
     try {
@@ -320,31 +348,28 @@ class _RegisterPageState extends State<_RegisterPage> {
               email: _emailController.text.trim(),
               password: _userPasswordController1.text.trim()))
           .user;
+      print('d');
 
       if (currentuser != null) {
         dbRef.child(currentuser.uid);
-        Map userDataMap = {
+        Map<String, dynamic> userDataMap = {
           'name': _usernameController.text.trim(),
           'email': _emailController.text.trim(),
         };
-        dbRef.child(currentuser.uid).set(userDataMap);
-        _formKey.currentState?.initState();
 
-        Navigator.push(context,
-            MaterialPageRoute(builder: (BuildContext context) => HomePage()));
+        await users.add(userDataMap).then((value) => print('User added'));
+
+        //_formKey.currentState?.initState();
 
         displayToastMessage('Account Created', context);
-      } else {
-        setState(() {
-          load();
-        });
-        displayToastMessage('Account has not been created', context);
       }
     } on FirebaseAuthException catch (e) {
-      setState(() {
-        load();
-      });
-      displayToastMessage(e.code, context);
+      if (e.code == 'weak-password') {
+        displayToastMessage('The password provided is too weak.', context);
+      } else if (e.code == 'email-already-in-use') {
+        displayToastMessage(
+            'The account already exists for that email.', context);
+      }
     }
   }
 
@@ -358,6 +383,5 @@ displayToastMessage(String msg, BuildContext context) {
 }
 
 void showInSnackBar(String value, BuildContext context) {
-  ScaffoldMessenger.of(context)
-      .showSnackBar(new SnackBar(content: new Text(value)));
+  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(value)));
 }

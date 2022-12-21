@@ -37,23 +37,23 @@ class _InsertCodeState extends State<InsertCode> {
 
   Widget buildTextField(BuildContext context) => TextField(
         controller: controller,
-        style: TextStyle(
+        style: const TextStyle(
           color: Colors.white,
           fontWeight: FontWeight.bold,
           fontSize: 20,
         ),
         decoration: InputDecoration(
           hintText: 'Enter Your Code',
-          hintStyle: TextStyle(color: Colors.grey),
+          hintStyle: const TextStyle(color: Colors.grey),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(18),
-            borderSide: BorderSide(
+            borderSide: const BorderSide(
               color: Color.fromRGBO(30, 215, 96, 0.9),
             ),
           ),
           suffixIcon: IconButton(
-              color: Color.fromRGBO(30, 215, 96, 0.9),
-              icon: Icon(Icons.done, size: 30),
+              color: const Color.fromRGBO(30, 215, 96, 0.9),
+              icon: const Icon(Icons.done, size: 30),
               onPressed: () {}),
         ),
       );
