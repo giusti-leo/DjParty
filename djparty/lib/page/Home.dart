@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:djparty/entities/User.dart';
 import 'package:djparty/main.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -21,20 +22,10 @@ class _HomeState extends State<Home> {
 
   FirebaseAuth auth = FirebaseAuth.instance;
   String uid = FirebaseAuth.instance.currentUser!.uid;
-  CollectionReference users = FirebaseFirestore.instance.collection('users');
-
-  String name = '';
-  var username = '';
 
   @override
   void initState() {
     super.initState();
-
-    DocumentReference<Map<String, dynamic>> documentReference =
-        FirebaseFirestore.instance.collection('Users').doc(uid);
-
-    username = documentReference.collection('email').toString();
-    name = documentReference.collection('name').toString();
   }
 
   Future<void> _signOut(BuildContext context) async {
@@ -45,6 +36,22 @@ class _HomeState extends State<Home> {
     Navigator.pushReplacement(
         context, MaterialPageRoute(builder: (context) => Main()));
   }
+
+  Future<Person?> readUsername() async {
+    final docUser = FirebaseFirestore.instance.collection('users').doc(uid);
+    final snapshot = await docUser.get();
+    print(uid);
+    print(snapshot);
+
+    if (snapshot.exists) {
+      return Person.fromJson(snapshot.data()!);
+    }
+  }
+
+  Widget buildUser(Person user) => ListTile(
+        leading: CircleAvatar(child: Text('${user.username}')),
+        title: Text('${user.email}'),
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -60,11 +67,30 @@ class _HomeState extends State<Home> {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            const DrawerHeader(
-              decoration: BoxDecoration(
+            DrawerHeader(
+              decoration: const BoxDecoration(
                 color: Colors.green,
               ),
-              child: Text('Username / Name'),
+              child: FutureBuilder<Person?>(
+                  future: readUsername(),
+                  builder: ((context, snapshot) {
+                    if (snapshot.hasData) {
+                      final user = snapshot.data;
+                      return user == null
+                          ? const Center(
+                              child: Text('No username'),
+                            )
+                          : buildUser(user);
+                    } else {
+                      print(snapshot.data);
+                      return const Center(
+                          child: CircularProgressIndicator(
+                        backgroundColor: Colors.greenAccent,
+                        color: Colors.lightGreenAccent,
+                        strokeWidth: 3,
+                      ));
+                    }
+                  })),
             ),
             ListTile(
               leading: const Icon(
@@ -89,6 +115,27 @@ class _HomeState extends State<Home> {
       ),
       body: Center(
         child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+          /*
+          FutureBuilder<Person?>(
+              future: readUsername(),
+              builder: ((context, snapshot) {
+                if (snapshot.hasData) {
+                  final user = snapshot.data;
+                  return user == null
+                      ? const Center(
+                          child: Text('No username'),
+                        )
+                      : buildUser(user);
+                } else {
+                  return const  Center(
+                      child: CircularProgressIndicator(
+                    backgroundColor: Colors.greenAccent,
+                    color: Colors.lightGreenAccent,
+                    strokeWidth: 3,
+                  ));
+                }
+              })),
+              */
           SizedBox(
             height: 40,
             width: 170,
@@ -138,5 +185,7 @@ class _HomeState extends State<Home> {
         ]),
       ),
     ));
+
+    // ignore: dead_code
   }
 }

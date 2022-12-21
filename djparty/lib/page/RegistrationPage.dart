@@ -11,7 +11,6 @@ import './SignInPage.dart';
 import './HomePage.dart';
 
 DatabaseReference dbRef = FirebaseDatabase.instance.ref();
-CollectionReference users = FirebaseFirestore.instance.collection('users');
 final FirebaseAuth auth = FirebaseAuth.instance;
 
 class Register extends StatelessWidget {
@@ -343,21 +342,26 @@ class _RegisterPageState extends State<_RegisterPage> {
 
   Future<void> registerNewUser(BuildContext context) async {
     User? currentuser;
+
     try {
       currentuser = (await auth.createUserWithEmailAndPassword(
               email: _emailController.text.trim(),
               password: _userPasswordController1.text.trim()))
           .user;
-      print('d');
+
+      CollectionReference<Map<String, dynamic>> users =
+          FirebaseFirestore.instance.collection('users');
 
       if (currentuser != null) {
-        dbRef.child(currentuser.uid);
         Map<String, dynamic> userDataMap = {
           'name': _usernameController.text.trim(),
           'email': _emailController.text.trim(),
         };
 
-        await users.add(userDataMap).then((value) => print('User added'));
+        await users
+            .doc(currentuser.uid)
+            .set(userDataMap)
+            .then((value) => print('User added'));
 
         //_formKey.currentState?.initState();
 
