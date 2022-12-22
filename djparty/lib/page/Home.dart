@@ -155,8 +155,8 @@ class _HomeState extends State<Home> {
                   Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => const GeneratorScreen(
-                              title: 'Create your Party')));
+                          builder: (context) =>
+                              const GeneratedCode(title: 'Create your Party')));
                 }),
           ),
           const SizedBox(height: 30),
