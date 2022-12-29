@@ -6,11 +6,11 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:djparty/page/JoinOptions.dart';
 import 'package:djparty/page/GenerateShare.dart';
-import 'package:djparty/main.dart';
 
 //String name, email;
 
 class Home extends StatefulWidget {
+  static String routeName = '/home';
   const Home({super.key});
 
   @override
@@ -31,7 +31,6 @@ class _HomeState extends State<Home> {
   Future<void> _signOut(BuildContext context) async {
     //FirebaseAuth.instance.currentUser.delete();                                  ---> TO_DO
     await FirebaseAuth.instance.signOut();
-    await isUserLoggedIn();
 
     Navigator.pushReplacement(
         context, MaterialPageRoute(builder: (context) => Main()));

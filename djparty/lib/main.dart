@@ -1,34 +1,25 @@
 import 'package:animated_splash_screen/animated_splash_screen.dart';
-import 'package:djparty/page/SignInPage.dart';
+import 'package:djparty/page/Home.dart';
+import 'package:djparty/page/Login.dart';
+import 'package:djparty/page/SignIn.dart';
+import 'package:djparty/page/SignUp.dart';
+import 'package:djparty/services/FirebaseAuthMethods.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 import 'package:djparty/page/HomePage.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:provider/provider.dart';
 
 String initialroute = '';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  await isUserLoggedIn();
   runApp(const Main());
-}
-
-Future<void> isUserLoggedIn() async {
-  FirebaseAuth.instance.authStateChanges().listen((User? user) {
-    if (user == null || (user.uid == '')) {
-      print('User is currently signed out!');
-      initialroute = 'login';
-    } else {
-      print('User is signed in!');
-      print('User: ');
-      print(user);
-      print('\n');
-      initialroute = 'homepage';
-      print(initialroute);
-    }
-  });
 }
 
 class Main extends StatelessWidget {
@@ -37,43 +28,54 @@ class Main extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: _Splashscreen(),
-      debugShowCheckedModeBanner: false,
-    );
-  }
-}
-
-class _Splashscreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
         title: '',
         home: AnimatedSplashScreen(
-            splashIconSize: 200,
-            duration: 3000,
+            splashIconSize: 400,
+            duration: 1000,
             splash: Image.asset(
               'assets/images/logo.jpg',
               width: 10000,
               height: 10000,
               colorBlendMode: BlendMode.hardLight,
             ),
-            nextScreen: const SecondScreen(),
+            nextScreen: connection(context),
             splashTransition: SplashTransition.fadeTransition,
             backgroundColor: Colors.black));
   }
+
+  Widget connection(BuildContext context) {
+    return MultiProvider(
+      providers: [
+        Provider<FirebaseAuthMethods>(
+          create: (_) => FirebaseAuthMethods(FirebaseAuth.instance),
+        ),
+        StreamProvider(
+          create: (context) => context.read<FirebaseAuthMethods>().authState,
+          initialData: null,
+        ),
+      ],
+      child: MaterialApp(
+        title: 'Dj Party',
+        home: const AuthWrapper(),
+        routes: {
+          SignUp.routeName: (context) => const SignUp(),
+          SignIn.routeName: (context) => const SignIn(),
+        },
+      ),
+    );
+  }
 }
 
-class SecondScreen extends StatelessWidget {
-  const SecondScreen({super.key});
+class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-        home: const SignInPage(),
-        initialRoute: initialroute,
-        routes: {
-          'homepage': (context) => HomePage(),
-          'login': (context) => const SignInPage(),
-        });
+    final firebaseUser = context.watch<User?>();
+
+    if (firebaseUser != null) {
+      return const Home();
+    }
+    return const Login();
   }
 }

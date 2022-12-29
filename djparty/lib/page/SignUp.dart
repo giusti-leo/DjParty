@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:djparty/main.dart';
+import 'package:djparty/page/Login.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -7,34 +8,25 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:email_validator/email_validator.dart';
 
-import './SignInPage.dart';
+import 'SignIn.dart';
 import './HomePage.dart';
 
-DatabaseReference dbRef = FirebaseDatabase.instance.ref();
-final FirebaseAuth auth = FirebaseAuth.instance;
-
-class Register extends StatelessWidget {
-  const Register({super.key});
+class SignUp extends StatefulWidget {
+  static String routeName = '/signup';
+  const SignUp({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(home: _RegisterPage(), routes: {
-      'homepage': (context) => HomePage(),
-      'login': (context) => const SignInPage(),
-    });
-  }
+  _SignUpState createState() => _SignUpState();
 }
 
-class _RegisterPage extends StatefulWidget {
-  @override
-  _RegisterPageState createState() => _RegisterPageState();
-}
-
-class _RegisterPageState extends State<_RegisterPage> {
+class _SignUpState extends State<SignUp> {
   bool _passwordVisible1 = false;
   bool _passwordVisible2 = false;
   static bool visible = false;
   bool err = false;
+
+  DatabaseReference dbRef = FirebaseDatabase.instance.ref();
+  final FirebaseAuth auth = FirebaseAuth.instance;
 
   @override
   void initState() {
@@ -60,8 +52,14 @@ class _RegisterPageState extends State<_RegisterPage> {
       child: Scaffold(
         backgroundColor: Colors.black,
         appBar: AppBar(
-          backgroundColor: const Color.fromRGBO(30, 215, 96, 0.9),
-          title: const Text('Registration'),
+          backgroundColor: Colors.black,
+          shadowColor: Colors.green,
+          title: const Text('Registration',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 24,
+                  color: Colors.greenAccent)),
           centerTitle: true,
           leading: GestureDetector(
             child: const Icon(
@@ -69,10 +67,7 @@ class _RegisterPageState extends State<_RegisterPage> {
               color: Colors.black,
             ),
             onTap: () {
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (BuildContext context) => const SignInPage()));
+              Navigator.pushNamed(context, Login.routeName);
             },
           ),
         ),
@@ -280,7 +275,7 @@ class _RegisterPageState extends State<_RegisterPage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (context) => const SignInPage()),
+                              builder: (context) => const SignIn()),
                         );
                       }
                     },

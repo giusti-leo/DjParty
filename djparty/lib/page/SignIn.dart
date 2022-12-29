@@ -1,22 +1,27 @@
+import 'package:djparty/page/Home.dart';
 import 'package:djparty/page/HomePage.dart';
+import 'package:djparty/page/Login.dart';
+import 'package:djparty/services/FirebaseAuthMethods.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:djparty/animations/ScaleRoute.dart';
 
 import 'package:flutter/scheduler.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:provider/provider.dart';
 
-import 'RegistrationPage.dart';
+import 'SignUp.dart';
 
-class SignInPage extends StatefulWidget {
-  const SignInPage({super.key});
+class SignIn extends StatefulWidget {
+  static String routeName = '/login-email-password';
+  const SignIn({Key? key}) : super(key: key);
 
   @override
-  // ignore: library_private_types_in_public_api
-  _SignInPageState createState() => _SignInPageState();
+  _SignInState createState() => _SignInState();
 }
 
-class _SignInPageState extends State<SignInPage> {
+class _SignInState extends State<SignIn> {
   static bool _passwordVisible = false;
   static bool visible = false;
   static bool gvisible = false;
@@ -33,6 +38,14 @@ class _SignInPageState extends State<SignInPage> {
     gvisible = false;
   }
 
+  void loginUser() {
+    context.read<FirebaseAuthMethods>().loginWithEmail(
+          email: _emailidController.text,
+          password: _passwordController.text,
+          context: context,
+        );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -40,22 +53,33 @@ class _SignInPageState extends State<SignInPage> {
         home: Scaffold(
           key: _scaffoldKey,
           backgroundColor: Colors.black12,
+          appBar: AppBar(
+            backgroundColor: Colors.black,
+            shadowColor: Colors.greenAccent,
+            title: const Text('Login',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 24,
+                    color: Colors.greenAccent)),
+            centerTitle: true,
+            leading: GestureDetector(
+              child: const Icon(
+                Icons.arrow_back_ios_new,
+                color: Colors.greenAccent,
+              ),
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+          ),
           body: SingleChildScrollView(
             child: Form(
               key: _formKey,
               child: Column(
                 children: <Widget>[
-                  Padding(
-                    padding: const EdgeInsets.only(top: 0, bottom: 50.0),
-                    child: Center(
-                      child: Container(
-                          width: 200,
-                          height: 150,
-                          decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10.0)),
-                          child:
-                              Image.asset('assets/images/logo.jpg', scale: 4)),
-                    ),
+                  const SizedBox(
+                    height: 20,
                   ),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -71,12 +95,12 @@ class _SignInPageState extends State<SignInPage> {
                           ),
                           filled: true,
                           enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                                color: Colors.greenAccent, width: 1.5),
+                            borderSide:
+                                BorderSide(color: Colors.greenAccent, width: 3),
                           ),
                           focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                                color: Colors.greenAccent, width: 1.5),
+                            borderSide:
+                                BorderSide(color: Colors.greenAccent, width: 3),
                           ),
                           labelText: 'Email',
                           labelStyle: TextStyle(
@@ -105,7 +129,12 @@ class _SignInPageState extends State<SignInPage> {
                                     : Icons.visibility_off,
                                 color: Colors.greenAccent,
                               ),
-                              onPressed: () {
+                              onPressed: () async {
+                                setState(() {
+                                  _passwordVisible = !_passwordVisible;
+                                });
+                                await Future.delayed(
+                                    const Duration(seconds: 3));
                                 setState(() {
                                   _passwordVisible = !_passwordVisible;
                                 });
@@ -115,8 +144,8 @@ class _SignInPageState extends State<SignInPage> {
                           enabledBorder: const OutlineInputBorder(
                             borderRadius:
                                 BorderRadius.all(Radius.circular(5.0)),
-                            borderSide: BorderSide(
-                                color: Colors.greenAccent, width: 1.5),
+                            borderSide:
+                                BorderSide(color: Colors.greenAccent, width: 3),
                           ),
                           focusedBorder: const OutlineInputBorder(
                             borderRadius:
@@ -133,27 +162,22 @@ class _SignInPageState extends State<SignInPage> {
                     ),
                   ),
                   SizedBox(
-                    height: 50,
+                    height: 70,
                     width: 350,
                     child: ElevatedButton(
                       onPressed: () {
                         if (!_emailidController.text.contains('@')) {
                           displayToastMessage('Invalid Email-ID', context);
-                          return;
                         } else if (_passwordController.text.length < 8) {
                           displayToastMessage(
                               'Password should be a minimum of 8 characters',
                               context);
-                          return;
                         } else {
-                          setState(() {
-                            visible = load(visible);
-                          });
-                          login();
+                          loginUser();
                         }
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black,
+                        backgroundColor: Colors.greenAccent,
                         surfaceTintColor: Colors.greenAccent,
                         foregroundColor: Colors.greenAccent,
                         shadowColor: Colors.greenAccent,
@@ -161,15 +185,15 @@ class _SignInPageState extends State<SignInPage> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(15.0),
                           side: const BorderSide(
-                            color: Colors.greenAccent,
+                            color: Color.fromARGB(184, 255, 255, 255),
                             width: 5,
                           ),
                         ),
                       ),
                       child: const Text(
                         'Login',
-                        selectionColor: Colors.greenAccent,
-                        style: TextStyle(fontSize: 20),
+                        selectionColor: Colors.white,
+                        style: TextStyle(fontSize: 20, color: Colors.black),
                       ),
                     ),
                   ),
@@ -192,7 +216,7 @@ class _SignInPageState extends State<SignInPage> {
                                     AlwaysStoppedAnimation(Colors.white),
                               )))),
                   SizedBox(
-                    height: 30,
+                    height: 50,
                     width: 300,
                     child: TextButton(
                       onPressed: () {
@@ -201,7 +225,7 @@ class _SignInPageState extends State<SignInPage> {
                               context,
                               MaterialPageRoute(
                                   builder: (BuildContext context) =>
-                                      const Register()));
+                                      const SignUp()));
                           //ResetPass()));
                         });
                       },
@@ -209,7 +233,7 @@ class _SignInPageState extends State<SignInPage> {
                         'Forgot Password?',
                         selectionColor: Colors.white,
                         style:
-                            TextStyle(fontSize: 14, color: Colors.greenAccent),
+                            TextStyle(fontSize: 18, color: Colors.greenAccent),
                       ),
                     ),
                   ),
@@ -230,24 +254,6 @@ class _SignInPageState extends State<SignInPage> {
                                 valueColor:
                                     AlwaysStoppedAnimation(Colors.white),
                               )))),
-                  SizedBox(
-                    height: 30,
-                    child: TextButton(
-                      onPressed: () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (BuildContext context) =>
-                                    const Register()));
-                      },
-                      child: const Text(
-                        'New User? Create Account',
-                        selectionColor: Colors.white,
-                        style:
-                            TextStyle(fontSize: 14, color: Colors.greenAccent),
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),
@@ -259,37 +265,18 @@ class _SignInPageState extends State<SignInPage> {
 
   FirebaseAuth auth = FirebaseAuth.instance;
 
-  Future<void> login() async {
-    final formState = _formKey.currentState;
-    if (formState!.validate()) {
-      formState.save();
-      try {
-        await auth.signInWithEmailAndPassword(
-            email: _emailidController.text.trim(),
-            password: _passwordController.text.trim());
-
-        SchedulerBinding.instance.addPostFrameCallback((_) {
-          Navigator.push(context,
-              MaterialPageRoute(builder: (BuildContext context) => HomePage()));
-          visible = !visible;
-        });
-      } on FirebaseAuthException catch (e) {
-        setState(() {
-          visible = load(visible);
-        });
-        displayToastMessage(e.code, context);
-      }
-    }
-  }
-
-  bool load(visible) {
-    return visible = !visible;
-  }
-
   @override
   void dispose() {
     _emailidController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  displayToastMessage(String msg, BuildContext context) {
+    Fluttertoast.showToast(msg: msg);
+  }
+
+  void showInSnackBar(String value, BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(value)));
   }
 }
