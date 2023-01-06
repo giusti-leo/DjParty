@@ -70,10 +70,7 @@ class FirebaseAuthMethods {
           email: email.trim(), password: password.trim());
 
       if (user.emailVerified) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const Home()),
-        );
+        Navigator.pushNamed(context, Home.routeName);
       } else {
         await sendEmailVerification(context);
       }
@@ -104,29 +101,23 @@ class FirebaseAuthMethods {
   // GOOGLE SIGN IN
   Future<void> signInWithGoogle(BuildContext context) async {
     try {
-      final googleSignIn = GoogleSignIn();
-      GoogleSignInAccount? _user;
-
       final googleUser = await GoogleSignIn().signIn();
 
       if (googleUser == null) return;
-      _user = googleUser;
 
       final googleAuth = await googleUser.authentication;
 
       final credential = GoogleAuthProvider.credential(
           accessToken: googleAuth.accessToken, idToken: googleAuth.idToken);
 
-      final userCredential = await _auth.signInWithCredential(credential);
-
-      if (userCredential.user != null) {
-        if (userCredential.additionalUserInfo!.isNewUser) {
-          insertUser(context, googleUser!);
-          displayToastMessage('User added', context);
+      await _auth.signInWithCredential(credential).then((value) {
+        if (value.user != null) {
+          if (value.additionalUserInfo!.isNewUser) {
+            insertUser(context, googleUser);
+            displayToastMessage('User added', context);
+          }
         }
-
-        await _auth.signInWithCredential(credential);
-      }
+      });
     } on FirebaseAuthException catch (e) {
       displayToastMessage(e.message!, context); // Displaying the error message
     }
@@ -148,15 +139,6 @@ class FirebaseAuthMethods {
           .then((value) => print('User added'));
     } on FirebaseAuthException catch (e) {
       displayToastMessage(e.code, context);
-    }
-  }
-
-  // ANONYMOUS SIGN IN
-  Future<void> signInAnonymously(BuildContext context) async {
-    try {
-      await _auth.signInAnonymously();
-    } on FirebaseAuthException catch (e) {
-      displayToastMessage(e.message!, context); // Displaying the error message
     }
   }
 
@@ -243,7 +225,7 @@ class FirebaseAuthMethods {
     try {
       await _auth.signOut();
     } on FirebaseAuthException catch (e) {
-      displayToastMessage(e.message!, context); // Displaying the error message
+      displayToastMessage(e.message!, context);
     }
   }
 
@@ -252,9 +234,17 @@ class FirebaseAuthMethods {
     try {
       await _auth.currentUser!.delete();
     } on FirebaseAuthException catch (e) {
-      displayToastMessage(e.message!, context); // Displaying the error message
-      // if an error of requires-recent-login is thrown, make sure to log
-      // in user again and then delete account.
+      displayToastMessage(e.message!, context);
+    }
+  }
+
+  Future<void> resetPassword(
+      {required String email, required BuildContext context}) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+      displayToastMessage('Check your mail box', context);
+    } on FirebaseAuthMethods catch (e) {
+      displayToastMessage(e.toString(), context);
     }
   }
 }
