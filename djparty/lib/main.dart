@@ -1,4 +1,5 @@
 import 'package:animated_splash_screen/animated_splash_screen.dart';
+import 'package:djparty/page/GenerateShare.dart';
 import 'package:djparty/page/Home.dart';
 import 'package:djparty/page/Login.dart';
 import 'package:djparty/page/SignIn.dart';
@@ -60,6 +61,8 @@ class Main extends StatelessWidget {
         routes: {
           SignUp.routeName: (context) => const SignUp(),
           SignIn.routeName: (context) => const SignIn(),
+          Home.routeName: (context) => const Home(),
+          GeneratorScreen.routeName: (context) => GeneratorScreen(),
         },
       ),
     );

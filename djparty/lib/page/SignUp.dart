@@ -268,9 +268,7 @@ class _SignUpState extends State<SignUp> {
                         });
                       }
                       if (err == false) {
-                        print('a');
                         registerNewUser(context);
-                        print('end');
 
                         Navigator.push(
                           context,

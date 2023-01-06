@@ -22,7 +22,7 @@ class JoinOptions extends StatelessWidget {
             width: 170,
             child: ElevatedButton(
                 style: ButtonStyle(
-                  backgroundColor: MaterialStatePropertyAll<Color>(
+                  backgroundColor: const MaterialStatePropertyAll<Color>(
                       Color.fromRGBO(30, 215, 96, 0.9)),
                   shape: MaterialStateProperty.all<RoundedRectangleBorder>(
                     RoundedRectangleBorder(

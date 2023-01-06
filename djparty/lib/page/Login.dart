@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
 
 DatabaseReference dbRef = FirebaseDatabase.instance.ref();
@@ -45,13 +46,13 @@ class _LoginState extends State<Login> {
       backgroundColor: Colors.black12,
       appBar: AppBar(
         backgroundColor: Colors.black,
-        shadowColor: Colors.greenAccent,
+        shadowColor: Color.fromRGBO(30, 215, 96, 0.9),
         title: const Text('Create Dj Party account',
             textAlign: TextAlign.center,
             style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 24,
-                color: Colors.greenAccent)),
+                color: Color.fromRGBO(30, 215, 96, 0.9))),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -71,24 +72,26 @@ class _LoginState extends State<Login> {
                     style: const TextStyle(color: Colors.white),
                     decoration: const InputDecoration(
                         prefixIcon: Icon(
-                          // Based on passwordVisible state choose the icon
                           Icons.mail_outline_rounded,
-                          color: Colors.greenAccent,
+                          color: Color.fromRGBO(30, 215, 96, 0.9),
                         ),
                         filled: true,
                         fillColor: Colors.black12,
                         hintStyle: TextStyle(color: Colors.black),
                         enabledBorder: OutlineInputBorder(
-                          borderSide:
-                              BorderSide(color: Colors.greenAccent, width: 3),
+                          borderSide: BorderSide(
+                              color: Color.fromRGBO(30, 215, 96, 0.9),
+                              width: 3),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderSide:
-                              BorderSide(color: Colors.greenAccent, width: 3),
+                          borderSide: BorderSide(
+                              color: Color.fromRGBO(30, 215, 96, 0.9),
+                              width: 3),
                         ),
                         labelText: 'Email',
-                        labelStyle:
-                            TextStyle(fontSize: 14, color: Colors.greenAccent),
+                        labelStyle: TextStyle(
+                            fontSize: 14,
+                            color: Color.fromRGBO(30, 215, 96, 0.9)),
                         hintText: ''),
                   ),
                 ),
@@ -102,17 +105,15 @@ class _LoginState extends State<Login> {
                     style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
                         prefixIcon: const Icon(
-                          // Based on passwordVisible state choose the icon
                           Icons.lock_outline_rounded,
-                          color: Colors.greenAccent,
+                          color: Color.fromRGBO(30, 215, 96, 0.9),
                         ),
                         suffixIcon: IconButton(
                             icon: Icon(
-                              // Based on passwordVisible state choose the icon
                               _passwordVisible1
                                   ? Icons.visibility
                                   : Icons.visibility_off,
-                              color: Colors.greenAccent,
+                              color: Color.fromRGBO(30, 215, 96, 0.9),
                             ),
                             onPressed: () async {
                               setState(() {
@@ -125,20 +126,24 @@ class _LoginState extends State<Login> {
                             }),
                         filled: true,
                         fillColor: Colors.black12,
-                        hintStyle: const TextStyle(color: Colors.greenAccent),
+                        hintStyle: const TextStyle(
+                            color: Color.fromRGBO(30, 215, 96, 0.9)),
                         enabledBorder: const OutlineInputBorder(
                           borderRadius: BorderRadius.all(Radius.circular(5.0)),
-                          borderSide:
-                              BorderSide(color: Colors.greenAccent, width: 3),
+                          borderSide: BorderSide(
+                              color: Color.fromRGBO(30, 215, 96, 0.9),
+                              width: 3),
                         ),
                         focusedBorder: const OutlineInputBorder(
                           borderRadius: BorderRadius.all(Radius.circular(5.0)),
-                          borderSide:
-                              BorderSide(color: Colors.greenAccent, width: 3),
+                          borderSide: BorderSide(
+                              color: Color.fromRGBO(30, 215, 96, 0.9),
+                              width: 3),
                         ),
                         labelText: 'New Password',
                         labelStyle: const TextStyle(
-                            fontSize: 16, color: Colors.greenAccent),
+                            fontSize: 16,
+                            color: Color.fromRGBO(30, 215, 96, 0.9)),
                         hintText: ''),
                   ),
                 ),
@@ -152,25 +157,23 @@ class _LoginState extends State<Login> {
                     style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
                         prefixIcon: const Icon(
-                          // Based on passwordVisible state choose the icon
                           Icons.lock_outline_rounded,
-                          color: Colors.greenAccent,
+                          color: Color.fromRGBO(30, 215, 96, 0.9),
                         ),
                         suffixIcon: IconButton(
                             icon: Icon(
                               _passwordVisible2
                                   ? Icons.visibility
-                                  : Icons
-                                      .visibility_off, // Based on passwordVisible state choose the icon
-                              color: Colors.greenAccent,
+                                  : Icons.visibility_off,
+                              color: Color.fromRGBO(30, 215, 96, 0.9),
                             ),
                             onPressed: () async {
                               setState(() {
-                                change(1);
+                                change(2);
                               });
                               await Future.delayed(const Duration(seconds: 3));
                               setState(() {
-                                change(1);
+                                change(2);
                               });
                             }),
                         filled: true,
@@ -178,17 +181,20 @@ class _LoginState extends State<Login> {
                         hintStyle: const TextStyle(color: Colors.white54),
                         enabledBorder: const OutlineInputBorder(
                           borderRadius: BorderRadius.all(Radius.circular(5.0)),
-                          borderSide:
-                              BorderSide(color: Colors.greenAccent, width: 3),
+                          borderSide: BorderSide(
+                              color: Color.fromRGBO(30, 215, 96, 0.9),
+                              width: 3),
                         ),
                         focusedBorder: const OutlineInputBorder(
                           borderRadius: BorderRadius.all(Radius.circular(5.0)),
-                          borderSide:
-                              BorderSide(color: Colors.greenAccent, width: 3),
+                          borderSide: BorderSide(
+                              color: Color.fromRGBO(30, 215, 96, 0.9),
+                              width: 3),
                         ),
                         labelText: 'Confirm New Password',
                         labelStyle: const TextStyle(
-                            fontSize: 16, color: Colors.greenAccent),
+                            fontSize: 16,
+                            color: Color.fromRGBO(30, 215, 96, 0.9)),
                         hintText: ''),
                   ),
                 ),
@@ -219,10 +225,10 @@ class _LoginState extends State<Login> {
                       }
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.greenAccent,
-                      surfaceTintColor: Colors.greenAccent,
-                      foregroundColor: Colors.greenAccent,
-                      shadowColor: Colors.greenAccent,
+                      backgroundColor: Color.fromRGBO(30, 215, 96, 0.9),
+                      surfaceTintColor: Color.fromRGBO(30, 215, 96, 0.9),
+                      foregroundColor: Color.fromRGBO(30, 215, 96, 0.9),
+                      shadowColor: Color.fromRGBO(30, 215, 96, 0.9),
                       elevation: 8,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(15.0),
@@ -239,17 +245,16 @@ class _LoginState extends State<Login> {
                     ),
                   ),
                 ),
-                SizedBox(
+                const SizedBox(
+                  height: 30,
+                ),
+                const SizedBox(
                   height: 50,
-                  child: TextButton(
-                    onPressed: () {
-                      Navigator.pushNamed(context, SignIn.routeName);
-                    },
-                    child: const Text(
-                      '----------------------- or -----------------------',
-                      selectionColor: Colors.white,
-                      style: TextStyle(fontSize: 16, color: Colors.greenAccent),
-                    ),
+                  child: Text(
+                    '----------------------- or -----------------------',
+                    selectionColor: Colors.white,
+                    style: TextStyle(
+                        fontSize: 16, color: Color.fromRGBO(30, 215, 96, 0.9)),
                   ),
                 ),
                 const SizedBox(
@@ -260,7 +265,7 @@ class _LoginState extends State<Login> {
                       backgroundColor: Colors.white,
                       minimumSize: const Size(double.infinity, 60),
                       side: const BorderSide(
-                          color: Color.fromARGB(255, 26, 80, 28), width: 5),
+                          color: Color.fromRGBO(30, 215, 96, 0.9), width: 5),
                     ),
                     onPressed: () async {
                       context
@@ -269,7 +274,7 @@ class _LoginState extends State<Login> {
                     },
                     icon: const FaIcon(
                       FontAwesomeIcons.google,
-                      color: Colors.greenAccent,
+                      color: Colors.green,
                     ),
                     label: const Text(
                       "Sign Up with Google",
@@ -286,7 +291,7 @@ class _LoginState extends State<Login> {
                       backgroundColor: Colors.white,
                       minimumSize: const Size(double.infinity, 60),
                       side: const BorderSide(
-                          color: Color.fromARGB(255, 26, 80, 28), width: 5),
+                          color: Color.fromRGBO(30, 215, 96, 0.9), width: 5),
                     ),
                     onPressed: () async {
                       context
@@ -295,7 +300,7 @@ class _LoginState extends State<Login> {
                     },
                     icon: const FaIcon(
                       FontAwesomeIcons.facebook,
-                      color: Colors.greenAccent,
+                      color: Colors.green,
                     ),
                     label: const Text(
                       "Sign Up with Facebook",
@@ -316,7 +321,7 @@ class _LoginState extends State<Login> {
                       'Have already an account? Log in ',
                       style: TextStyle(
                         fontSize: 18,
-                        color: Colors.greenAccent,
+                        color: Color.fromRGBO(30, 215, 96, 0.9),
                       ),
                     ),
                   ),
@@ -360,8 +365,6 @@ Future<void> registerNewUser(BuildContext context) async {
           .doc(currentuser.uid)
           .set(userDataMap)
           .then((value) => print('User added'));
-
-      //_formKey.currentState?.initState();
 
       displayToastMessage('Account Created', context);
     }

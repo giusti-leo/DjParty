@@ -25,7 +25,7 @@ if (flutterVersionName == null) {
 
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
-apply plugin: 'com.google.gms.google-services'
+
 
 
 apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
@@ -78,3 +78,5 @@ dependencies {
     implementation "androidx.activity:activity:1.6.0-alpha05"
     implementation 'com.google.firebase:firebase-auth'
 }
+
+apply plugin: 'com.google.gms.google-services'

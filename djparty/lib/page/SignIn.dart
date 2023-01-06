@@ -116,7 +116,7 @@ class _SignInState extends State<SignIn> {
                       controller: _passwordController,
                       obscureText: !_passwordVisible,
                       keyboardType: TextInputType.visiblePassword,
-                      style: const TextStyle(color: Colors.greenAccent),
+                      style: const TextStyle(color: Colors.white),
                       decoration: InputDecoration(
                           prefixIcon: const Icon(
                             Icons.lock_outline_rounded,
@@ -165,7 +165,7 @@ class _SignInState extends State<SignIn> {
                     height: 70,
                     width: 350,
                     child: ElevatedButton(
-                      onPressed: () {
+                      onPressed: () async {
                         if (!_emailidController.text.contains('@')) {
                           displayToastMessage('Invalid Email-ID', context);
                         } else if (_passwordController.text.length < 8) {

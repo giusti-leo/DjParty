@@ -17,6 +17,8 @@ import '../page/Login.dart';
 class FirebaseAuthMethods {
   final FirebaseAuth _auth;
   FirebaseAuthMethods(this._auth);
+  var _googleSignin = GoogleSignIn();
+  var googleAccount = GoogleSignInAccount;
 
   // FOR EVERY FUNCTION HERE
   // POP THE ROUTE USING: Navigator.of(context).pushNamedAndRemoveUntil('/', (Route<dynamic> route) => false);
@@ -67,18 +69,21 @@ class FirebaseAuthMethods {
       await auth.signInWithEmailAndPassword(
           email: email.trim(), password: password.trim());
 
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const Home()),
-      );
-
-      if (!user.emailVerified) {
+      if (user.emailVerified) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const Home()),
+        );
+      } else {
         await sendEmailVerification(context);
-        // restrict access to certain things using provider
-        // transition to another page instead of home screen
       }
     } on FirebaseAuthException catch (e) {
-      showSnackBar(context, e.message!); // Displaying the error message
+      if (e.code == 'too-many-request') {
+        displayToastMessage('Mail already sent!', context);
+        return;
+      } else {
+        displayToastMessage(e.message!, context);
+      }
     }
   }
 
@@ -86,52 +91,44 @@ class FirebaseAuthMethods {
   Future<void> sendEmailVerification(BuildContext context) async {
     try {
       _auth.currentUser!.sendEmailVerification();
-      showSnackBar(context, 'Email verification sent!');
+      displayToastMessage(
+          'Please, verify your email. Mail sent again!', context);
     } on FirebaseAuthException catch (e) {
-      showSnackBar(context, e.message!); // Display error message
+      if (e.code == 'too-many-request') {
+        displayToastMessage('Mail already sent!', context);
+        return;
+      }
     }
   }
 
   // GOOGLE SIGN IN
   Future<void> signInWithGoogle(BuildContext context) async {
     try {
-      if (kIsWeb) {
-        GoogleAuthProvider googleProvider = GoogleAuthProvider();
+      final googleSignIn = GoogleSignIn();
+      GoogleSignInAccount? _user;
 
-        googleProvider
-            .addScope('https://www.googleapis.com/auth/contacts.readonly');
+      final googleUser = await GoogleSignIn().signIn();
 
-        await _auth.signInWithPopup(googleProvider);
-      } else {
-        final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) return;
+      _user = googleUser;
 
-        final GoogleSignInAuthentication? googleAuth =
-            await googleUser?.authentication;
+      final googleAuth = await googleUser.authentication;
 
-        if (googleAuth?.accessToken != null && googleAuth?.idToken != null) {
-          // Create a new credential
-          final credential = GoogleAuthProvider.credential(
-            accessToken: googleAuth?.accessToken,
-            idToken: googleAuth?.idToken,
-          );
-          UserCredential userCredential =
-              await _auth.signInWithCredential(credential);
+      final credential = GoogleAuthProvider.credential(
+          accessToken: googleAuth.accessToken, idToken: googleAuth.idToken);
 
-          // if you want to do specific task like storing information in firestore
-          // only for new users using google sign in (since there are no two options
-          // for google sign in and google sign up, only one as of now),
-          // do the following:
+      final userCredential = await _auth.signInWithCredential(credential);
 
-          if (userCredential.user != null) {
-            if (userCredential.additionalUserInfo!.isNewUser) {
-              insertUser(context, googleUser!);
-              showSnackBar(context, 'User Added');
-            }
-          }
+      if (userCredential.user != null) {
+        if (userCredential.additionalUserInfo!.isNewUser) {
+          insertUser(context, googleUser!);
+          displayToastMessage('User added', context);
         }
+
+        await _auth.signInWithCredential(credential);
       }
     } on FirebaseAuthException catch (e) {
-      showSnackBar(context, e.message!); // Displaying the error message
+      displayToastMessage(e.message!, context); // Displaying the error message
     }
   }
 
@@ -146,7 +143,7 @@ class FirebaseAuthMethods {
       };
 
       await users
-          .doc(googleUser.id)
+          .doc(_auth.currentUser!.uid)
           .set(userDataMap)
           .then((value) => print('User added'));
     } on FirebaseAuthException catch (e) {
@@ -159,7 +156,7 @@ class FirebaseAuthMethods {
     try {
       await _auth.signInAnonymously();
     } on FirebaseAuthException catch (e) {
-      showSnackBar(context, e.message!); // Displaying the error message
+      displayToastMessage(e.message!, context); // Displaying the error message
     }
   }
 
@@ -173,7 +170,7 @@ class FirebaseAuthMethods {
 
       await _auth.signInWithCredential(facebookAuthCredential);
     } on FirebaseAuthException catch (e) {
-      showSnackBar(context, e.message!); // Displaying the error message
+      displayToastMessage(e.message!, context); // Displaying the error message
     }
   }
 
@@ -246,7 +243,7 @@ class FirebaseAuthMethods {
     try {
       await _auth.signOut();
     } on FirebaseAuthException catch (e) {
-      showSnackBar(context, e.message!); // Displaying the error message
+      displayToastMessage(e.message!, context); // Displaying the error message
     }
   }
 
@@ -255,7 +252,7 @@ class FirebaseAuthMethods {
     try {
       await _auth.currentUser!.delete();
     } on FirebaseAuthException catch (e) {
-      showSnackBar(context, e.message!); // Displaying the error message
+      displayToastMessage(e.message!, context); // Displaying the error message
       // if an error of requires-recent-login is thrown, make sure to log
       // in user again and then delete account.
     }
