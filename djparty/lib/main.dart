@@ -2,6 +2,7 @@ import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:djparty/page/GenerateShare.dart';
 import 'package:djparty/page/Home.dart';
 import 'package:djparty/page/Login.dart';
+import 'package:djparty/page/ResetPassword.dart';
 import 'package:djparty/page/SignIn.dart';
 import 'package:djparty/page/SignUp.dart';
 import 'package:djparty/services/FirebaseAuthMethods.dart';
@@ -24,6 +25,8 @@ void main() async {
 }
 
 class Main extends StatelessWidget {
+  static String routeName = 'main';
+
   const Main({super.key});
 
   @override
@@ -63,6 +66,7 @@ class Main extends StatelessWidget {
           SignIn.routeName: (context) => const SignIn(),
           Home.routeName: (context) => const Home(),
           GeneratorScreen.routeName: (context) => GeneratorScreen(),
+          ResetPassword.routeName: ((context) => const ResetPassword())
         },
       ),
     );

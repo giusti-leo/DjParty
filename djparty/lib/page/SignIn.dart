@@ -1,6 +1,7 @@
 import 'package:djparty/page/Home.dart';
 import 'package:djparty/page/HomePage.dart';
 import 'package:djparty/page/Login.dart';
+import 'package:djparty/page/ResetPassword.dart';
 import 'package:djparty/services/FirebaseAuthMethods.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -55,18 +56,18 @@ class _SignInState extends State<SignIn> {
           backgroundColor: Colors.black12,
           appBar: AppBar(
             backgroundColor: Colors.black,
-            shadowColor: Colors.greenAccent,
+            shadowColor: Color.fromRGBO(30, 215, 96, 0.9),
             title: const Text('Login',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 24,
-                    color: Colors.greenAccent)),
+                    color: Color.fromRGBO(30, 215, 96, 0.9))),
             centerTitle: true,
             leading: GestureDetector(
               child: const Icon(
                 Icons.arrow_back_ios_new,
-                color: Colors.greenAccent,
+                color: Color.fromRGBO(30, 215, 96, 0.9),
               ),
               onTap: () {
                 Navigator.pop(context);
@@ -88,24 +89,27 @@ class _SignInState extends State<SignIn> {
                       keyboardType: TextInputType.emailAddress,
                       style: const TextStyle(color: Colors.white),
                       decoration: const InputDecoration(
-                          focusColor: Colors.greenAccent,
+                          focusColor: Color.fromRGBO(30, 215, 96, 0.9),
                           prefixIcon: Icon(
                             Icons.mail_outline_rounded,
-                            color: Colors.greenAccent,
+                            color: Color.fromRGBO(30, 215, 96, 0.9),
                           ),
                           filled: true,
                           enabledBorder: OutlineInputBorder(
-                            borderSide:
-                                BorderSide(color: Colors.greenAccent, width: 3),
+                            borderSide: BorderSide(
+                                color: Color.fromRGBO(30, 215, 96, 0.9),
+                                width: 3),
                           ),
                           focusedBorder: OutlineInputBorder(
-                            borderSide:
-                                BorderSide(color: Colors.greenAccent, width: 3),
+                            borderSide: BorderSide(
+                                color: Color.fromRGBO(30, 215, 96, 0.9),
+                                width: 3),
                           ),
                           labelText: 'Email',
                           labelStyle: TextStyle(
-                              color: Colors.greenAccent, fontSize: 16),
-                          iconColor: Colors.greenAccent,
+                              color: Color.fromRGBO(30, 215, 96, 0.9),
+                              fontSize: 16),
+                          iconColor: Color.fromRGBO(30, 215, 96, 0.9),
                           hintText: ''),
                     ),
                   ),
@@ -120,14 +124,14 @@ class _SignInState extends State<SignIn> {
                       decoration: InputDecoration(
                           prefixIcon: const Icon(
                             Icons.lock_outline_rounded,
-                            color: Colors.greenAccent,
+                            color: Color.fromRGBO(30, 215, 96, 0.9),
                           ),
                           suffixIcon: IconButton(
                               icon: Icon(
                                 _passwordVisible
                                     ? Icons.visibility
                                     : Icons.visibility_off,
-                                color: Colors.greenAccent,
+                                color: Color.fromRGBO(30, 215, 96, 0.9),
                               ),
                               onPressed: () async {
                                 setState(() {
@@ -144,20 +148,22 @@ class _SignInState extends State<SignIn> {
                           enabledBorder: const OutlineInputBorder(
                             borderRadius:
                                 BorderRadius.all(Radius.circular(5.0)),
-                            borderSide:
-                                BorderSide(color: Colors.greenAccent, width: 3),
+                            borderSide: BorderSide(
+                                color: Color.fromRGBO(30, 215, 96, 0.9),
+                                width: 3),
                           ),
                           focusedBorder: const OutlineInputBorder(
                             borderRadius:
                                 BorderRadius.all(Radius.circular(5.0)),
                             borderSide: BorderSide(
-                              color: Colors.greenAccent,
+                              color: Color.fromRGBO(30, 215, 96, 0.9),
                               width: 2,
                             ),
                           ),
                           labelText: 'Password',
                           labelStyle: const TextStyle(
-                              color: Colors.greenAccent, fontSize: 16),
+                              color: Color.fromRGBO(30, 215, 96, 0.9),
+                              fontSize: 16),
                           hintText: ''),
                     ),
                   ),
@@ -177,10 +183,10 @@ class _SignInState extends State<SignIn> {
                         }
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.greenAccent,
-                        surfaceTintColor: Colors.greenAccent,
-                        foregroundColor: Colors.greenAccent,
-                        shadowColor: Colors.greenAccent,
+                        backgroundColor: Color.fromRGBO(30, 215, 96, 0.9),
+                        surfaceTintColor: Color.fromRGBO(30, 215, 96, 0.9),
+                        foregroundColor: Color.fromRGBO(30, 215, 96, 0.9),
+                        shadowColor: Color.fromRGBO(30, 215, 96, 0.9),
                         elevation: 8,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(15.0),
@@ -220,20 +226,14 @@ class _SignInState extends State<SignIn> {
                     width: 300,
                     child: TextButton(
                       onPressed: () {
-                        SchedulerBinding.instance.addPostFrameCallback((_) {
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (BuildContext context) =>
-                                      const SignUp()));
-                          //ResetPass()));
-                        });
+                        Navigator.pushNamed(context, ResetPassword.routeName);
                       },
                       child: const Text(
                         'Forgot Password?',
                         selectionColor: Colors.white,
-                        style:
-                            TextStyle(fontSize: 18, color: Colors.greenAccent),
+                        style: TextStyle(
+                            fontSize: 18,
+                            color: Color.fromRGBO(30, 215, 96, 0.9)),
                       ),
                     ),
                   ),

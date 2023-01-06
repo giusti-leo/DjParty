@@ -2,8 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:djparty/entities/Entities.dart';
 import 'package:djparty/main.dart';
 import 'package:djparty/page/InsertCode.dart';
+import 'package:djparty/page/Login.dart';
 import 'package:djparty/page/PartyPage.dart';
-import 'package:djparty/services/FirebaseAuthMethods.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -41,7 +41,6 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     final Size size = MediaQuery.of(context).size;
 
-    var firebaseFirestore = FirebaseFirestore;
     return SafeArea(
         child: Scaffold(
       backgroundColor: Colors.black,
@@ -130,12 +129,11 @@ class _HomeState extends State<Home> {
                           .collection('party')
                           .get(),
                       builder: (context, snapshot) {
-                        if (!(snapshot.data!.docs
-                            .any((element) => element.exists))) {
+                        if (!snapshot.hasData) {
                           return Container(
                             alignment: Alignment.topCenter,
                             child: const Text(
-                              "No party yet",
+                              "",
                               style: TextStyle(
                                 fontSize: 20,
                                 color: Colors.grey,
@@ -145,43 +143,59 @@ class _HomeState extends State<Home> {
                             ),
                           );
                         } else {
-                          return ListView(
-                            children: snapshot.data!.docs.map((doc) {
-                              Timestamp tmp = ((doc.data()['startDate']));
-                              return Card(
-                                color: Colors.white,
-                                child: ListTile(
-                                  trailing: Icon(Icons.arrow_right),
-                                  title: Text(
-                                    doc.data()['PartyName'],
-                                    style: const TextStyle(
-                                        color: Colors.black, fontSize: 18),
-                                  ),
-                                  subtitle: Text(
-                                    tmp.toDate().day.toString() +
-                                        " / " +
-                                        tmp.toDate().month.toString() +
-                                        " / " +
-                                        tmp.toDate().year.toString(),
-                                    style: TextStyle(
-                                        color: Colors.blueGrey, fontSize: 14),
-                                  ),
-                                  onTap: () {
-                                    Navigator.of(context)
-                                        .push(MaterialPageRoute(
-                                            builder: (context) => PartyPage(
-                                                  code: doc
-                                                      .data()['code']
-                                                      .toString(),
-                                                  name: doc
-                                                      .data()['PartyName']
-                                                      .toString(),
-                                                )));
-                                  },
+                          if (!(snapshot.data!.docs
+                              .any((element) => element.exists))) {
+                            return Container(
+                              alignment: Alignment.topCenter,
+                              child: const Text(
+                                "No party yet",
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.normal,
+                                  fontFamily: 'Roboto',
                                 ),
-                              );
-                            }).toList(),
-                          );
+                              ),
+                            );
+                          } else {
+                            return ListView(
+                              children: snapshot.data!.docs.map((doc) {
+                                Timestamp tmp = ((doc.data()['startDate']));
+                                return Card(
+                                  color: Colors.white,
+                                  child: ListTile(
+                                    trailing: Icon(Icons.arrow_right),
+                                    title: Text(
+                                      doc.data()['PartyName'],
+                                      style: const TextStyle(
+                                          color: Colors.black, fontSize: 18),
+                                    ),
+                                    subtitle: Text(
+                                      tmp.toDate().day.toString() +
+                                          " / " +
+                                          tmp.toDate().month.toString() +
+                                          " / " +
+                                          tmp.toDate().year.toString(),
+                                      style: TextStyle(
+                                          color: Colors.blueGrey, fontSize: 14),
+                                    ),
+                                    onTap: () {
+                                      Navigator.of(context)
+                                          .push(MaterialPageRoute(
+                                              builder: (context) => PartyPage(
+                                                    code: doc
+                                                        .data()['code']
+                                                        .toString(),
+                                                    name: doc
+                                                        .data()['PartyName']
+                                                        .toString(),
+                                                  )));
+                                    },
+                                  ),
+                                );
+                              }).toList(),
+                            );
+                          }
                         }
                       }))),
           Positioned(
@@ -255,11 +269,11 @@ class _HomeState extends State<Home> {
 
   Future<void> _signOut(BuildContext context) async {
     try {
-      await FirebaseAuth.instance.signOut();
-      Navigator.pushNamed(context, Home.routeName);
+      await FirebaseAuth.instance.signOut().then((value) =>
+          Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (context) => const Login()),
+              (route) => false));
     } on FirebaseAuthException catch (e) {
-      print(e);
-    } on Exception catch (e) {
       displayToastMessage(e.toString(), context);
     }
   }
