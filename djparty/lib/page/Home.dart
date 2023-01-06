@@ -217,10 +217,8 @@ class _HomeState extends State<Home> {
                       children: [
                         TextButton(
                             onPressed: () {
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => GeneratorScreen()));
+                              Navigator.pushNamed(
+                                  context, GeneratorScreen.routeName);
                             },
                             child: const Text(
                               'Create a party',
