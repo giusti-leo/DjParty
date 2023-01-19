@@ -16,6 +16,7 @@ import 'package:djparty/page/GenerateShare.dart';
 //String name, email;
 
 List parties = [];
+String uid = FirebaseAuth.instance.currentUser!.uid;
 
 class Home extends StatefulWidget {
   static String routeName = 'home';
@@ -127,14 +128,22 @@ class _HomeState extends State<Home> {
           ),
           Expanded(
               child: SizedBox(
-                  child: FutureBuilder(
-                      future: FirebaseFirestore.instance
+                  child: StreamBuilder(
+                      stream: FirebaseFirestore.instance
                           .collection('users')
                           .doc(uid)
                           .collection('party')
-                          .get(),
+                          .orderBy('startDate')
+                          .snapshots(),
                       builder: (context, snapshot) {
-                        if (!snapshot.hasData) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                              child: CircularProgressIndicator(
+                            backgroundColor: Colors.black,
+                            strokeWidth: 3,
+                          ));
+                        } else if (!snapshot.hasData) {
                           return Container(
                             alignment: Alignment.topCenter,
                             child: const Text(
@@ -169,7 +178,9 @@ class _HomeState extends State<Home> {
                                 return Card(
                                   color: Colors.white,
                                   child: ListTile(
-                                    trailing: Icon(Icons.arrow_right),
+                                    trailing: (doc.data()['admin'] == uid)
+                                        ? Icon(Icons.person)
+                                        : Icon(Icons.arrow_right),
                                     title: Text(
                                       doc.data()['PartyName'],
                                       style: const TextStyle(
@@ -184,6 +195,43 @@ class _HomeState extends State<Home> {
                                       style: TextStyle(
                                           color: Colors.blueGrey, fontSize: 14),
                                     ),
+                                    onLongPress: (() async {
+                                      if (doc.data()['admin'] == uid) {
+                                        showDialog(
+                                            context: context,
+                                            builder: (context) => AlertDialog(
+                                                  content: TextButton(
+                                                    child: Text('Delete ' +
+                                                        doc.data()[
+                                                            'PartyName']),
+                                                    onPressed: () {
+                                                      //you are the admin
+                                                      delete(context,
+                                                          doc.data()['code']);
+                                                      Navigator.pop(context);
+                                                    },
+                                                  ),
+                                                ));
+                                      } else {
+                                        showDialog(
+                                            context: context,
+                                            builder: (context) => AlertDialog(
+                                                  content: TextButton(
+                                                    child: Text('Exit from ' +
+                                                        doc.data()[
+                                                            'PartyName']),
+                                                    onPressed: () {
+// you are not the admin
+                                                      exit(context, uid,
+                                                          doc.data()['code']);
+                                                      remove(context,
+                                                          doc.data()['code']);
+                                                      Navigator.pop(context);
+                                                    },
+                                                  ),
+                                                ));
+                                      }
+                                    }),
                                     onTap: () {
                                       Navigator.of(context)
                                           .push(MaterialPageRoute(
@@ -270,6 +318,68 @@ class _HomeState extends State<Home> {
         ],
       ),
     ));
+  }
+
+  Future<void> exit(BuildContext context, String user, String data) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user)
+          .collection('party')
+          .doc(data)
+          .delete()
+          .then((_) => print('Deleted'))
+          .catchError((error) => print('Failed: $error'));
+    } on FirebaseAuthException catch (e) {
+      displayToastMessage(e.toString(), context);
+    }
+  }
+
+  Future<void> delete(BuildContext context, String data) async {
+    try {
+      List<dynamic> list = [];
+
+      var snap = await FirebaseFirestore.instance
+          .collection('parties')
+          .doc(data)
+          .get();
+
+      if (!snap.get('isStarted')) {
+        list = snap.get('partecipant_list');
+        if (list.isNotEmpty) {
+          list.forEach((value) {
+            exit(context, value, data);
+          });
+        }
+
+        await FirebaseFirestore.instance
+            .collection('parties')
+            .doc(data)
+            .delete();
+      } else if (snap.get('isStarted') && snap.get('isEnded')) {
+        exit(context, uid, data);
+      } else {
+        displayToastMessage('Please, stop the party first!', context);
+      }
+    } on FirebaseAuthException catch (e) {
+      displayToastMessage(e.toString(), context);
+    }
+  }
+
+  Future<void> remove(BuildContext context, String data) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('parties')
+          .doc(data)
+          .update({
+            '#partecipant': FieldValue.increment(-1),
+            'partecipant_list': FieldValue.arrayRemove([uid]),
+          })
+          .then((_) => print('Deleted'))
+          .catchError((error) => print('Failed: $error'));
+    } on FirebaseAuthException catch (e) {
+      displayToastMessage(e.toString(), context);
+    }
   }
 
   Future<void> _signOut(BuildContext context) async {
