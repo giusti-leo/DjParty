@@ -64,7 +64,7 @@ class _PartyPageState extends State<PartyPage> {
                 if ((snapshot.data!.get('#partecipant') > 1)) {
                   text = 'For the moment there are ' +
                       snapshot.data!.get('#partecipants').toString() +
-                      ' partecipant';
+                      ' partecipants';
                 } else {
                   text = "Why don't you invite someone to your party?";
                 }
@@ -245,7 +245,7 @@ class _PartyPageState extends State<PartyPage> {
                   .collection('parties')
                   .doc(widget.code)
                   .update({"isStarted": true})
-                  .then((_) => print('Success'))
+                  .then((_) => print('Party started'))
                   .catchError((error) => print('Failed: $error'));
               build;
             },

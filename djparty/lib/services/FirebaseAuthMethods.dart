@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:djparty/page/Home.dart';
-import 'package:djparty/page/SignUp.dart';
 import 'package:djparty/utils/showOtpDialog.dart';
 import 'package:djparty/utils/showSnackbar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -42,10 +41,19 @@ class FirebaseAuthMethods {
     required BuildContext context,
   }) async {
     try {
-      await _auth.createUserWithEmailAndPassword(
+      await _auth
+          .createUserWithEmailAndPassword(
         email: email,
         password: password,
-      );
+      )
+          .then((value) {
+        if (value.user != null) {
+          if (value.additionalUserInfo!.isNewUser) {
+            insertUser(context, user);
+            displayToastMessage('User added', context);
+          }
+        }
+      });
       await sendEmailVerification(context);
     } on FirebaseAuthException catch (e) {
       // if you want to display your own custom error message
@@ -68,11 +76,8 @@ class FirebaseAuthMethods {
     try {
       await auth.signInWithEmailAndPassword(
           email: email.trim(), password: password.trim());
-
       if (user.emailVerified) {
         Navigator.pushNamed(context, Home.routeName);
-      } else {
-        await sendEmailVerification(context);
       }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'too-many-request') {
@@ -113,7 +118,7 @@ class FirebaseAuthMethods {
       await _auth.signInWithCredential(credential).then((value) {
         if (value.user != null) {
           if (value.additionalUserInfo!.isNewUser) {
-            insertUser(context, googleUser);
+            insertGoogleUser(context, googleUser);
             displayToastMessage('User added', context);
           }
         }
@@ -123,7 +128,7 @@ class FirebaseAuthMethods {
     }
   }
 
-  Future<void> insertUser(
+  Future<void> insertGoogleUser(
       BuildContext context, GoogleSignInAccount googleUser) async {
     try {
       CollectionReference<Map<String, dynamic>> users =
@@ -131,6 +136,34 @@ class FirebaseAuthMethods {
 
       Map<String, dynamic> userDataMap = {
         'email': googleUser.email.toString(),
+        'image': new Color(0x00000000).value,
+        'username': googleUser.email.toString(),
+        'description': '',
+        'init': googleUser.email[0].toString(),
+        'initColor': new Color(0xFFFFFFFF).value
+      };
+
+      await users
+          .doc(_auth.currentUser!.uid)
+          .set(userDataMap)
+          .then((value) => print('User added'));
+    } on FirebaseAuthException catch (e) {
+      displayToastMessage(e.code, context);
+    }
+  }
+
+  Future<void> insertUser(BuildContext context, User user) async {
+    try {
+      CollectionReference<Map<String, dynamic>> users =
+          FirebaseFirestore.instance.collection('users');
+
+      Map<String, dynamic> userDataMap = {
+        'email': user.email.toString(),
+        'username': user.email.toString(),
+        'description': '',
+        'image': new Color(0x00000000).value,
+        'initColor': new Color(0xFFFFFFFF).value,
+        'init': user.email![0].toString(),
       };
 
       await users

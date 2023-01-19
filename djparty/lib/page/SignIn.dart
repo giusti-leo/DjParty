@@ -1,5 +1,4 @@
 import 'package:djparty/page/Home.dart';
-import 'package:djparty/page/HomePage.dart';
 import 'package:djparty/page/Login.dart';
 import 'package:djparty/page/ResetPassword.dart';
 import 'package:djparty/services/FirebaseAuthMethods.dart';
@@ -11,8 +10,6 @@ import 'package:djparty/animations/ScaleRoute.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
-
-import 'SignUp.dart';
 
 class SignIn extends StatefulWidget {
   static String routeName = '/login-email-password';
@@ -39,14 +36,6 @@ class _SignInState extends State<SignIn> {
     gvisible = false;
   }
 
-  void loginUser() {
-    context.read<FirebaseAuthMethods>().loginWithEmail(
-          email: _emailidController.text,
-          password: _passwordController.text,
-          context: context,
-        );
-  }
-
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -70,7 +59,8 @@ class _SignInState extends State<SignIn> {
                 color: Color.fromRGBO(30, 215, 96, 0.9),
               ),
               onTap: () {
-                Navigator.pop(context);
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => const Login()));
               },
             ),
           ),
@@ -179,7 +169,11 @@ class _SignInState extends State<SignIn> {
                               'Password should be a minimum of 8 characters',
                               context);
                         } else {
-                          loginUser();
+                          context.read<FirebaseAuthMethods>().loginWithEmail(
+                                email: _emailidController.text,
+                                password: _passwordController.text,
+                                context: context,
+                              );
                         }
                       },
                       style: ElevatedButton.styleFrom(

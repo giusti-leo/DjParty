@@ -4,6 +4,7 @@ import 'package:djparty/main.dart';
 import 'package:djparty/page/InsertCode.dart';
 import 'package:djparty/page/Login.dart';
 import 'package:djparty/page/PartyPage.dart';
+import 'package:djparty/page/UserProfile.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -64,19 +65,22 @@ class _HomeState extends State<Home> {
               decoration: const BoxDecoration(
                 color: Color.fromRGBO(30, 215, 96, 0.9),
               ),
-              child: FutureBuilder(
-                  future: FirebaseFirestore.instance
+              child: StreamBuilder(
+                  stream: FirebaseFirestore.instance
                       .collection('users')
                       .doc(uid)
-                      .get(),
+                      .snapshots(),
                   builder: ((context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.done) {
+                    if (snapshot.connectionState != ConnectionState.waiting) {
                       final user = snapshot.data;
                       return user == null
                           ? const Center(
-                              child: Text('No username'),
+                              child: Text(
+                                'No username',
+                                style: TextStyle(color: Colors.black),
+                              ),
                             )
-                          : buildDrawer(user);
+                          : buildDrawer(snapshot);
                     } else {
                       return const Center(
                           child: CircularProgressIndicator(
@@ -98,7 +102,8 @@ class _HomeState extends State<Home> {
                 selectionColor: Colors.black,
               ),
               onTap: () {
-                Navigator.pop(context);
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => UserProfile()));
               },
             ),
             ListTile(
@@ -278,23 +283,27 @@ class _HomeState extends State<Home> {
     }
   }
 
-  Widget buildDrawer(DocumentSnapshot<Map<String, dynamic>> user) => ListTile(
+  Widget buildDrawer(
+          AsyncSnapshot<DocumentSnapshot<Map<String, dynamic>>> snapshot) =>
+      ListTile(
         leading: CircleAvatar(
             backgroundColor: Colors.white,
-            foregroundColor: Colors.white,
-            child: Text(
-              '${user.get('email')![0].toUpperCase()}',
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.black,
-                fontSize: 20,
-              ),
-            )),
+            maxRadius: 45.0,
+            child: CircleAvatar(
+                backgroundColor: Color(snapshot.data!.get('image')),
+                maxRadius: 40,
+                child: Text(
+                  snapshot.data!.get('init').toString().toUpperCase(),
+                  style: TextStyle(
+                    color: Color(snapshot.data!.get('initColor')),
+                    fontSize: 20,
+                  ),
+                ))),
         title: Text(
-          '${user.get('email').toString().split('@')[0]}',
+          snapshot.data!.get('username'),
           style: const TextStyle(
             color: Colors.black,
-            fontSize: 15,
+            fontSize: 13,
           ),
         ),
       );

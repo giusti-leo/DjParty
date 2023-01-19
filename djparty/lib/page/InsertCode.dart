@@ -123,9 +123,9 @@ class _InsertCodeState extends State<InsertCode> {
         await FirebaseFirestore.instance
             .collection('parties')
             .doc(controller.text)
-            .snapshots()
-            .any((element) =>
-                element.data()!.update('#partecipant', (value) => value + 1));
+            .update({
+          '#partecipant': FieldValue.increment(1),
+        });
       }
 
       controller.clear();
