@@ -119,8 +119,8 @@ class _InsertCodeState extends State<InsertCode> {
         color: Color.fromARGB(158, 61, 219, 71),
         icon: Icon(Icons.qr_code_sharp),
         onPressed: () {
-          Navigator.of(context).push(
-              MaterialPageRoute(builder: (context) => const QrScanCode()));
+          Navigator.of(context)
+              .push(MaterialPageRoute(builder: (context) => ScannerScreen()));
         },
       ),
     );
@@ -192,6 +192,127 @@ class _InsertCodeState extends State<InsertCode> {
   }
 }
 
+class ScannerScreen extends StatefulWidget {
+  const ScannerScreen({Key? key}) : super(key: key);
+
+  @override
+  State<ScannerScreen> createState() => _ScannerScreenState();
+}
+
+class _ScannerScreenState extends State<ScannerScreen> {
+  final GlobalKey _gLobalkey = GlobalKey();
+  QRViewController? controller;
+  Barcode? result;
+
+  void qr(QRViewController controller) {
+    this.controller = controller;
+    controller.scannedDataStream.listen((event) {
+      setState(() {
+        result = event;
+      });
+      setState(() {
+        controller.pauseCamera();
+      });
+      enterCode(result!.code.toString());
+    });
+  }
+
+  Future<void> enterCode(String code) async {
+    try {
+      DocumentSnapshot<Map<String, dynamic>> partySnapshot =
+          await FirebaseFirestore.instance
+              .collection('parties')
+              .doc(code)
+              .get();
+
+      DocumentSnapshot<Map<String, dynamic>> userSnapshot =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(uid)
+              .collection('party')
+              .doc(code)
+              .get();
+
+      if (partySnapshot.data()!.isEmpty) {
+        displayToastMessage(
+            'This code does not correspond to any party', context);
+        return;
+      }
+
+      if (userSnapshot.exists) {
+        displayToastMessage('You are already part of the party', context);
+        Navigator.pushNamed(context, Home.routeName);
+
+        return;
+      } else {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(uid)
+            .collection('party')
+            .doc(code)
+            .set({
+          'PartyName': partySnapshot.get('partyName').toString(),
+          'startDate': partySnapshot.get('creationTime'),
+          'code': partySnapshot.get('code').toString(),
+        });
+
+        await FirebaseFirestore.instance
+            .collection('parties')
+            .doc(code)
+            .update({
+          '#partecipant': FieldValue.increment(1),
+          'partecipant_list': FieldValue.arrayUnion([uid]),
+        });
+      }
+
+      Navigator.pushNamed(context, Home.routeName);
+    } on FirebaseFirestore catch (e) {
+      displayToastMessage(e.toString(), context);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color.fromRGBO(25, 20, 20, 0.4),
+      appBar: AppBar(
+        backgroundColor: const Color.fromRGBO(30, 215, 96, 0.9),
+        title: Text(''),
+        centerTitle: true,
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Container(
+              height: 400,
+              width: 400,
+              child: QRView(key: _gLobalkey, onQRViewCreated: qr),
+            ),
+            const SizedBox(height: 20),
+            Center(
+              child: (result != null)
+                  ? Text(
+                      '${result!.code}',
+                      style: TextStyle(
+                        color: Colors.white,
+                      ),
+                    )
+                  : Text(
+                      'Scan a code',
+                      style: TextStyle(
+                        color: Colors.white,
+                      ),
+                    ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+}
+/*
+
 class QrScanCode extends StatefulWidget {
   const QrScanCode({Key? key}) : super(key: key);
 
@@ -208,7 +329,9 @@ class _QrScanCodeState extends State<QrScanCode> {
 
   @override
   void reassemble() async {
-    super.reassemble();
+    super
+        .reassemble(); 
+    
     if (Platform.isAndroid) {
       await controller!.pauseCamera();
     }
@@ -328,3 +451,4 @@ class _QrScanCodeState extends State<QrScanCode> {
     }
   }
 }
+*/
