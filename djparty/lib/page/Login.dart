@@ -11,12 +11,12 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
 
+import 'package:djparty/services/FirebaseAuthMethods.dart';
+
 DatabaseReference dbRef = FirebaseDatabase.instance.ref();
 final FirebaseAuth auth = FirebaseAuth.instance;
 
-final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 final TextEditingController _emailController = TextEditingController();
-final TextEditingController _usernameController = TextEditingController();
 final TextEditingController _userPasswordController1 = TextEditingController();
 final TextEditingController _userPasswordController2 = TextEditingController();
 
@@ -37,7 +37,19 @@ class _LoginState extends State<Login> {
   @override
   void initState() {
     super.initState();
+    final TextEditingController _emailController = TextEditingController();
+    final TextEditingController _userPasswordController1 =
+        TextEditingController();
+    final TextEditingController _userPasswordController2 =
+        TextEditingController();
     visible = false;
+  }
+
+  @override
+  void dispose() {
+    _emailController.clear();
+    _userPasswordController1.clear();
+    _userPasswordController2.clear();
   }
 
   @override
@@ -46,7 +58,7 @@ class _LoginState extends State<Login> {
       backgroundColor: Colors.black12,
       appBar: AppBar(
         backgroundColor: Colors.black,
-        shadowColor: Color.fromRGBO(30, 215, 96, 0.9),
+        shadowColor: const Color.fromRGBO(30, 215, 96, 0.9),
         title: const Text('Create Dj Party account',
             textAlign: TextAlign.center,
             style: TextStyle(
@@ -220,7 +232,13 @@ class _LoginState extends State<Login> {
                         err = false;
                       }
                       if (err == false) {
-                        registerNewUser(context);
+                        await context
+                            .read<FirebaseAuthMethods>()
+                            .signUpWithEmail(
+                                email: _emailController.text,
+                                password: _userPasswordController1.text,
+                                context: context);
+
                         Navigator.pushNamed(context, SignIn.routeName);
                       }
                     },
@@ -339,41 +357,6 @@ class _LoginState extends State<Login> {
       _passwordVisible1 = !_passwordVisible1;
     } else {
       _passwordVisible2 = !_passwordVisible2;
-    }
-  }
-}
-
-Future<void> registerNewUser(BuildContext context) async {
-  User? currentuser;
-
-  try {
-    currentuser = (await auth.createUserWithEmailAndPassword(
-            email: _emailController.text.trim(),
-            password: _userPasswordController1.text.trim()))
-        .user;
-
-    CollectionReference<Map<String, dynamic>> users =
-        FirebaseFirestore.instance.collection('users');
-
-    if (currentuser != null) {
-      Map<String, dynamic> userDataMap = {
-        'name': _usernameController.text.trim(),
-        'email': _emailController.text.trim(),
-      };
-
-      await users
-          .doc(currentuser.uid)
-          .set(userDataMap)
-          .then((value) => print('User added'));
-
-      displayToastMessage('Account Created', context);
-    }
-  } on FirebaseAuthException catch (e) {
-    if (e.code == 'weak-password') {
-      displayToastMessage('The password provided is too weak.', context);
-    } else if (e.code == 'email-already-in-use') {
-      displayToastMessage(
-          'The account already exists for that email.', context);
     }
   }
 }

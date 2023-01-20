@@ -32,8 +32,6 @@ class GeneratorScreen extends StatefulWidget {
 class _insertPartyName extends State<GeneratorScreen> {
   final controller = TextEditingController();
 
-  late String _dateCount;
-  late String _range;
   final _chars =
       'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890';
   Random _rnd = Random();
@@ -49,8 +47,6 @@ class _insertPartyName extends State<GeneratorScreen> {
   bool showDate = false;
   bool showTime = false;
   bool showDateTime = false;
-  late NumberPicker integerNumberPicker;
-  int _currentHorizontalIntValue = 30;
 
   @override
   void initState() {
@@ -155,6 +151,32 @@ class _insertPartyName extends State<GeneratorScreen> {
                 const SizedBox(
                   height: 30,
                 ),
+                SizedBox(
+                  height: MediaQuery.of(context).size.height / 18,
+                  width: MediaQuery.of(context).size.width / 2,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      side: const BorderSide(
+                        color: Color.fromARGB(184, 255, 255, 255),
+                        width: 5,
+                      ),
+                      primary: const Color.fromRGBO(
+                          30, 215, 96, 0.9), // Background color
+                      onPrimary: Colors.white, // Text Color (Foreground color)
+                    ),
+                    onPressed: () {
+                      _selectDate(context);
+                      showDate = true;
+                    },
+                    child: Text(
+                      getDate(),
+                      style: const TextStyle(color: Colors.black, fontSize: 20),
+                    ),
+                  ),
+                ),
+                const SizedBox(
+                  height: 20,
+                ),
                 const Divider(
                     color: Color.fromRGBO(30, 215, 96, 0.9), height: 64),
                 const SizedBox(
@@ -172,32 +194,14 @@ class _insertPartyName extends State<GeneratorScreen> {
                   height: 30,
                 ),
                 SizedBox(
-                  height: MediaQuery.of(context).size.height / 15,
-                  width: double.infinity,
+                  height: MediaQuery.of(context).size.height / 18,
+                  width: MediaQuery.of(context).size.width / 2,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      primary: const Color.fromRGBO(
-                          30, 215, 96, 0.9), // Background color
-                      onPrimary: Colors.white, // Text Color (Foreground color)
-                    ),
-                    onPressed: () {
-                      _selectDate(context);
-                      showDate = true;
-                    },
-                    child: Text(
-                      getDate(),
-                      style: const TextStyle(color: Colors.black, fontSize: 20),
-                    ),
-                  ),
-                ),
-                const SizedBox(
-                  height: 30,
-                ),
-                SizedBox(
-                  height: MediaQuery.of(context).size.height / 15,
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
+                      side: const BorderSide(
+                        color: Color.fromARGB(184, 255, 255, 255),
+                        width: 5,
+                      ),
                       primary: const Color.fromRGBO(
                           30, 215, 96, 0.9), // Background color
                       onPrimary: Colors.white, // Text Color (Foreground color)
@@ -211,16 +215,7 @@ class _insertPartyName extends State<GeneratorScreen> {
                             const TextStyle(color: Colors.black, fontSize: 20)),
                   ),
                 ),
-                const SizedBox(
-                  height: 20,
-                ),
-                const SizedBox(
-                  height: 30,
-                  child: Text(
-                    'Select a time interval',
-                    style: TextStyle(color: Colors.white, fontSize: 20),
-                  ),
-                ),
+                /*
                 const SizedBox(
                   height: 20,
                 ),
@@ -243,9 +238,9 @@ class _insertPartyName extends State<GeneratorScreen> {
                     border: Border.all(
                         color: Colors.greenAccent, style: BorderStyle.solid),
                   ),
-                ),
+                ),*/
                 const SizedBox(
-                  height: 30,
+                  height: 50,
                 ),
                 SizedBox(
                     child: SizedBox(
@@ -256,6 +251,10 @@ class _insertPartyName extends State<GeneratorScreen> {
                       if (partyName.text.isEmpty) {
                         displayToastMessage(
                             'The Party Name cannot be empty', context);
+                        return;
+                      }
+                      if (choosenDate == '') {
+                        displayToastMessage('Choose a date', context);
                         return;
                       }
                       try {
@@ -280,13 +279,13 @@ class _insertPartyName extends State<GeneratorScreen> {
 
                           Map<String, dynamic> party = {
                             'admin': currentUser.uid,
-                            'timer': _currentIntValue,
                             'partyName': partyName.text,
                             'code': controller.text,
                             'creationTime': Timestamp.now(),
-                            'PartyDate': choosenDate,
+                            'PartyDate': selectedDate,
                             'PartyTime': choosenTime.toString(),
                             'isStarted': false,
+                            'isEnded': false,
                             '#partecipant': 1,
                             'partecipant_list': members,
                           };
@@ -304,7 +303,7 @@ class _insertPartyName extends State<GeneratorScreen> {
                           if (userDoc != null) {
                             userDoc.set({
                               'PartyName': partyName.text,
-                              'startDate': Timestamp.now(),
+                              'startDate': selectedDate,
                               'code': controller.text,
                               'admin': currentUser.uid,
                             });

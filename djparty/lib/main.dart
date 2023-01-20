@@ -1,17 +1,21 @@
 import 'package:animated_splash_screen/animated_splash_screen.dart';
+import 'package:djparty/page/EditProfile.dart';
 import 'package:djparty/page/GenerateShare.dart';
 import 'package:djparty/page/Home.dart';
 import 'package:djparty/page/Login.dart';
 import 'package:djparty/page/ResetPassword.dart';
 import 'package:djparty/page/SignIn.dart';
+<<<<<<< HEAD
 import 'package:djparty/page/SignUp.dart';
 import 'package:djparty/page/spotifyPlayer.dart';
+=======
+import 'package:djparty/page/UserProfile.dart';
+>>>>>>> 38e74aaff890b1df1340e807676919b24fb4ecfe
 import 'package:djparty/services/FirebaseAuthMethods.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 
-import 'package:djparty/page/HomePage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -63,12 +67,16 @@ class Main extends StatelessWidget {
         title: 'Dj Party',
         home: const AuthWrapper(),
         routes: {
-          SignUp.routeName: (context) => const SignUp(),
           SignIn.routeName: (context) => const SignIn(),
           Home.routeName: (context) => const Home(),
           GeneratorScreen.routeName: (context) => GeneratorScreen(),
           ResetPassword.routeName: ((context) => const ResetPassword()),
+<<<<<<< HEAD
           SpotifyPlayer.routeName: ((context) => const SpotifyPlayer()),
+=======
+          UserProfile.routeName: (context) => UserProfile(),
+          EditProfile.routeName: (context) => EditProfile(),
+>>>>>>> 38e74aaff890b1df1340e807676919b24fb4ecfe
         },
       ),
     );

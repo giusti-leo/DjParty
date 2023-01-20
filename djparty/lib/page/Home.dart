@@ -5,11 +5,15 @@ import 'package:djparty/main.dart';
 import 'package:djparty/page/InsertCode.dart';
 import 'package:djparty/page/Login.dart';
 import 'package:djparty/page/PartyPage.dart';
+<<<<<<< HEAD
 import 'package:djparty/page/GenerateShare.dart';
 import 'package:spotify_sdk/spotify_sdk.dart';
 import 'package:spotify_sdk/models/connection_status.dart';
 import 'package:logger/logger.dart';
 import 'package:flutter/services.dart';
+=======
+import 'package:djparty/page/UserProfile.dart';
+>>>>>>> 38e74aaff890b1df1340e807676919b24fb4ecfe
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -18,6 +22,7 @@ import 'package:flutter/material.dart';
 //String name, email;
 
 List parties = [];
+String uid = FirebaseAuth.instance.currentUser!.uid;
 
 class Home extends StatefulWidget {
   static String routeName = 'home';
@@ -60,13 +65,13 @@ class _HomeState extends State<Home> {
 
     return SafeArea(
         child: Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Color.fromARGB(128, 53, 74, 62),
       appBar: AppBar(
-        backgroundColor: const Color.fromRGBO(30, 215, 96, 0.9),
+        backgroundColor: Color.fromARGB(158, 61, 219, 71),
         title: const Text(
           'My parties',
           style: TextStyle(
-              color: Colors.black,
+              color: Colors.white,
               fontSize: 20,
               fontFamily: 'Roboto',
               fontWeight: FontWeight.bold),
@@ -79,26 +84,29 @@ class _HomeState extends State<Home> {
           children: [
             DrawerHeader(
               decoration: const BoxDecoration(
-                color: Color.fromRGBO(30, 215, 96, 0.9),
+                color: Color.fromARGB(224, 25, 183, 35),
               ),
-              child: FutureBuilder(
-                  future: FirebaseFirestore.instance
+              child: StreamBuilder(
+                  stream: FirebaseFirestore.instance
                       .collection('users')
                       .doc(uid)
-                      .get(),
+                      .snapshots(),
                   builder: ((context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.done) {
+                    if (snapshot.connectionState != ConnectionState.waiting) {
                       final user = snapshot.data;
                       return user == null
                           ? const Center(
-                              child: Text('No username'),
+                              child: Text(
+                                'No username',
+                                style: TextStyle(color: Colors.black),
+                              ),
                             )
-                          : buildDrawer(user);
+                          : buildDrawer(snapshot);
                     } else {
                       return const Center(
                           child: CircularProgressIndicator(
                         backgroundColor: Colors.black,
-                        color: Colors.white,
+                        color: Color.fromARGB(210, 193, 172, 172),
                         strokeWidth: 3,
                       ));
                     }
@@ -115,7 +123,8 @@ class _HomeState extends State<Home> {
                 selectionColor: Colors.black,
               ),
               onTap: () {
-                Navigator.pop(context);
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => UserProfile()));
               },
             ),
             ListTile(
@@ -166,9 +175,20 @@ class _HomeState extends State<Home> {
                           .collection('users')
                           .doc(uid)
                           .collection('party')
+<<<<<<< HEAD
+=======
+                          .orderBy('startDate')
+>>>>>>> 38e74aaff890b1df1340e807676919b24fb4ecfe
                           .snapshots(),
                       builder: (context, snapshot) {
-                        if (!snapshot.hasData) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                              child: CircularProgressIndicator(
+                            backgroundColor: Colors.black,
+                            strokeWidth: 3,
+                          ));
+                        } else if (!snapshot.hasData) {
                           return Container(
                             alignment: Alignment.topCenter,
                             child: const Text(
@@ -200,38 +220,109 @@ class _HomeState extends State<Home> {
                             return ListView(
                               children: snapshot.data!.docs.map((doc) {
                                 Timestamp tmp = ((doc.data()['startDate']));
-                                return Card(
-                                  color: Colors.white,
-                                  child: ListTile(
-                                    trailing: Icon(Icons.arrow_right),
-                                    title: Text(
-                                      doc.data()['PartyName'],
-                                      style: const TextStyle(
-                                          color: Colors.black, fontSize: 18),
-                                    ),
-                                    subtitle: Text(
-                                      tmp.toDate().day.toString() +
-                                          " / " +
-                                          tmp.toDate().month.toString() +
-                                          " / " +
-                                          tmp.toDate().year.toString(),
-                                      style: TextStyle(
-                                          color: Colors.blueGrey, fontSize: 14),
-                                    ),
-                                    onTap: () {
-                                      Navigator.of(context)
-                                          .push(MaterialPageRoute(
-                                              builder: (context) => PartyPage(
-                                                    code: doc
-                                                        .data()['code']
-                                                        .toString(),
-                                                    name: doc
-                                                        .data()['PartyName']
-                                                        .toString(),
-                                                  )));
-                                    },
-                                  ),
-                                );
+                                return Padding(
+                                    padding: EdgeInsets.all(8),
+                                    child: Card(
+                                      color: Colors.white,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(10.0),
+                                      ),
+                                      child: ListTile(
+                                        trailing: (doc.data()['admin'] == uid)
+                                            ? Icon(Icons.emoji_people)
+                                            : Icon(Icons.people),
+                                        title: Text(
+                                          doc.data()['PartyName'],
+                                          style: const TextStyle(
+                                              color: Colors.black,
+                                              fontSize: 18),
+                                        ),
+                                        subtitle: Text(
+                                          tmp.toDate().day.toString() +
+                                              " / " +
+                                              tmp.toDate().month.toString() +
+                                              " / " +
+                                              tmp.toDate().year.toString(),
+                                          style: TextStyle(
+                                              color: Colors.blueGrey,
+                                              fontSize: 14),
+                                        ),
+                                        onLongPress: (() async {
+                                          if (doc.data()['admin'] == uid) {
+                                            showDialog(
+                                                context: context,
+                                                builder: (context) =>
+                                                    AlertDialog(
+                                                      content: TextButton(
+                                                        child: Text(
+                                                          'Delete ' +
+                                                              doc.data()[
+                                                                  'PartyName'],
+                                                          style: TextStyle(
+                                                              color:
+                                                                  Colors.black,
+                                                              fontSize: 20),
+                                                        ),
+                                                        onPressed: () {
+                                                          //you are the admin
+                                                          delete(
+                                                              context,
+                                                              doc.data()[
+                                                                  'code']);
+                                                          Navigator.pop(
+                                                              context);
+                                                        },
+                                                      ),
+                                                    ));
+                                          } else {
+                                            showDialog(
+                                                context: context,
+                                                builder: (context) =>
+                                                    AlertDialog(
+                                                      content: TextButton(
+                                                        child: Text(
+                                                          'Exit from ' +
+                                                              doc.data()[
+                                                                  'PartyName'],
+                                                          style: TextStyle(
+                                                              color:
+                                                                  Colors.black,
+                                                              fontSize: 20),
+                                                        ),
+                                                        onPressed: () {
+// you are not the admin
+                                                          exit(
+                                                              context,
+                                                              uid,
+                                                              doc.data()[
+                                                                  'code']);
+                                                          remove(
+                                                              context,
+                                                              doc.data()[
+                                                                  'code']);
+                                                          Navigator.pop(
+                                                              context);
+                                                        },
+                                                      ),
+                                                    ));
+                                          }
+                                        }),
+                                        onTap: () {
+                                          Navigator.of(context).push(
+                                              MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      PartyPage(
+                                                        code: doc
+                                                            .data()['code']
+                                                            .toString(),
+                                                        name: doc
+                                                            .data()['PartyName']
+                                                            .toString(),
+                                                      )));
+                                        },
+                                      ),
+                                    ));
                               }).toList(),
                             );
                           }
@@ -252,7 +343,7 @@ class _HomeState extends State<Home> {
                   Center(
                     heightFactor: 0.6,
                     child: FloatingActionButton(
-                        backgroundColor: const Color.fromRGBO(30, 215, 96, 0.9),
+                        backgroundColor: Color.fromARGB(158, 61, 219, 71),
                         elevation: 0.1,
                         onPressed: () {
                           Navigator.pushNamed(context, Home.routeName);
@@ -275,8 +366,10 @@ class _HomeState extends State<Home> {
                             },
                             child: const Text(
                               'Create a party',
-                              style:
-                                  TextStyle(color: Colors.black, fontSize: 18),
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold),
                             )),
                         Container(
                           width: size.width * 0.15,
@@ -291,8 +384,10 @@ class _HomeState extends State<Home> {
                             },
                             child: const Text(
                               'Join a party',
-                              style:
-                                  TextStyle(color: Colors.black, fontSize: 18),
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold),
                             )),
                       ],
                     ),
@@ -306,6 +401,68 @@ class _HomeState extends State<Home> {
     ));
   }
 
+  Future<void> exit(BuildContext context, String user, String data) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user)
+          .collection('party')
+          .doc(data)
+          .delete()
+          .then((_) => print('Deleted'))
+          .catchError((error) => print('Failed: $error'));
+    } on FirebaseAuthException catch (e) {
+      displayToastMessage(e.toString(), context);
+    }
+  }
+
+  Future<void> delete(BuildContext context, String data) async {
+    try {
+      List<dynamic> list = [];
+
+      var snap = await FirebaseFirestore.instance
+          .collection('parties')
+          .doc(data)
+          .get();
+
+      if (!snap.get('isStarted')) {
+        list = snap.get('partecipant_list');
+        if (list.isNotEmpty) {
+          list.forEach((value) {
+            exit(context, value, data);
+          });
+        }
+
+        await FirebaseFirestore.instance
+            .collection('parties')
+            .doc(data)
+            .delete();
+      } else if (snap.get('isStarted') && snap.get('isEnded')) {
+        exit(context, uid, data);
+      } else {
+        displayToastMessage('Please, stop the party first!', context);
+      }
+    } on FirebaseAuthException catch (e) {
+      displayToastMessage(e.toString(), context);
+    }
+  }
+
+  Future<void> remove(BuildContext context, String data) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('parties')
+          .doc(data)
+          .update({
+            '#partecipant': FieldValue.increment(-1),
+            'partecipant_list': FieldValue.arrayRemove([uid]),
+          })
+          .then((_) => print('Deleted'))
+          .catchError((error) => print('Failed: $error'));
+    } on FirebaseAuthException catch (e) {
+      displayToastMessage(e.toString(), context);
+    }
+  }
+
   Future<void> _signOut(BuildContext context) async {
     try {
       await FirebaseAuth.instance.signOut().then((value) =>
@@ -317,6 +474,7 @@ class _HomeState extends State<Home> {
     }
   }
 
+<<<<<<< HEAD
   Future<void> connectToSpotify() async {
     try {
       setState(() {
@@ -355,22 +513,28 @@ class _HomeState extends State<Home> {
   }
 
   Widget buildDrawer(DocumentSnapshot<Map<String, dynamic>> user) => ListTile(
+=======
+  Widget buildDrawer(
+          AsyncSnapshot<DocumentSnapshot<Map<String, dynamic>>> snapshot) =>
+      ListTile(
+>>>>>>> 38e74aaff890b1df1340e807676919b24fb4ecfe
         leading: CircleAvatar(
             backgroundColor: Colors.white,
-            foregroundColor: Colors.white,
-            child: Text(
-              '${user.get('email')![0].toUpperCase()}',
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.black,
-                fontSize: 20,
-              ),
-            )),
+            maxRadius: 40,
+            child: CircleAvatar(
+                backgroundColor: Color(snapshot.data!.get('image')),
+                child: Text(
+                  snapshot.data!.get('init').toString().toUpperCase(),
+                  style: TextStyle(
+                    color: Color(snapshot.data!.get('initColor')),
+                    fontSize: 20,
+                  ),
+                ))),
         title: Text(
-          '${user.get('email').toString().split('@')[0]}',
+          snapshot.data!.get('username'),
           style: const TextStyle(
             color: Colors.black,
-            fontSize: 15,
+            fontSize: 13,
           ),
         ),
       );
@@ -380,7 +544,7 @@ class BNBCustomPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     Paint paint = new Paint()
-      ..color = const Color.fromRGBO(30, 215, 96, 0.9)
+      ..color = Color.fromARGB(158, 61, 219, 71)
       ..style = PaintingStyle.fill;
 
     Path path = Path();
