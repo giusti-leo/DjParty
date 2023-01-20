@@ -203,29 +203,76 @@ class _ScannerScreenState extends State<ScannerScreen> {
   final GlobalKey _gLobalkey = GlobalKey();
   QRViewController? controller;
   Barcode? result;
+
   void qr(QRViewController controller) {
     this.controller = controller;
     controller.scannedDataStream.listen((event) {
       setState(() {
         result = event;
       });
+      setState(() {
+        controller.pauseCamera();
+      });
+      enterCode(result!.code.toString());
     });
+  }
+
+  Future<void> enterCode(String code) async {
+    try {
+      DocumentSnapshot<Map<String, dynamic>> partySnapshot =
+          await FirebaseFirestore.instance
+              .collection('parties')
+              .doc(code)
+              .get();
+
+      DocumentSnapshot<Map<String, dynamic>> userSnapshot =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(uid)
+              .collection('party')
+              .doc(code)
+              .get();
+
+      if (partySnapshot.data()!.isEmpty) {
+        displayToastMessage(
+            'This code does not correspond to any party', context);
+        return;
+      }
+
+      if (userSnapshot.exists) {
+        displayToastMessage('You are already part of the party', context);
+        Navigator.pushNamed(context, Home.routeName);
+
+        return;
+      } else {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(uid)
+            .collection('party')
+            .doc(code)
+            .set({
+          'PartyName': partySnapshot.get('partyName').toString(),
+          'startDate': partySnapshot.get('creationTime'),
+          'code': partySnapshot.get('code').toString(),
+        });
+
+        await FirebaseFirestore.instance
+            .collection('parties')
+            .doc(code)
+            .update({
+          '#partecipant': FieldValue.increment(1),
+          'partecipant_list': FieldValue.arrayUnion([uid]),
+        });
+      }
+
+      Navigator.pushNamed(context, Home.routeName);
+    } on FirebaseFirestore catch (e) {
+      displayToastMessage(e.toString(), context);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final GlobalKey _gLobalkey = GlobalKey();
-    QRViewController? controller;
-    Barcode? result;
-    void qr(QRViewController controller) {
-      this.controller = controller;
-      controller.scannedDataStream.listen((event) {
-        setState(() {
-          result = event;
-        });
-      });
-    }
-
     return Scaffold(
       backgroundColor: const Color.fromRGBO(25, 20, 20, 0.4),
       appBar: AppBar(
@@ -263,7 +310,8 @@ class _ScannerScreenState extends State<ScannerScreen> {
       ),
     );
   }
-}/*
+}
+/*
 
 class QrScanCode extends StatefulWidget {
   const QrScanCode({Key? key}) : super(key: key);
