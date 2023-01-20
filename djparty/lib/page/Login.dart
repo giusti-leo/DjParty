@@ -238,8 +238,6 @@ class _LoginState extends State<Login> {
                                 email: _emailController.text,
                                 password: _userPasswordController1.text,
                                 context: context);
-
-                        Navigator.pushNamed(context, SignIn.routeName);
                       }
                     },
                     style: ElevatedButton.styleFrom(
