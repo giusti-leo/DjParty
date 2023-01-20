@@ -1,16 +1,19 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:djparty/Icons/spotify_icons.dart';
 import 'package:djparty/entities/Entities.dart';
 import 'package:djparty/main.dart';
 import 'package:djparty/page/InsertCode.dart';
 import 'package:djparty/page/Login.dart';
 import 'package:djparty/page/PartyPage.dart';
+import 'package:djparty/page/GenerateShare.dart';
+import 'package:spotify_sdk/spotify_sdk.dart';
+import 'package:spotify_sdk/models/connection_status.dart';
+import 'package:logger/logger.dart';
+import 'package:flutter/services.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
-import 'package:djparty/entities/Entities.dart';
-
-import 'package:djparty/page/GenerateShare.dart';
 
 //String name, email;
 
@@ -19,6 +22,7 @@ List parties = [];
 class Home extends StatefulWidget {
   static String routeName = 'home';
   const Home({super.key});
+  final bool _connected = false;
 
   @override
   State<Home> createState() => _HomeState();
@@ -31,6 +35,19 @@ class _HomeState extends State<Home> {
   String uid = FirebaseAuth.instance.currentUser!.uid;
 
   List<Widget> itemsData = [];
+  bool _loading = false;
+  bool _connected = false;
+  final Logger _logger = Logger(
+    //filter: CustomLogFilter(), // custom logfilter can be used to have logs in release mode
+    printer: PrettyPrinter(
+      methodCount: 2, // number of method calls to be displayed
+      errorMethodCount: 8, // number of method calls if stacktrace is provided
+      lineLength: 120, // width of the output
+      colors: true, // Colorful log messages
+      printEmojis: true, // Print an emoji for each log message
+      printTime: true,
+    ),
+  );
 
   @override
   void initState() {
@@ -112,6 +129,28 @@ class _HomeState extends State<Home> {
                   style: TextStyle(color: Colors.black),
                 ),
                 onTap: () => {_signOut(context)}),
+            StreamBuilder<ConnectionStatus>(
+              stream: SpotifySdk.subscribeConnectionStatus(),
+              builder: (context, snapshot) {
+                _connected = false;
+                var data = snapshot.data;
+                if (data != null) {
+                  _connected = data.connected;
+                }
+                return ListTile(
+                  leading: const Icon(
+                    Spotify.spotify,
+                    color: Colors.black,
+                  ),
+                  title: const Text(
+                    'Connect to Spotify',
+                    style: TextStyle(color: Colors.black),
+                    selectionColor: Colors.black,
+                  ),
+                  onTap: (connectToSpotify),
+                );
+              },
+            ),
           ],
         ),
       ),
@@ -122,12 +161,12 @@ class _HomeState extends State<Home> {
           ),
           Expanded(
               child: SizedBox(
-                  child: FutureBuilder(
-                      future: FirebaseFirestore.instance
+                  child: StreamBuilder(
+                      stream: FirebaseFirestore.instance
                           .collection('users')
                           .doc(uid)
                           .collection('party')
-                          .get(),
+                          .snapshots(),
                       builder: (context, snapshot) {
                         if (!snapshot.hasData) {
                           return Container(
@@ -276,6 +315,43 @@ class _HomeState extends State<Home> {
     } on FirebaseAuthException catch (e) {
       displayToastMessage(e.toString(), context);
     }
+  }
+
+  Future<void> connectToSpotify() async {
+    try {
+      setState(() {
+        _loading = true;
+      });
+      var result = await SpotifySdk.connectToSpotifyRemote(
+          clientId: 'a502045e3c4b47d6b9bcfded418afd32',
+          redirectUrl: 'test-1-login://callback');
+      if (result) {
+        _connected = true;
+      } else {
+        _connected = false;
+      }
+      setStatus(result
+          ? 'connect to spotify successful'
+          : 'connect to spotify failed');
+      setState(() {
+        _loading = false;
+      });
+    } on PlatformException catch (e) {
+      setState(() {
+        _loading = false;
+      });
+      setStatus(e.code, message: e.message);
+    } on MissingPluginException {
+      setState(() {
+        _loading = false;
+      });
+      setStatus('not implemented');
+    }
+  }
+
+  void setStatus(String code, {String? message}) {
+    var text = message ?? '';
+    _logger.i('$code$text');
   }
 
   Widget buildDrawer(DocumentSnapshot<Map<String, dynamic>> user) => ListTile(

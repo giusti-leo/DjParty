@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:djparty/page/Home.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-
+import 'package:qr_code_scanner/qr_code_scanner.dart';
 import '../services/FirebaseAuthMethods.dart';
 
 class InsertCode extends StatefulWidget {
@@ -14,7 +14,19 @@ class InsertCode extends StatefulWidget {
 }
 
 class _InsertCodeState extends State<InsertCode> {
-  final TextEditingController controller = TextEditingController();
+  final GlobalKey _gLobalkey = GlobalKey();
+  QRViewController? controller;
+  Barcode? result;
+  void qr(QRViewController controller) {
+    this.controller = controller;
+    controller.scannedDataStream.listen((event) {
+      setState(() {
+        result = event;
+      });
+    });
+  }
+
+  final TextEditingController controllertext = TextEditingController();
   bool err = false;
   String code = 'null';
 
@@ -46,7 +58,7 @@ class _InsertCodeState extends State<InsertCode> {
   }
 
   Widget buildTextField(BuildContext context) => TextFormField(
-        controller: controller,
+        controller: controllertext,
         style: const TextStyle(
           color: Colors.white,
           fontWeight: FontWeight.bold,
@@ -71,7 +83,7 @@ class _InsertCodeState extends State<InsertCode> {
       );
 
   void validityCode() {
-    if (controller.text.length != 5) {
+    if (controllertext.text.length != 5) {
       err = true;
       displayToastMessage('Party Code is 5 characters long', context);
       return;
@@ -88,7 +100,7 @@ class _InsertCodeState extends State<InsertCode> {
       DocumentSnapshot<Map<String, dynamic>> partySnapshot =
           await FirebaseFirestore.instance
               .collection('parties')
-              .doc(controller.text)
+              .doc(controllertext.text)
               .get();
 
       DocumentSnapshot<Map<String, dynamic>> userSnapshot =
@@ -96,7 +108,7 @@ class _InsertCodeState extends State<InsertCode> {
               .collection('users')
               .doc(uid)
               .collection('party')
-              .doc(controller.text)
+              .doc(controllertext.text)
               .get();
 
       if (partySnapshot.data()!.isEmpty) {
@@ -113,7 +125,7 @@ class _InsertCodeState extends State<InsertCode> {
             .collection('users')
             .doc(uid)
             .collection('party')
-            .doc(controller.text)
+            .doc(controllertext.text)
             .set({
           'PartyName': partySnapshot.get('partyName').toString(),
           'startDate': partySnapshot.get('creationTime'),
@@ -122,13 +134,13 @@ class _InsertCodeState extends State<InsertCode> {
 
         await FirebaseFirestore.instance
             .collection('parties')
-            .doc(controller.text)
+            .doc(controllertext.text)
             .snapshots()
             .any((element) =>
                 element.data()!.update('#partecipant', (value) => value + 1));
       }
 
-      controller.clear();
+      controllertext.clear();
 
       Navigator.pushNamed(context, Home.routeName);
     } on FirebaseFirestore catch (e) {

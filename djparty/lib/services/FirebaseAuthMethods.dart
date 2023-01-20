@@ -119,7 +119,8 @@ class FirebaseAuthMethods {
         }
       });
     } on FirebaseAuthException catch (e) {
-      displayToastMessage(e.message!, context); // Displaying the error message
+      displayToastMessage(e.message!, context);
+      // Displaying the error message
     }
   }
 

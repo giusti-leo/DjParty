@@ -5,6 +5,7 @@ import 'package:djparty/page/Login.dart';
 import 'package:djparty/page/ResetPassword.dart';
 import 'package:djparty/page/SignIn.dart';
 import 'package:djparty/page/SignUp.dart';
+import 'package:djparty/page/spotifyPlayer.dart';
 import 'package:djparty/services/FirebaseAuthMethods.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -66,7 +67,8 @@ class Main extends StatelessWidget {
           SignIn.routeName: (context) => const SignIn(),
           Home.routeName: (context) => const Home(),
           GeneratorScreen.routeName: (context) => GeneratorScreen(),
-          ResetPassword.routeName: ((context) => const ResetPassword())
+          ResetPassword.routeName: ((context) => const ResetPassword()),
+          SpotifyPlayer.routeName: ((context) => const SpotifyPlayer()),
         },
       ),
     );

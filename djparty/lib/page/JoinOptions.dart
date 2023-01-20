@@ -33,11 +33,11 @@ class JoinOptions extends StatelessWidget {
                 child:
                     const Text('Scan Qr-Code', style: TextStyle(fontSize: 17)),
                 onPressed: () {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) =>
-                              ScannerScreen(title: 'Join Party')));
+                  // Navigator.push(
+                  //     context,
+                  //     MaterialPageRoute(
+                  //         builder: (context) =>
+                  //             ScannerScreen(title: 'Join Party')));
                 }),
           ),
           const SizedBox(height: 30),

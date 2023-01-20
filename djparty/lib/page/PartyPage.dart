@@ -12,6 +12,7 @@ import 'package:flutter/src/widgets/framework.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:djparty/page/spotifyPlayer.dart';
 
 class PartyPage extends StatefulWidget {
   final String code, name;
@@ -241,13 +242,14 @@ class _PartyPageState extends State<PartyPage> {
           alignment: Alignment.bottomCenter,
           child: ElevatedButton(
             onPressed: () async {
-              await FirebaseFirestore.instance
-                  .collection('parties')
-                  .doc(widget.code)
-                  .update({"isStarted": true})
-                  .then((_) => print('Success'))
-                  .catchError((error) => print('Failed: $error'));
-              build;
+              // await FirebaseFirestore.instance
+              //     .collection('parties')
+              //     .doc(widget.code)
+              //     .update({"isStarted": true})
+              //     .then((_) => print('Success'))
+              //     .catchError((error) => print('Failed: $error'));
+              // build;
+              Navigator.pushNamed(context, SpotifyPlayer.routeName);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color.fromRGBO(30, 215, 96, 0.9),
