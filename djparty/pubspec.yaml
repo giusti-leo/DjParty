@@ -55,11 +55,8 @@ dependencies:
   syncfusion_flutter_datepicker: ^20.4.41
   intl: ^0.18.0
   numberpicker: ^2.1.1
-<<<<<<< HEAD
   spotify_sdk: ^2.3.0
-=======
   flutter_colorpicker: ^1.0.3
->>>>>>> 38e74aaff890b1df1340e807676919b24fb4ecfe
 
 dev_dependencies:
   flutter_test:

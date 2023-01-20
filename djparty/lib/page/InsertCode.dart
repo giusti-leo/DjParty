@@ -5,10 +5,6 @@ import 'package:djparty/page/Home.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
-<<<<<<< HEAD
-=======
-
->>>>>>> 38e74aaff890b1df1340e807676919b24fb4ecfe
 import '../services/FirebaseAuthMethods.dart';
 
 class InsertCode extends StatefulWidget {
@@ -20,23 +16,7 @@ class InsertCode extends StatefulWidget {
 }
 
 class _InsertCodeState extends State<InsertCode> {
-<<<<<<< HEAD
-  final GlobalKey _gLobalkey = GlobalKey();
-  QRViewController? controller;
-  Barcode? result;
-  void qr(QRViewController controller) {
-    this.controller = controller;
-    controller.scannedDataStream.listen((event) {
-      setState(() {
-        result = event;
-      });
-    });
-  }
-
-  final TextEditingController controllertext = TextEditingController();
-=======
   final TextEditingController textController = TextEditingController();
->>>>>>> 38e74aaff890b1df1340e807676919b24fb4ecfe
   bool err = false;
   String code = 'null';
 
@@ -104,15 +84,10 @@ class _InsertCodeState extends State<InsertCode> {
     );
   }
 
-<<<<<<< HEAD
-  Widget buildTextField(BuildContext context) => TextFormField(
-        controller: controllertext,
-=======
   Widget buildTextField(BuildContext context) => SizedBox(
       width: MediaQuery.of(context).size.width * 0.8,
       child: TextFormField(
         controller: textController,
->>>>>>> 38e74aaff890b1df1340e807676919b24fb4ecfe
         style: const TextStyle(
           color: Colors.white,
           fontWeight: FontWeight.bold,
@@ -152,11 +127,7 @@ class _InsertCodeState extends State<InsertCode> {
   }
 
   void validityCode() {
-<<<<<<< HEAD
-    if (controllertext.text.length != 5) {
-=======
     if (textController.text.length != 5) {
->>>>>>> 38e74aaff890b1df1340e807676919b24fb4ecfe
       err = true;
       displayToastMessage('Party Code is 5 characters long', context);
       return;
@@ -173,11 +144,7 @@ class _InsertCodeState extends State<InsertCode> {
       DocumentSnapshot<Map<String, dynamic>> partySnapshot =
           await FirebaseFirestore.instance
               .collection('parties')
-<<<<<<< HEAD
-              .doc(controllertext.text)
-=======
               .doc(code)
->>>>>>> 38e74aaff890b1df1340e807676919b24fb4ecfe
               .get();
 
       DocumentSnapshot<Map<String, dynamic>> userSnapshot =
@@ -185,11 +152,7 @@ class _InsertCodeState extends State<InsertCode> {
               .collection('users')
               .doc(uid)
               .collection('party')
-<<<<<<< HEAD
-              .doc(controllertext.text)
-=======
               .doc(code)
->>>>>>> 38e74aaff890b1df1340e807676919b24fb4ecfe
               .get();
 
       if (partySnapshot.data()!.isEmpty) {
@@ -206,11 +169,7 @@ class _InsertCodeState extends State<InsertCode> {
             .collection('users')
             .doc(uid)
             .collection('party')
-<<<<<<< HEAD
-            .doc(controllertext.text)
-=======
             .doc(code)
->>>>>>> 38e74aaff890b1df1340e807676919b24fb4ecfe
             .set({
           'PartyName': partySnapshot.get('partyName').toString(),
           'startDate': partySnapshot.get('creationTime'),
@@ -219,16 +178,6 @@ class _InsertCodeState extends State<InsertCode> {
 
         await FirebaseFirestore.instance
             .collection('parties')
-<<<<<<< HEAD
-            .doc(controllertext.text)
-            .snapshots()
-            .any((element) =>
-                element.data()!.update('#partecipant', (value) => value + 1));
-      }
-
-      controllertext.clear();
-
-=======
             .doc(code)
             .update({
           '#partecipant': FieldValue.increment(1),
@@ -318,7 +267,7 @@ class _QrScanCodeState extends State<QrScanCode> {
       this.controller = controller;
     });
 
-    controller!.scannedDataStream.listen((barcode) {
+    controller.scannedDataStream.listen((barcode) {
       this.barcode = barcode;
     });
 
@@ -373,7 +322,6 @@ class _QrScanCodeState extends State<QrScanCode> {
         });
       }
 
->>>>>>> 38e74aaff890b1df1340e807676919b24fb4ecfe
       Navigator.pushNamed(context, Home.routeName);
     } on FirebaseFirestore catch (e) {
       displayToastMessage(e.toString(), context);

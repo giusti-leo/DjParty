@@ -242,7 +242,6 @@ class _PartyPageState extends State<PartyPage> {
           alignment: Alignment.bottomCenter,
           child: ElevatedButton(
             onPressed: () async {
-<<<<<<< HEAD
               // await FirebaseFirestore.instance
               //     .collection('parties')
               //     .doc(widget.code)
@@ -251,15 +250,6 @@ class _PartyPageState extends State<PartyPage> {
               //     .catchError((error) => print('Failed: $error'));
               // build;
               Navigator.pushNamed(context, SpotifyPlayer.routeName);
-=======
-              await FirebaseFirestore.instance
-                  .collection('parties')
-                  .doc(widget.code)
-                  .update({"isStarted": true})
-                  .then((_) => print('Party started'))
-                  .catchError((error) => print('Failed: $error'));
-              build;
->>>>>>> 38e74aaff890b1df1340e807676919b24fb4ecfe
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color.fromRGBO(30, 215, 96, 0.9),

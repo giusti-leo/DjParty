@@ -5,15 +5,12 @@ import 'package:djparty/main.dart';
 import 'package:djparty/page/InsertCode.dart';
 import 'package:djparty/page/Login.dart';
 import 'package:djparty/page/PartyPage.dart';
-<<<<<<< HEAD
 import 'package:djparty/page/GenerateShare.dart';
 import 'package:spotify_sdk/spotify_sdk.dart';
 import 'package:spotify_sdk/models/connection_status.dart';
 import 'package:logger/logger.dart';
 import 'package:flutter/services.dart';
-=======
 import 'package:djparty/page/UserProfile.dart';
->>>>>>> 38e74aaff890b1df1340e807676919b24fb4ecfe
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -175,10 +172,7 @@ class _HomeState extends State<Home> {
                           .collection('users')
                           .doc(uid)
                           .collection('party')
-<<<<<<< HEAD
-=======
                           .orderBy('startDate')
->>>>>>> 38e74aaff890b1df1340e807676919b24fb4ecfe
                           .snapshots(),
                       builder: (context, snapshot) {
                         if (snapshot.connectionState ==
@@ -474,7 +468,6 @@ class _HomeState extends State<Home> {
     }
   }
 
-<<<<<<< HEAD
   Future<void> connectToSpotify() async {
     try {
       setState(() {
@@ -512,12 +505,9 @@ class _HomeState extends State<Home> {
     _logger.i('$code$text');
   }
 
-  Widget buildDrawer(DocumentSnapshot<Map<String, dynamic>> user) => ListTile(
-=======
   Widget buildDrawer(
           AsyncSnapshot<DocumentSnapshot<Map<String, dynamic>>> snapshot) =>
       ListTile(
->>>>>>> 38e74aaff890b1df1340e807676919b24fb4ecfe
         leading: CircleAvatar(
             backgroundColor: Colors.white,
             maxRadius: 40,
