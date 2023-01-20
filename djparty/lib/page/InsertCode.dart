@@ -155,7 +155,7 @@ class _InsertCodeState extends State<InsertCode> {
               .doc(code)
               .get();
 
-      if (partySnapshot.data()!.isEmpty) {
+      if (!partySnapshot.exists) {
         displayToastMessage(
             'This code does not correspond to any party', context);
         return;
@@ -205,6 +205,9 @@ class _ScannerScreenState extends State<ScannerScreen> {
   Barcode? result;
 
   void qr(QRViewController controller) {
+    if (Platform.isAndroid) {
+      controller.resumeCamera();
+    }
     this.controller = controller;
     controller.scannedDataStream.listen((event) {
       setState(() {
@@ -219,6 +222,13 @@ class _ScannerScreenState extends State<ScannerScreen> {
 
   Future<void> enterCode(String code) async {
     try {
+      if (code.contains('//')) {
+        displayToastMessage(
+            'This code does not correspond to any party', context);
+        Navigator.pushNamed(context, Home.routeName);
+        return;
+      }
+
       DocumentSnapshot<Map<String, dynamic>> partySnapshot =
           await FirebaseFirestore.instance
               .collection('parties')
@@ -233,9 +243,10 @@ class _ScannerScreenState extends State<ScannerScreen> {
               .doc(code)
               .get();
 
-      if (partySnapshot.data()!.isEmpty) {
+      if (partySnapshot == null || !partySnapshot.exists) {
         displayToastMessage(
             'This code does not correspond to any party', context);
+        Navigator.pushNamed(context, Home.routeName);
         return;
       }
 
@@ -273,21 +284,33 @@ class _ScannerScreenState extends State<ScannerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    double width = MediaQuery.of(context).size.width;
+    double heigth = MediaQuery.of(context).size.height;
     return Scaffold(
       backgroundColor: const Color.fromRGBO(25, 20, 20, 0.4),
       appBar: AppBar(
-        backgroundColor: const Color.fromRGBO(30, 215, 96, 0.9),
-        title: Text(''),
-        centerTitle: true,
-      ),
+          backgroundColor: const Color.fromRGBO(30, 215, 96, 0.9),
+          centerTitle: true,
+          title: Text(
+            'Qr Scanner',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          )),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Container(
-              height: 400,
-              width: 400,
-              child: QRView(key: _gLobalkey, onQRViewCreated: qr),
+              height: heigth / 2,
+              width: width * 0.8,
+              child: QRView(
+                key: _gLobalkey,
+                onQRViewCreated: qr,
+                overlay: QrScannerOverlayShape(
+                    borderColor: const Color.fromRGBO(30, 215, 96, 0.9),
+                    borderRadius: 10,
+                    borderLength: 20,
+                    borderWidth: 10),
+              ),
             ),
             const SizedBox(height: 20),
             Center(
