@@ -84,7 +84,7 @@ class _SignInState extends State<SignIn> {
                             Icons.mail_outline_rounded,
                             color: Color.fromRGBO(30, 215, 96, 0.9),
                           ),
-                          filled: true,
+                          //filled: true,
                           enabledBorder: OutlineInputBorder(
                             borderSide: BorderSide(
                                 color: Color.fromRGBO(30, 215, 96, 0.9),
@@ -133,7 +133,7 @@ class _SignInState extends State<SignIn> {
                                   _passwordVisible = !_passwordVisible;
                                 });
                               }),
-                          filled: true,
+                          //filled: true,
                           fillColor: Colors.black12,
                           enabledBorder: const OutlineInputBorder(
                             borderRadius:

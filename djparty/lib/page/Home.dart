@@ -143,18 +143,32 @@ class _HomeState extends State<Home> {
                 if (data != null) {
                   _connected = data.connected;
                 }
-                return ListTile(
-                  leading: const Icon(
-                    Spotify.spotify,
-                    color: Colors.black,
+                return Column(children: [
+                  ListTile(
+                    leading: const Icon(
+                      Spotify.spotify,
+                      color: Colors.black,
+                    ),
+                    title: const Text(
+                      'Connect to Spotify',
+                      style: TextStyle(color: Colors.black),
+                      selectionColor: Colors.black,
+                    ),
+                    onTap: (connectToSpotify),
                   ),
-                  title: const Text(
-                    'Connect to Spotify',
-                    style: TextStyle(color: Colors.black),
-                    selectionColor: Colors.black,
-                  ),
-                  onTap: (connectToSpotify),
-                );
+                  ListTile(
+                    leading: const Icon(
+                      Spotify.spotify,
+                      color: Colors.black,
+                    ),
+                    title: const Text(
+                      'Get Token',
+                      style: TextStyle(color: Colors.black),
+                      selectionColor: Colors.black,
+                    ),
+                    onTap: (getAuthToken),
+                  )
+                ]);
               },
             ),
           ],
@@ -465,6 +479,26 @@ class _HomeState extends State<Home> {
               (route) => false));
     } on FirebaseAuthException catch (e) {
       displayToastMessage(e.toString(), context);
+    }
+  }
+
+  Future<String> getAuthToken() async {
+    try {
+      var authenticationToken = await SpotifySdk.getAccessToken(
+          clientId: 'a502045e3c4b47d6b9bcfded418afd32',
+          redirectUrl: 'test-1-login://callback',
+          scope: 'app-remote-control, '
+              'user-modify-playback-state, '
+              'playlist-read-private, '
+              'playlist-modify-public,user-read-currently-playing');
+      setStatus('Got a token: $authenticationToken');
+      return authenticationToken;
+    } on PlatformException catch (e) {
+      setStatus(e.code, message: e.message);
+      return Future.error('$e.code: $e.message');
+    } on MissingPluginException {
+      setStatus('not implemented');
+      return Future.error('not implemented');
     }
   }
 

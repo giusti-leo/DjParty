@@ -79,6 +79,8 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
         var track = snapshot.data?.track;
         currentTrackImageUri = track?.imageUri;
         var playerState = snapshot.data;
+        var playerPosition = double.parse('${playerState?.playbackPosition}');
+        var trackDuration = double.parse('${track?.duration}');
 
         if (playerState == null || track == null) {
           return Center(
@@ -97,6 +99,7 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
                 height: 250,
                 child: spotifyImageWidget(track.imageUri),
               ),
+              SizedBox(height: 20),
               SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,

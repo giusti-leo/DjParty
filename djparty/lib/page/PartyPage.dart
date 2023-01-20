@@ -64,7 +64,7 @@ class _PartyPageState extends State<PartyPage> {
                 }
                 if ((snapshot.data!.get('#partecipant') > 1)) {
                   text = 'For the moment there are ' +
-                      snapshot.data!.get('#partecipants').toString() +
+                      snapshot.data!.get('#partecipant').toString() +
                       ' partecipants';
                 } else {
                   text = "Why don't you invite someone to your party?";
