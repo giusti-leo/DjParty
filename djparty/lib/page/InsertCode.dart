@@ -119,8 +119,8 @@ class _InsertCodeState extends State<InsertCode> {
         color: Color.fromARGB(158, 61, 219, 71),
         icon: Icon(Icons.qr_code_sharp),
         onPressed: () {
-          Navigator.of(context).push(
-              MaterialPageRoute(builder: (context) => const QrScanCode()));
+          Navigator.of(context)
+              .push(MaterialPageRoute(builder: (context) => ScannerScreen()));
         },
       ),
     );
@@ -192,6 +192,79 @@ class _InsertCodeState extends State<InsertCode> {
   }
 }
 
+class ScannerScreen extends StatefulWidget {
+  const ScannerScreen({Key? key}) : super(key: key);
+
+  @override
+  State<ScannerScreen> createState() => _ScannerScreenState();
+}
+
+class _ScannerScreenState extends State<ScannerScreen> {
+  final GlobalKey _gLobalkey = GlobalKey();
+  QRViewController? controller;
+  Barcode? result;
+  void qr(QRViewController controller) {
+    this.controller = controller;
+    controller.scannedDataStream.listen((event) {
+      setState(() {
+        result = event;
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final GlobalKey _gLobalkey = GlobalKey();
+    QRViewController? controller;
+    Barcode? result;
+    void qr(QRViewController controller) {
+      this.controller = controller;
+      controller.scannedDataStream.listen((event) {
+        setState(() {
+          result = event;
+        });
+      });
+    }
+
+    return Scaffold(
+      backgroundColor: const Color.fromRGBO(25, 20, 20, 0.4),
+      appBar: AppBar(
+        backgroundColor: const Color.fromRGBO(30, 215, 96, 0.9),
+        title: Text(''),
+        centerTitle: true,
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Container(
+              height: 400,
+              width: 400,
+              child: QRView(key: _gLobalkey, onQRViewCreated: qr),
+            ),
+            const SizedBox(height: 20),
+            Center(
+              child: (result != null)
+                  ? Text(
+                      '${result!.code}',
+                      style: TextStyle(
+                        color: Colors.white,
+                      ),
+                    )
+                  : Text(
+                      'Scan a code',
+                      style: TextStyle(
+                        color: Colors.white,
+                      ),
+                    ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+}/*
+
 class QrScanCode extends StatefulWidget {
   const QrScanCode({Key? key}) : super(key: key);
 
@@ -208,7 +281,9 @@ class _QrScanCodeState extends State<QrScanCode> {
 
   @override
   void reassemble() async {
-    super.reassemble();
+    super
+        .reassemble(); 
+    
     if (Platform.isAndroid) {
       await controller!.pauseCamera();
     }
@@ -328,3 +403,4 @@ class _QrScanCodeState extends State<QrScanCode> {
     }
   }
 }
+*/
