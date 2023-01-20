@@ -73,7 +73,7 @@ class _EditProfileState extends State<EditProfile> {
     return Scaffold(
         backgroundColor: Color.fromARGB(128, 52, 74, 61),
         appBar: AppBar(
-          backgroundColor: Color.fromRGBO(30, 215, 96, 0.9),
+          backgroundColor: Color.fromARGB(158, 61, 219, 71),
           title: const Text(
             'Edit Profile',
             style: TextStyle(
@@ -101,6 +101,14 @@ class _EditProfileState extends State<EditProfile> {
                     .doc(uid)
                     .get(),
                 builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.none) {
+                    return const Center(
+                        child: CircularProgressIndicator(
+                      backgroundColor: Colors.green,
+                      color: Color.fromARGB(210, 193, 172, 172),
+                      strokeWidth: 3,
+                    ));
+                  }
                   if (!snapshot.hasData) {
                     return const Center(
                       child: Text('No data'),
@@ -132,7 +140,7 @@ class _EditProfileState extends State<EditProfile> {
                                   side:
                                       BorderSide(width: 3, color: Colors.white),
                                   backgroundColor:
-                                      Color.fromRGBO(30, 215, 96, 0.9)),
+                                      Color.fromARGB(158, 61, 219, 71)),
                               onPressed: () {
                                 showDialog(
                                     context: context,
@@ -182,7 +190,7 @@ class _EditProfileState extends State<EditProfile> {
                                   side:
                                       BorderSide(width: 3, color: Colors.white),
                                   backgroundColor:
-                                      const Color.fromRGBO(30, 215, 96, 0.9)),
+                                      const Color.fromARGB(158, 61, 219, 71)),
                               onPressed: () {
                                 showDialog(
                                     context: context,
@@ -252,12 +260,12 @@ class _EditProfileState extends State<EditProfile> {
                                   TextStyle(color: Colors.white, fontSize: 16),
                               enabledBorder: OutlineInputBorder(
                                 borderSide: BorderSide(
-                                    color: Color.fromRGBO(30, 215, 96, 0.9),
+                                    color: Color.fromARGB(158, 61, 219, 71),
                                     width: 3),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderSide: BorderSide(
-                                    color: Color.fromRGBO(30, 215, 96, 0.9),
+                                    color: Color.fromARGB(158, 61, 219, 71),
                                     width: 3),
                               )),
                         ),
@@ -289,12 +297,12 @@ class _EditProfileState extends State<EditProfile> {
                                 TextStyle(color: Colors.white, fontSize: 16),
                             enabledBorder: OutlineInputBorder(
                               borderSide: BorderSide(
-                                  color: Color.fromRGBO(30, 215, 96, 0.9),
+                                  color: Color.fromARGB(158, 61, 219, 71),
                                   width: 3),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderSide: BorderSide(
-                                  color: Color.fromRGBO(30, 215, 96, 0.9),
+                                  color: Color.fromARGB(158, 61, 219, 71),
                                   width: 3),
                             ),
                           ),
@@ -315,17 +323,15 @@ class _EditProfileState extends State<EditProfile> {
                                 return;
                               }
                               await update(context);
+
                               Navigator.pop(context);
                             },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor:
-                                  const Color.fromRGBO(30, 215, 96, 0.9),
+                              backgroundColor: Color.fromARGB(158, 61, 219, 71),
                               surfaceTintColor:
-                                  const Color.fromRGBO(30, 215, 96, 0.9),
-                              foregroundColor:
-                                  const Color.fromRGBO(30, 215, 96, 0.9),
-                              shadowColor:
-                                  const Color.fromRGBO(30, 215, 96, 0.9),
+                                  Color.fromARGB(158, 61, 219, 71),
+                              foregroundColor: Color.fromARGB(158, 61, 219, 71),
+                              shadowColor: Color.fromARGB(158, 61, 219, 71),
                               elevation: 8,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(15.0),
