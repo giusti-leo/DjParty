@@ -1,8 +1,17 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:djparty/page/Login.dart';
+import 'package:djparty/page/SignIn.dart';
+import 'package:djparty/services/InternetProvider.dart';
+import 'package:djparty/services/SignInProvider.dart';
+import 'package:djparty/utils/nextScreen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/container.dart';
 import 'package:flutter/src/widgets/framework.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:rounded_loading_button/rounded_loading_button.dart';
 
 import '../services/FirebaseAuthMethods.dart';
 
@@ -21,12 +30,8 @@ class _ResetPasswordState extends State<ResetPassword> {
 
   final TextEditingController _emailidController = TextEditingController();
 
-  void resetPassword() {
-    context.read<FirebaseAuthMethods>().resetPassword(
-          email: _emailidController.text,
-          context: context,
-        );
-  }
+  final RoundedLoadingButtonController resetController =
+      RoundedLoadingButtonController();
 
   @override
   Widget build(BuildContext context) {
@@ -34,9 +39,9 @@ class _ResetPasswordState extends State<ResetPassword> {
         child: MaterialApp(
             home: Scaffold(
                 key: _scaffoldKey,
-                backgroundColor: Colors.black12,
+                backgroundColor: const Color.fromARGB(128, 53, 74, 62),
                 appBar: AppBar(
-                  backgroundColor: Colors.black,
+                  backgroundColor: const Color.fromARGB(128, 53, 74, 62),
                   shadowColor: const Color.fromRGBO(30, 215, 96, 0.9),
                   title: const Text('Reset your password',
                       textAlign: TextAlign.center,
@@ -96,58 +101,82 @@ class _ResetPasswordState extends State<ResetPassword> {
                           const SizedBox(
                             height: 20,
                           ),
-                          SizedBox(
-                            height: 70,
-                            width: 350,
-                            child: ElevatedButton(
-                              onPressed: () async {
-                                if (!_emailidController.text.contains('@')) {
-                                  displayToastMessage(
-                                      'Invalid Email-ID', context);
-                                  return;
-                                } else if (_emailidController.text.isEmpty) {
-                                  displayToastMessage(
-                                      'Please. Insert your Email-ID', context);
-                                  return;
-                                }
-                                checkIfExist();
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor:
-                                    const Color.fromRGBO(30, 215, 96, 0.9),
-                                surfaceTintColor:
-                                    const Color.fromRGBO(30, 215, 96, 0.9),
-                                foregroundColor:
-                                    const Color.fromRGBO(30, 215, 96, 0.9),
-                                shadowColor:
-                                    const Color.fromRGBO(30, 215, 96, 0.9),
-                                elevation: 8,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(15.0),
-                                  side: const BorderSide(
-                                    color: Color.fromARGB(184, 255, 255, 255),
-                                    width: 5,
-                                  ),
+                          RoundedLoadingButton(
+                            onPressed: () {
+                              passwordReset();
+                            },
+                            controller: resetController,
+                            successColor: Color.fromRGBO(30, 215, 96, 0.9),
+                            width: MediaQuery.of(context).size.width * 0.80,
+                            elevation: 0,
+                            borderRadius: 25,
+                            color: Color.fromRGBO(30, 215, 96, 0.9),
+                            child: Wrap(
+                              children: const [
+                                Icon(
+                                  FontAwesomeIcons.music,
+                                  size: 20,
+                                  color: Colors.white,
                                 ),
-                              ),
-                              child: const Text(
-                                'Reset',
-                                selectionColor: Colors.white,
-                                style: TextStyle(
-                                    fontSize: 20, color: Colors.black),
-                              ),
+                                SizedBox(
+                                  width: 15,
+                                ),
+                                Text("Reset password",
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w500)),
+                              ],
                             ),
-                          )
+                          ),
                         ]))))));
   }
 
-  Future<void> checkIfExist() async {
-    await FirebaseFirestore.instance
-        .collection('users')
-        .where('email', isEqualTo: _emailidController.text)
-        .get()
-        .then((value) => resetPassword())
-        .onError((error, stackTrace) =>
-            displayToastMessage('Wait. Email-ID not found', context));
+  Future passwordReset() async {
+    final sp = context.read<SignInProvider>();
+    final ip = context.read<InternetProvider>();
+    await ip.checkInternetConnection();
+
+    if (ip.hasInternet == false) {
+      showInSnackBar(context, "Check your Internet connection", Colors.red);
+      resetController.reset();
+      return;
+    }
+
+    if (!isValid()) {
+      resetController.reset();
+      return;
+    }
+
+    sp.resetPassword(_emailidController.text).then((value) {
+      if (sp.hasError) {
+        showInSnackBar(context, sp.errorCode!.toString(), Colors.red);
+        resetController.reset();
+        return;
+      } else {
+        resetController.success();
+        handleAfterReset();
+      }
+    });
+  }
+
+  handleAfterReset() {
+    Future.delayed(const Duration(milliseconds: 1000)).then((value) {
+      nextScreenReplace(context, const SignIn());
+    });
+  }
+
+  bool isValid() {
+    if (!_emailidController.text.contains('@')) {
+      displayToastMessage(context, 'Invalid Email-ID', Colors.red);
+
+      return false;
+    } else if (_emailidController.text.isEmpty) {
+      displayToastMessage(context, 'Please. Insert your Email-ID', Colors.red);
+
+      return false;
+    } else {
+      return true;
+    }
   }
 }

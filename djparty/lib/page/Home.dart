@@ -1,3 +1,6 @@
+import 'dart:ui';
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:djparty/Icons/spotify_icons.dart';
 import 'package:djparty/entities/Entities.dart';
@@ -6,6 +9,18 @@ import 'package:djparty/page/InsertCode.dart';
 import 'package:djparty/page/Login.dart';
 import 'package:djparty/page/PartyPage.dart';
 import 'package:djparty/page/GenerateShare.dart';
+import 'package:djparty/page/spotifyPlayer.dart';
+import 'package:djparty/services/FirebaseRequests.dart';
+import 'package:djparty/services/InternetProvider.dart';
+import 'package:djparty/services/SignInProvider.dart';
+import 'package:djparty/utils/nextScreen.dart';
+import 'package:flutter/rendering.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:provider/provider.dart';
+import 'package:qr_flutter/qr_flutter.dart';
+import 'package:rounded_loading_button/rounded_loading_button.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:spotify_sdk/spotify_sdk.dart';
 import 'package:spotify_sdk/models/connection_status.dart';
 import 'package:logger/logger.dart';
@@ -17,7 +32,6 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 
 List parties = [];
-String uid = FirebaseAuth.instance.currentUser!.uid;
 
 class Home extends StatefulWidget {
   static String routeName = 'home';
@@ -37,6 +51,20 @@ class _HomeState extends State<Home> {
   List<Widget> itemsData = [];
   bool _loading = false;
   bool _connected = false;
+  Stream<QuerySnapshot>? parties;
+
+  final RoundedLoadingButtonController partyController =
+      RoundedLoadingButtonController();
+
+  final RoundedLoadingButtonController exitController =
+      RoundedLoadingButtonController();
+
+  final RoundedLoadingButtonController shareController =
+      RoundedLoadingButtonController();
+
+  final key = GlobalKey();
+  File? file;
+
   final Logger _logger = Logger(
     //filter: CustomLogFilter(), // custom logfilter can be used to have logs in release mode
     printer: PrettyPrinter(
@@ -49,291 +77,558 @@ class _HomeState extends State<Home> {
     ),
   );
 
+  Future getData() async {
+    final sp = context.read<SignInProvider>();
+    final ip = context.read<InternetProvider>();
+    final fr = context.read<FirebaseRequests>();
+
+    sp.getDataFromSharedPreferences();
+
+    fr.getParties(uid: uid).then((val) {
+      setState(() {
+        parties = val;
+      });
+    });
+  }
+
   @override
   void initState() {
     super.initState();
+    getData();
+  }
+
+  streamParties() {
+    bool expandFlag = false;
+    final sp = context.read<SignInProvider>();
+    final width = MediaQuery.of(context).size.width;
+
+    return StreamBuilder(
+      stream: parties,
+      builder: (context, AsyncSnapshot snapshot) {
+        return snapshot.hasData && snapshot.data.docs.length > 0
+            ? ListView.builder(
+                itemCount: snapshot.data.docs.length,
+                itemBuilder: (context, index) {
+                  var tmp = snapshot.data.docs[index]['startDate'];
+                  return Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Card(
+                        color: const Color.fromARGB(255, 215, 208, 208),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10.0),
+                        ),
+                        child: ExpansionTile(
+                          trailing: (snapshot.data.docs[index]['admin'] == uid)
+                              ? const Icon(Icons.emoji_people)
+                              : const Icon(Icons.people),
+                          title: Text(
+                            snapshot.data.docs[index]['PartyName'],
+                            style: const TextStyle(
+                                color: Colors.black, fontSize: 18),
+                          ),
+                          subtitle: Text(
+                            "${tmp.toDate().day} / ${tmp.toDate().month} / ${tmp.toDate().year}",
+                            style: const TextStyle(
+                                color: Colors.blueGrey, fontSize: 14),
+                          ),
+                          children: [
+                            Stack(
+                              children: [
+                                Column(
+                                  children: [
+                                    Text(
+                                      'Party Code : ' +
+                                          snapshot.data.docs[index]['code'],
+                                      style: const TextStyle(
+                                        color: Colors.black,
+                                        fontSize: 20,
+                                      ),
+                                    ),
+                                    Row(
+                                      children: const [
+                                        Divider(height: 32),
+                                      ],
+                                    ),
+                                    /*
+                                    Center(
+                                      child: RepaintBoundary(
+                                        key: Key(index),
+                                        child: QrImage(
+                                          data: snapshot.data.docs[index]
+                                              ['code'],
+                                          size: 200,
+                                          backgroundColor: Colors.white,
+                                        ),
+                                      ),
+                                    ),*/
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        (snapshot.data.docs[index]['admin']
+                                                    .toString() ==
+                                                sp.uid)
+                                            ? RoundedLoadingButton(
+                                                onPressed: () {
+                                                  handleExitPartyAdmin(snapshot
+                                                      .data.docs[index]['code']
+                                                      .toString());
+                                                },
+                                                controller: exitController,
+                                                successColor:
+                                                    const Color.fromRGBO(
+                                                        30, 215, 96, 0.9),
+                                                width: width * 0.25,
+                                                elevation: 0,
+                                                borderRadius: 25,
+                                                color: const Color.fromRGBO(
+                                                    30, 215, 96, 0.9),
+                                                child: Wrap(
+                                                  children: const [
+                                                    Center(
+                                                      child: Text(
+                                                          "Delete Party",
+                                                          style: TextStyle(
+                                                              color:
+                                                                  Colors.white,
+                                                              fontSize: 14,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w500)),
+                                                    )
+                                                  ],
+                                                ),
+                                              )
+                                            : RoundedLoadingButton(
+                                                onPressed: () {
+                                                  handleExitNormalUser(snapshot
+                                                      .data.docs[index]['code']
+                                                      .toString());
+                                                },
+                                                controller: partyController,
+                                                successColor:
+                                                    const Color.fromRGBO(
+                                                        30, 215, 96, 0.9),
+                                                width: width * 0.25,
+                                                elevation: 0,
+                                                borderRadius: 25,
+                                                color: const Color.fromRGBO(
+                                                    30, 215, 96, 0.9),
+                                                child: Wrap(
+                                                  children: const [
+                                                    Center(
+                                                      child: Text(
+                                                          "Remove Party",
+                                                          style: TextStyle(
+                                                              color:
+                                                                  Colors.white,
+                                                              fontSize: 14,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w500)),
+                                                    )
+                                                  ],
+                                                ),
+                                              ),
+                                        SizedBox(
+                                          width: width * .08,
+                                        ),
+                                        RoundedLoadingButton(
+                                          onPressed: () async {
+                                            handleShare(
+                                              snapshot.data.docs[index]['code']
+                                                  .toString(),
+                                            );
+                                          },
+                                          controller: shareController,
+                                          successColor: const Color.fromRGBO(
+                                              30, 215, 96, 0.9),
+                                          width: width * 0.25,
+                                          elevation: 0,
+                                          borderRadius: 25,
+                                          color: const Color.fromRGBO(
+                                              30, 215, 96, 0.9),
+                                          child: Wrap(
+                                            children: const [
+                                              Center(
+                                                child: Text("Share",
+                                                    style: TextStyle(
+                                                        color: Colors.white,
+                                                        fontSize: 14,
+                                                        fontWeight:
+                                                            FontWeight.w500)),
+                                              )
+                                            ],
+                                          ),
+                                        ),
+                                        SizedBox(
+                                          width: width * .08,
+                                        ),
+                                        (snapshot.data.docs[index]['admin']
+                                                    .toString() ==
+                                                sp.uid)
+                                            ? RoundedLoadingButton(
+                                                onPressed: () {
+                                                  handleEnterInLobby(snapshot
+                                                      .data.docs[index]['code']
+                                                      .toString());
+                                                },
+                                                controller: partyController,
+                                                successColor:
+                                                    const Color.fromRGBO(
+                                                        30, 215, 96, 0.9),
+                                                width: width * 0.25,
+                                                elevation: 0,
+                                                borderRadius: 25,
+                                                color: const Color.fromRGBO(
+                                                    30, 215, 96, 0.9),
+                                                child: Wrap(
+                                                  children: const [
+                                                    Center(
+                                                      child: Text("Join Party",
+                                                          style: TextStyle(
+                                                              color:
+                                                                  Colors.white,
+                                                              fontSize: 14,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w500)),
+                                                    )
+                                                  ],
+                                                ),
+                                              )
+                                            : RoundedLoadingButton(
+                                                onPressed: () {
+                                                  handleJoinLobby(snapshot
+                                                      .data.docs[index]['code']
+                                                      .toString());
+                                                },
+                                                controller: partyController,
+                                                successColor:
+                                                    const Color.fromRGBO(
+                                                        30, 215, 96, 0.9),
+                                                width: width * 0.25,
+                                                elevation: 0,
+                                                borderRadius: 25,
+                                                color: const Color.fromRGBO(
+                                                    30, 215, 96, 0.9),
+                                                child: Wrap(
+                                                  children: const [
+                                                    Center(
+                                                      child: Text("Join Party",
+                                                          style: TextStyle(
+                                                              color:
+                                                                  Colors.white,
+                                                              fontSize: 14,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w500)),
+                                                    )
+                                                  ],
+                                                ),
+                                              ),
+                                      ],
+                                    ),
+                                    Row(
+                                      children: const [
+                                        Divider(height: 16),
+                                      ],
+                                    ),
+                                  ],
+                                )
+                              ],
+                            )
+                          ],
+                          /*
+                                  onLongPress: (() async {
+                                    if (snapshot.data.docs[index]['admin'] ==
+                                        uid) {
+                                      showDialog(
+                                          context: context,
+                                          builder: (context) => AlertDialog(
+                                                content: TextButton(
+                                                  child: Text(
+                                                    'Delete ' +
+                                                        snapshot.data
+                                                                .docs[index]
+                                                                .data()[
+                                                            'PartyName'],
+                                                    style: const TextStyle(
+                                                        color: Colors.black,
+                                                        fontSize: 20),
+                                                  ),
+                                                  onPressed: () {
+                                                    //you are the admin
+                                                    handleExitPartyAdmin(
+                                                        snapshot
+                                                            .data.docs[index]
+                                                            .data()['code']
+                                                            .toString());
+
+                                                    Navigator.pop(context);
+                                                  },
+                                                ),
+                                              ));
+                                    } else {
+                                      showDialog(
+                                          context: context,
+                                          builder: (context) => AlertDialog(
+                                                content: TextButton(
+                                                  child: Text(
+                                                    'Exit from ' +
+                                                        snapshot.data
+                                                                .docs[index]
+                                                            ['PartyName'],
+                                                    style: const TextStyle(
+                                                        color: Colors.black,
+                                                        fontSize: 20),
+                                                  ),
+                                                  onPressed: () {
+                                                    // exit from a party
+                                                    // you are not the admin
+
+                                                    handleExitNormalUser(
+                                                        snapshot.data
+                                                            .docs[index]['code']
+                                                            .toString());
+                                                    Navigator.pop(context);
+                                                  },
+                                                ),
+                                              ));
+                                    }
+                                  }),*/
+                          onExpansionChanged: (bool expdandFlag) {
+                            setState(() {
+                              expandFlag = !expandFlag;
+                            });
+                            /*Navigator.of(context).push(MaterialPageRoute(
+                                builder: (context) => PartyPage(
+                                      code: snapshot.data.docs[index]['code']
+                                          .toString(),
+                                      name: snapshot
+                                          .data.docs[index]['PartyName']
+                                          .toString(),
+                                    )));*/
+                          },
+                        ),
+                      ));
+                })
+            : Container(
+                alignment: Alignment.topCenter,
+                child: const Text(
+                  "No party yet",
+                  style: TextStyle(
+                    fontSize: 20,
+                    color: Colors.grey,
+                    fontWeight: FontWeight.normal,
+                    fontFamily: 'Roboto',
+                  ),
+                ),
+              );
+      },
+    );
+  }
+
+  Future handleEnterInLobby(String code) async {
+    final sp = context.read<SignInProvider>();
+    final ip = context.read<InternetProvider>();
+    final fp = context.read<FirebaseRequests>();
+    await ip.checkInternetConnection();
+
+    if (ip.hasInternet == false) {
+      showInSnackBar(context, "Check your Internet connection", Colors.red);
+      partyController.reset();
+      return;
+    }
+
+    fp.checkPartyExists(code: code).then((value) async {
+      if (sp.hasError == true) {
+        showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+        partyController.reset();
+        return;
+      }
+      if (value == true) {
+        fp.isPartyStarted().then((value) {
+          if (sp.hasError == true) {
+            showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+            partyController.reset();
+            return;
+          }
+
+          fp.setPartyStarted(code).then((value) {
+            if (sp.hasError == true) {
+              showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+              partyController.reset();
+              return;
+            }
+            fp.getPartyDataFromFirestore(code).then((value) {
+              if (sp.hasError == true) {
+                showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+                partyController.reset();
+                return;
+              }
+              fp.saveDataToSharedPreferences().then((value) {
+                partyController.success();
+                handlePassToLobby();
+              });
+            });
+          });
+        });
+      }
+    });
+  }
+
+  Widget qrImage(String string, GlobalKey key) {
+    return RepaintBoundary(
+      key: key,
+      child: QrImage(
+        data: string,
+        size: 200,
+        backgroundColor: Colors.white,
+      ),
+    );
+  }
+
+  Future handleShare(String string) async {
+    try {
+      var image = await QrPainter(
+        data: string,
+        version: 10,
+        gapless: true,
+        color: const Color(0x00000000),
+        emptyColor: const Color(0xFFFFFFFF),
+      ).toImage(300);
+      ByteData? byteData = await image.toByteData(format: ImageByteFormat.png);
+      Uint8List pngBytes = byteData!.buffer.asUint8List();
+      final appDir = await getApplicationDocumentsDirectory();
+      var datetime = DateTime.now();
+      file = await File('${appDir.path}/$datetime.png').create();
+      await file?.writeAsBytes(pngBytes);
+
+      await Share.shareFiles(
+        [file!.path],
+        mimeTypes: ["image/png"],
+        text: "Scan this Qr-Code to join my SpotiParty!" +
+            " Or insert this code: $string",
+      );
+      shareController.success();
+
+      Future.delayed(const Duration(milliseconds: 1000));
+      shareController.reset();
+    } catch (e) {
+      showInSnackBar(context, e.toString(), Colors.red);
+      shareController.reset();
+      return;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final Size size = MediaQuery.of(context).size;
+    final sp = context.watch<SignInProvider>();
+
+    final ip = context.watch<InternetProvider>();
+    final fr = context.watch<FirebaseRequests>();
 
     return SafeArea(
         child: Scaffold(
-      backgroundColor: Color.fromARGB(128, 53, 74, 62),
+      backgroundColor: const Color.fromARGB(128, 53, 74, 62),
       appBar: AppBar(
-        backgroundColor: Color.fromARGB(158, 61, 219, 71),
+        backgroundColor: const Color.fromARGB(158, 61, 219, 71),
         title: const Text(
-          'My parties',
+          'Home',
           style: TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontFamily: 'Roboto',
-              fontWeight: FontWeight.bold),
+              color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
       ),
       drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              decoration: const BoxDecoration(
-                color: Color.fromARGB(224, 25, 183, 35),
-              ),
-              child: StreamBuilder(
-                  stream: FirebaseFirestore.instance
-                      .collection('users')
-                      .doc(uid)
-                      .snapshots(),
-                  builder: ((context, snapshot) {
-                    if (snapshot.connectionState != ConnectionState.waiting) {
-                      final user = snapshot.data;
-                      return user == null
-                          ? const Center(
-                              child: Text(
-                                'No username',
-                                style: TextStyle(color: Colors.black),
-                              ),
-                            )
-                          : buildDrawer(snapshot);
-                    } else {
-                      return const Center(
-                          child: CircularProgressIndicator(
-                        backgroundColor: Colors.black,
-                        color: Color.fromARGB(210, 193, 172, 172),
-                        strokeWidth: 3,
-                      ));
-                    }
-                  })),
+          child: ListView(padding: EdgeInsets.zero, children: [
+        DrawerHeader(
+            decoration: const BoxDecoration(
+              color: Color.fromARGB(224, 25, 183, 35),
             ),
-            ListTile(
-              leading: const Icon(
-                Icons.home,
-                color: Colors.black,
-              ),
-              title: const Text(
-                'Profile',
-                style: TextStyle(color: Colors.black),
-                selectionColor: Colors.black,
-              ),
-              onTap: () {
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => UserProfile()));
-              },
+            child: sp.uid == null
+                ? const Center(
+                    child: Text(
+                      'No username',
+                      style: TextStyle(color: Colors.black),
+                    ),
+                  )
+                : buildDrawer(sp)),
+        ListTile(
+          leading: const Icon(
+            Icons.home,
+            color: Colors.black,
+          ),
+          title: const Text(
+            'Profile',
+            style: TextStyle(color: Colors.black),
+            selectionColor: Colors.black,
+          ),
+          onTap: () {
+            nextScreen(context, UserProfile());
+          },
+        ),
+        ListTile(
+            leading: const Icon(
+              Icons.exit_to_app,
+              color: Colors.black,
             ),
-            ListTile(
+            title: const Text(
+              'Logout',
+              selectionColor: Colors.black,
+              style: TextStyle(color: Colors.black),
+            ),
+            onTap: () {
+              {
+                sp.userSignOut();
+                handleAfterLogout();
+              }
+            }),
+        StreamBuilder<ConnectionStatus>(
+          stream: SpotifySdk.subscribeConnectionStatus(),
+          builder: (context, snapshot) {
+            _connected = false;
+            var data = snapshot.data;
+            if (data != null) {
+              _connected = data.connected;
+            }
+            return Column(children: [
+              ListTile(
                 leading: const Icon(
-                  Icons.exit_to_app,
+                  Spotify.spotify,
                   color: Colors.black,
                 ),
                 title: const Text(
-                  'Logout',
-                  selectionColor: Colors.black,
+                  'Connect to Spotify',
                   style: TextStyle(color: Colors.black),
+                  selectionColor: Colors.black,
                 ),
-                onTap: () => {_signOut(context)}),
-            StreamBuilder<ConnectionStatus>(
-              stream: SpotifySdk.subscribeConnectionStatus(),
-              builder: (context, snapshot) {
-                _connected = false;
-                var data = snapshot.data;
-                if (data != null) {
-                  _connected = data.connected;
-                }
-                return Column(children: [
-                  ListTile(
-                    leading: const Icon(
-                      Spotify.spotify,
-                      color: Colors.black,
-                    ),
-                    title: const Text(
-                      'Connect to Spotify',
-                      style: TextStyle(color: Colors.black),
-                      selectionColor: Colors.black,
-                    ),
-                    onTap: (connectToSpotify),
-                  ),
-                  ListTile(
-                    leading: const Icon(
-                      Spotify.spotify,
-                      color: Colors.black,
-                    ),
-                    title: const Text(
-                      'Get Token',
-                      style: TextStyle(color: Colors.black),
-                      selectionColor: Colors.black,
-                    ),
-                    onTap: (getAuthToken),
-                  )
-                ]);
-              },
-            ),
-          ],
+                onTap: (connectToSpotify),
+              ),
+              ListTile(
+                leading: const Icon(
+                  Spotify.spotify,
+                  color: Colors.black,
+                ),
+                title: const Text(
+                  'Get Token',
+                  style: TextStyle(color: Colors.black),
+                  selectionColor: Colors.black,
+                ),
+                onTap: (getAuthToken),
+              )
+            ]);
+          },
         ),
-      ),
-      body: Column(
+      ])),
+      body: Stack(
         children: <Widget>[
           const SizedBox(
             height: 20,
           ),
-          Expanded(
-              child: SizedBox(
-                  child: StreamBuilder(
-                      stream: FirebaseFirestore.instance
-                          .collection('users')
-                          .doc(uid)
-                          .collection('party')
-                          .orderBy('startDate')
-                          .snapshots(),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const Center(
-                              child: CircularProgressIndicator(
-                            backgroundColor: Colors.black,
-                            strokeWidth: 3,
-                          ));
-                        } else if (!snapshot.hasData) {
-                          return Container(
-                            alignment: Alignment.topCenter,
-                            child: const Text(
-                              "",
-                              style: TextStyle(
-                                fontSize: 20,
-                                color: Colors.grey,
-                                fontWeight: FontWeight.normal,
-                                fontFamily: 'Roboto',
-                              ),
-                            ),
-                          );
-                        } else {
-                          if (!(snapshot.data!.docs
-                              .any((element) => element.exists))) {
-                            return Container(
-                              alignment: Alignment.topCenter,
-                              child: const Text(
-                                "No party yet",
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  color: Colors.grey,
-                                  fontWeight: FontWeight.normal,
-                                  fontFamily: 'Roboto',
-                                ),
-                              ),
-                            );
-                          } else {
-                            return ListView(
-                              children: snapshot.data!.docs.map((doc) {
-                                Timestamp tmp = ((doc.data()['startDate']));
-                                return Padding(
-                                    padding: EdgeInsets.all(8),
-                                    child: Card(
-                                      color: Colors.white,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(10.0),
-                                      ),
-                                      child: ListTile(
-                                        trailing: (doc.data()['admin'] == uid)
-                                            ? Icon(Icons.emoji_people)
-                                            : Icon(Icons.people),
-                                        title: Text(
-                                          doc.data()['PartyName'],
-                                          style: const TextStyle(
-                                              color: Colors.black,
-                                              fontSize: 18),
-                                        ),
-                                        subtitle: Text(
-                                          tmp.toDate().day.toString() +
-                                              " / " +
-                                              tmp.toDate().month.toString() +
-                                              " / " +
-                                              tmp.toDate().year.toString(),
-                                          style: TextStyle(
-                                              color: Colors.blueGrey,
-                                              fontSize: 14),
-                                        ),
-                                        onLongPress: (() async {
-                                          if (doc.data()['admin'] == uid) {
-                                            showDialog(
-                                                context: context,
-                                                builder: (context) =>
-                                                    AlertDialog(
-                                                      content: TextButton(
-                                                        child: Text(
-                                                          'Delete ' +
-                                                              doc.data()[
-                                                                  'PartyName'],
-                                                          style: TextStyle(
-                                                              color:
-                                                                  Colors.black,
-                                                              fontSize: 20),
-                                                        ),
-                                                        onPressed: () {
-                                                          //you are the admin
-                                                          delete(
-                                                              context,
-                                                              doc.data()[
-                                                                  'code']);
-                                                          Navigator.pop(
-                                                              context);
-                                                        },
-                                                      ),
-                                                    ));
-                                          } else {
-                                            showDialog(
-                                                context: context,
-                                                builder: (context) =>
-                                                    AlertDialog(
-                                                      content: TextButton(
-                                                        child: Text(
-                                                          'Exit from ' +
-                                                              doc.data()[
-                                                                  'PartyName'],
-                                                          style: TextStyle(
-                                                              color:
-                                                                  Colors.black,
-                                                              fontSize: 20),
-                                                        ),
-                                                        onPressed: () {
-// you are not the admin
-                                                          exit(
-                                                              context,
-                                                              uid,
-                                                              doc.data()[
-                                                                  'code']);
-                                                          remove(
-                                                              context,
-                                                              doc.data()[
-                                                                  'code']);
-                                                          Navigator.pop(
-                                                              context);
-                                                        },
-                                                      ),
-                                                    ));
-                                          }
-                                        }),
-                                        onTap: () {
-                                          Navigator.of(context).push(
-                                              MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      PartyPage(
-                                                        code: doc
-                                                            .data()['code']
-                                                            .toString(),
-                                                        name: doc
-                                                            .data()['PartyName']
-                                                            .toString(),
-                                                      )));
-                                        },
-                                      ),
-                                    ));
-                              }).toList(),
-                            );
-                          }
-                        }
-                      }))),
+          streamParties(),
           Positioned(
             bottom: 0,
             left: 0,
@@ -349,10 +644,10 @@ class _HomeState extends State<Home> {
                   Center(
                     heightFactor: 0.6,
                     child: FloatingActionButton(
-                        backgroundColor: Color.fromARGB(158, 61, 219, 71),
+                        backgroundColor: const Color.fromARGB(158, 61, 219, 71),
                         elevation: 0.1,
                         onPressed: () {
-                          Navigator.pushNamed(context, Home.routeName);
+                          //Navigator.pushNamed(context, Home.routeName);
                         },
                         child: const Icon(
                           Icons.home,
@@ -367,8 +662,10 @@ class _HomeState extends State<Home> {
                       children: [
                         TextButton(
                             onPressed: () {
-                              Navigator.pushNamed(
-                                  context, GeneratorScreen.routeName);
+                              //                            Navigator.pushNamed(
+                              //                          context, GeneratorScreen.routeName);
+                              //                        nextScreen(context, GeneratorScreen());
+                              handleGeneratorScreen();
                             },
                             child: const Text(
                               'Create a party',
@@ -382,11 +679,7 @@ class _HomeState extends State<Home> {
                         ),
                         TextButton(
                             onPressed: () {
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => const InsertCode(
-                                          title: 'Join a Party')));
+                              nextScreen(context, const InsertCode());
                             },
                             child: const Text(
                               'Join a party',
@@ -407,77 +700,289 @@ class _HomeState extends State<Home> {
     ));
   }
 
-  Future<void> exit(BuildContext context, String user, String data) async {
-    try {
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user)
-          .collection('party')
-          .doc(data)
-          .delete()
-          .then((_) => print('Deleted'))
-          .catchError((error) => print('Failed: $error'));
-    } on FirebaseAuthException catch (e) {
-      displayToastMessage(e.toString(), context);
-    }
+  handleAfterLogout() {
+    Future.delayed(const Duration(milliseconds: 1000)).then((value) {
+      nextScreenReplace(context, const Login());
+    });
   }
 
-  Future<void> delete(BuildContext context, String data) async {
-    try {
-      List<dynamic> list = [];
+  handleAfterUserProfile() {
+    Future.delayed(const Duration(milliseconds: 200)).then((value) {
+      nextScreen(context, UserProfile());
+    });
+  }
 
-      var snap = await FirebaseFirestore.instance
-          .collection('parties')
-          .doc(data)
-          .get();
+  handleGeneratorScreen() {
+    Future.delayed(const Duration(milliseconds: 500)).then((value) {
+      nextScreen(context, GeneratorScreen());
+    });
+  }
 
-      if (!snap.get('isStarted')) {
-        list = snap.get('partecipant_list');
-        if (list.isNotEmpty) {
-          list.forEach((value) {
-            exit(context, value, data);
+  Future handleJoinLobby(String code) async {
+    final sp = context.read<SignInProvider>();
+    final ip = context.read<InternetProvider>();
+    final fp = context.read<FirebaseRequests>();
+    await ip.checkInternetConnection();
+
+    if (ip.hasInternet == false) {
+      showInSnackBar(context, "Check your Internet connection", Colors.red);
+      partyController.reset();
+      return;
+    }
+
+    fp.checkPartyExists(code: code).then((value) async {
+      if (sp.hasError == true) {
+        showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+        partyController.reset();
+        return;
+      }
+      if (value == true) {
+        fp.isPartyStarted().then((value) {
+          if (sp.hasError == true) {
+            showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+            partyController.reset();
+            return;
+          }
+
+          if (value == true) {
+            fp.getPartyDataFromFirestore(code).then((value) {
+              if (sp.hasError == true) {
+                showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+                partyController.reset();
+                return;
+              }
+              fp.saveDataToSharedPreferences().then((value) {
+                partyController.success();
+                handlePassToLobby();
+              });
+            });
+          } else {
+            displayToastMessage(
+                context, 'Wait the Admin starts the party', Colors.red);
+          }
+
+          fp.setPartyStarted(code).then((value) {
+            if (sp.hasError == true) {
+              showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+              partyController.reset();
+              return;
+            }
+            fp.getPartyDataFromFirestore(code).then((value) {
+              if (sp.hasError == true) {
+                showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+                partyController.reset();
+                return;
+              }
+              fp.saveDataToSharedPreferences().then((value) {
+                partyController.success();
+                handlePassToLobby();
+              });
+            });
           });
+        });
+      }
+    });
+  }
+
+  handlePassToLobby() {
+    Future.delayed(const Duration(milliseconds: 200)).then((value) {
+      nextScreenReplace(context, const SpotifyPlayer());
+    });
+  }
+
+  Future handleExitPartyAdmin(String code) async {
+    final sp = context.read<SignInProvider>();
+    final ip = context.read<InternetProvider>();
+    final fp = context.read<FirebaseRequests>();
+
+    await ip.checkInternetConnection();
+
+    if (ip.hasInternet == false) {
+      showInSnackBar(context, "Check your Internet connection", Colors.red);
+      exitController.reset();
+
+      return;
+    }
+
+    await sp.checkUserExists().then((value) async {
+      if (sp.hasError == true) {
+        showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+        exitController.reset();
+
+        return;
+      }
+
+      if (value == false) {
+        showInSnackBar(context, 'User Does Not Exist', Colors.red);
+        exitController.reset();
+
+        return;
+      }
+
+      await sp.getUserDataFromFirestore(sp.uid).then((value) {
+        if (sp.hasError == true) {
+          showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+          exitController.reset();
+
+          return;
         }
 
-        await FirebaseFirestore.instance
-            .collection('parties')
-            .doc(data)
-            .delete();
-      } else if (snap.get('isStarted') && snap.get('isEnded')) {
-        exit(context, uid, data);
-      } else {
-        displayToastMessage('Please, stop the party first!', context);
+        sp.saveDataToSharedPreferences().then((value) async {
+          await fp.checkPartyExists(code: code).then((value) async {
+            if (fp.hasError == true) {
+              showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+              exitController.reset();
+              return;
+            }
+            if (value == false) {
+              showInSnackBar(context, 'Party Does Not Exist', Colors.red);
+              exitController.reset();
+
+              return;
+            }
+
+            await fp.getPartyDataFromFirestore(code).then((value) {
+              if (fp.hasError == true) {
+                showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+                exitController.reset();
+
+                return;
+              }
+
+              fp.saveDataToSharedPreferences().then((value) {
+                if (fp.getIsEnded()) {
+                  fp.exit(sp.uid!).then((value) {
+                    if (sp.hasError == true) {
+                      showInSnackBar(
+                          context, sp.errorCode.toString(), Colors.red);
+                      exitController.reset();
+
+                      return;
+                    }
+
+                    fp.remove(sp.uid).then((value) {
+                      if (sp.hasError == true) {
+                        showInSnackBar(
+                            context, sp.errorCode.toString(), Colors.red);
+                        exitController.reset();
+
+                        return;
+                      }
+                      exitController.success();
+                      Future.delayed(const Duration(milliseconds: 500));
+                      displayToastMessage(context,
+                          'You are no longer part of the party', Colors.green);
+                      return;
+                    });
+                  });
+                }
+
+                if (fp.getIsStarted()) {
+                  exitController.reset();
+
+                  showInSnackBar(context,
+                      'Please, stop the party before deleting', Colors.red);
+                  return;
+                } else {
+                  fp.delete(sp.uid!).then((value) {
+                    if (fp.hasError == true) {
+                      showInSnackBar(
+                          context, sp.errorCode.toString(), Colors.red);
+                      exitController.reset();
+                    }
+                    exitController.success();
+
+                    Future.delayed(const Duration(milliseconds: 500));
+                    displayToastMessage(context, 'Party Deleted', Colors.green);
+                    exitController.reset();
+                  });
+                }
+              });
+            });
+          });
+        });
+      });
+    });
+  }
+
+  Future handleExitNormalUser(String code) async {
+    final sp = context.read<SignInProvider>();
+    final ip = context.read<InternetProvider>();
+    final fp = context.read<FirebaseRequests>();
+    await ip.checkInternetConnection();
+
+    if (ip.hasInternet == false) {
+      showInSnackBar(context, "Check your Internet connection", Colors.red);
+      exitController.reset();
+
+      return;
+    }
+
+    await sp.checkUserExists().then((value) async {
+      if (sp.hasError == true) {
+        showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+        exitController.reset();
+
+        return;
       }
-    } on FirebaseAuthException catch (e) {
-      displayToastMessage(e.toString(), context);
-    }
-  }
 
-  Future<void> remove(BuildContext context, String data) async {
-    try {
-      await FirebaseFirestore.instance
-          .collection('parties')
-          .doc(data)
-          .update({
-            '#partecipant': FieldValue.increment(-1),
-            'partecipant_list': FieldValue.arrayRemove([uid]),
-          })
-          .then((_) => print('Deleted'))
-          .catchError((error) => print('Failed: $error'));
-    } on FirebaseAuthException catch (e) {
-      displayToastMessage(e.toString(), context);
-    }
-  }
+      await sp.getUserDataFromFirestore(sp.uid).then((value) {
+        if (sp.hasError == true) {
+          showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+          exitController.reset();
 
-  Future<void> _signOut(BuildContext context) async {
-    try {
-      await FirebaseAuth.instance.signOut().then((value) =>
-          Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(builder: (context) => const Login()),
-              (route) => false));
-    } on FirebaseAuthException catch (e) {
-      displayToastMessage(e.toString(), context);
-    }
+          return;
+        }
+
+        sp.saveDataToSharedPreferences().then((value) async {
+          await fp.checkPartyExists(code: code).then((value) async {
+            if (fp.hasError == true) {
+              showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+              exitController.reset();
+
+              return;
+            }
+
+            await fp.getPartyDataFromFirestore(code).then((value) {
+              if (fp.hasError == true) {
+                showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+                exitController.reset();
+
+                return;
+              }
+
+              fp.saveDataToSharedPreferences().then((value) {
+                fp.exit(sp.uid!).then((value) {
+                  if (sp.hasError == true) {
+                    showInSnackBar(
+                        context, sp.errorCode.toString(), Colors.red);
+                    exitController.reset();
+
+                    return;
+                  }
+                  fp.remove(sp.uid).then((value) {
+                    if (sp.hasError == true) {
+                      showInSnackBar(
+                          context, sp.errorCode.toString(), Colors.red);
+                      exitController.reset();
+
+                      return;
+                    }
+                    exitController.success();
+                    Future.delayed(const Duration(milliseconds: 500));
+                    displayToastMessage(context,
+                        'You are no longer part of the party', Colors.green);
+                    exitController.reset();
+                  });
+                });
+              });
+            });
+          });
+        });
+      });
+    });
+
+    // check if exist
   }
 
   Future<String> getAuthToken() async {
@@ -537,28 +1042,43 @@ class _HomeState extends State<Home> {
     _logger.i('$code$text');
   }
 
-  Widget buildDrawer(
-          AsyncSnapshot<DocumentSnapshot<Map<String, dynamic>>> snapshot) =>
-      ListTile(
-        leading: CircleAvatar(
-            backgroundColor: Colors.white,
-            maxRadius: 40,
-            child: CircleAvatar(
-                backgroundColor: Color(snapshot.data!.get('image')),
-                child: Text(
-                  snapshot.data!.get('init').toString().toUpperCase(),
-                  style: TextStyle(
-                    color: Color(snapshot.data!.get('initColor')),
-                    fontSize: 20,
+  Widget buildDrawer(SignInProvider sp) => Column(
+        children: [
+          (sp.imageUrl != '')
+              ? ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: Colors.white,
+                    maxRadius: 40,
+                    child: CircleAvatar(
+                      backgroundColor: Colors.white,
+                      backgroundImage: NetworkImage("${sp.imageUrl}"),
+                      radius: 50,
+                    ),
                   ),
-                ))),
-        title: Text(
-          snapshot.data!.get('username'),
-          style: const TextStyle(
-            color: Colors.black,
-            fontSize: 13,
-          ),
-        ),
+                )
+              : ListTile(
+                  leading: CircleAvatar(
+                      backgroundColor: Colors.white,
+                      maxRadius: 40,
+                      child: CircleAvatar(
+                          backgroundColor: Color(sp.image!),
+                          child: Text(
+                            sp.init.toString().toUpperCase(),
+                            style: TextStyle(
+                              color: Color(sp.initColor!),
+                              fontSize: 20,
+                            ),
+                          )))),
+          ListTile(
+            leading: Text(
+              sp.name!.toString(),
+              style: const TextStyle(
+                color: Colors.black,
+                fontSize: 13,
+              ),
+            ),
+          )
+        ],
       );
 }
 
@@ -566,7 +1086,7 @@ class BNBCustomPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     Paint paint = new Paint()
-      ..color = Color.fromARGB(158, 61, 219, 71)
+      ..color = const Color.fromARGB(158, 61, 219, 71)
       ..style = PaintingStyle.fill;
 
     Path path = Path();

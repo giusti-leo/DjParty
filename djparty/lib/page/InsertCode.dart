@@ -2,14 +2,18 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:djparty/page/Home.dart';
+import 'package:djparty/services/FirebaseRequests.dart';
+import 'package:djparty/services/InternetProvider.dart';
+import 'package:djparty/services/SignInProvider.dart';
+import 'package:djparty/utils/nextScreen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 import '../services/FirebaseAuthMethods.dart';
 
 class InsertCode extends StatefulWidget {
-  const InsertCode({super.key, required this.title});
-  final String title;
+  const InsertCode({super.key});
 
   @override
   State<InsertCode> createState() => _InsertCodeState();
@@ -27,17 +31,42 @@ class _InsertCodeState extends State<InsertCode> {
     super.dispose();
   }
 
+  Future getData() async {
+    final sp = context.read<SignInProvider>();
+    final ip = context.read<InternetProvider>();
+    final fr = context.read<FirebaseRequests>();
+
+    sp.getDataFromSharedPreferences();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getData();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final sp = context.read<SignInProvider>();
+
     return Scaffold(
-      backgroundColor: Color.fromARGB(128, 53, 74, 62),
+      backgroundColor: const Color.fromARGB(128, 53, 74, 62),
       appBar: AppBar(
-        backgroundColor: Color.fromARGB(158, 61, 219, 71),
+        backgroundColor: const Color.fromARGB(158, 61, 219, 71),
         title: const Text(
           'Join a Party',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
+        leading: GestureDetector(
+          child: const Icon(
+            Icons.arrow_back_ios_new,
+            color: Colors.white,
+          ),
+          onTap: () {
+            nextScreenReplace(context, const Home());
+          },
+        ),
       ),
       body: Stack(
         alignment: Alignment.center,
@@ -106,7 +135,7 @@ class _InsertCodeState extends State<InsertCode> {
               color: const Color.fromRGBO(30, 215, 96, 0.9),
               icon: const Icon(Icons.done, size: 30),
               onPressed: () {
-                validityCode();
+                handleInsert();
               }),
         ),
       ));
@@ -116,78 +145,103 @@ class _InsertCodeState extends State<InsertCode> {
       width: MediaQuery.of(context).size.width * 0.4,
       height: MediaQuery.of(context).size.height / 18,
       child: IconButton(
-        color: Color.fromARGB(158, 61, 219, 71),
-        icon: Icon(Icons.qr_code_sharp),
+        color: const Color.fromARGB(158, 61, 219, 71),
+        icon: const Icon(Icons.qr_code_sharp),
         onPressed: () {
-          Navigator.of(context)
-              .push(MaterialPageRoute(builder: (context) => ScannerScreen()));
+          nextScreen(context, const ScannerScreen());
         },
       ),
     );
   }
 
-  void validityCode() {
-    if (textController.text.length != 5) {
-      err = true;
-      displayToastMessage('Party Code is 5 characters long', context);
+  Future handleInsert() async {
+    final sp = context.read<SignInProvider>();
+    final ip = context.read<InternetProvider>();
+    final fp = context.read<FirebaseRequests>();
+
+    await ip.checkInternetConnection();
+
+    if (ip.hasInternet == false) {
+      showInSnackBar(context, "Check your Internet connection", Colors.red);
       return;
-    } else {
-      err = false;
-      if (err == false) {
-        enterCode(textController.text);
-      }
     }
+
+    if (!validityCode()) {
+      return;
+    }
+
+    await sp.checkUserExists().then((value) async {
+      if (sp.hasError == true) {
+        showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+        return;
+      }
+      if (value == false) {
+        showInSnackBar(context, 'The user data does not exists', Colors.red);
+        return;
+      }
+
+      await sp.getUserDataFromFirestore(sp.uid).then((value) {
+        if (sp.hasError == true) {
+          showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+          return;
+        }
+        sp.saveDataToSharedPreferences().then((value) async {
+          await fp.checkPartyExists(code: textController.text).then((value) {
+            if (fp.hasError == true) {
+              showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+              return;
+            }
+            if (value == false) {
+              showInSnackBar(context,
+                  'This code does not correspond to any party', Colors.red);
+              return;
+            } else {
+              fp.getPartyDataFromFirestore(textController.text).then((value) =>
+                  fp.saveDataToSharedPreferences().then((value) =>
+                      fp.isUserInsideParty(sp.uid!).then((value) {
+                        if (value == true) {
+                          displayToastMessage(
+                              context,
+                              'You are already part of the party',
+                              Colors.green);
+                          return;
+                        }
+                        fp.userJoinParty(sp.uid!).then((value) {
+                          if (fp.hasError) {
+                            showInSnackBar(
+                                context, sp.errorCode.toString(), Colors.red);
+                            return;
+                          } else {
+                            fp.addUserToParty(sp.uid!).then((value) {
+                              if (fp.hasError) {
+                                showInSnackBar(context, sp.errorCode.toString(),
+                                    Colors.red);
+                                return;
+                              } else {
+                                handleAfterAdd();
+                              }
+                            });
+                          }
+                        });
+                      })));
+            }
+          });
+        });
+      });
+    });
   }
 
-  Future<void> enterCode(String code) async {
-    try {
-      DocumentSnapshot<Map<String, dynamic>> partySnapshot =
-          await FirebaseFirestore.instance
-              .collection('parties')
-              .doc(code)
-              .get();
+  handleAfterAdd() {
+    nextScreenReplace(context, const Home());
+  }
 
-      DocumentSnapshot<Map<String, dynamic>> userSnapshot =
-          await FirebaseFirestore.instance
-              .collection('users')
-              .doc(uid)
-              .collection('party')
-              .doc(code)
-              .get();
-
-      if (!partySnapshot.exists) {
-        displayToastMessage(
-            'This code does not correspond to any party', context);
-        return;
-      }
-
-      if (userSnapshot.exists) {
-        displayToastMessage('You are already part of the party', context);
-        return;
-      } else {
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(uid)
-            .collection('party')
-            .doc(code)
-            .set({
-          'PartyName': partySnapshot.get('partyName').toString(),
-          'startDate': partySnapshot.get('creationTime'),
-          'code': partySnapshot.get('code').toString(),
-        });
-
-        await FirebaseFirestore.instance
-            .collection('parties')
-            .doc(code)
-            .update({
-          '#partecipant': FieldValue.increment(1),
-          'partecipant_list': FieldValue.arrayUnion([uid]),
-        });
-      }
-
-      Navigator.pushNamed(context, Home.routeName);
-    } on FirebaseFirestore catch (e) {
-      displayToastMessage(e.toString(), context);
+  bool validityCode() {
+    if (textController.text.length != 5) {
+      displayToastMessage(
+          context, 'Party Code is 5 characters long', Colors.red);
+      return false;
+    } else {
+      return true;
     }
   }
 }
@@ -204,6 +258,9 @@ class _ScannerScreenState extends State<ScannerScreen> {
   QRViewController? controller;
   Barcode? result;
 
+  String error = '';
+  String newError = '';
+
   void qr(QRViewController controller) {
     if (Platform.isAndroid) {
       controller.resumeCamera();
@@ -213,73 +270,139 @@ class _ScannerScreenState extends State<ScannerScreen> {
       setState(() {
         result = event;
       });
-      setState(() {
-        controller.pauseCamera();
-      });
-      enterCode(result!.code.toString());
+      handleInsert();
     });
   }
 
-  Future<void> enterCode(String code) async {
-    try {
-      if (code.contains('//')) {
-        displayToastMessage(
-            'This code does not correspond to any party', context);
-        Navigator.pushNamed(context, Home.routeName);
-        return;
-      }
-
-      DocumentSnapshot<Map<String, dynamic>> partySnapshot =
-          await FirebaseFirestore.instance
-              .collection('parties')
-              .doc(code)
-              .get();
-
-      DocumentSnapshot<Map<String, dynamic>> userSnapshot =
-          await FirebaseFirestore.instance
-              .collection('users')
-              .doc(uid)
-              .collection('party')
-              .doc(code)
-              .get();
-
-      if (partySnapshot == null || !partySnapshot.exists) {
-        displayToastMessage(
-            'This code does not correspond to any party', context);
-        Navigator.pushNamed(context, Home.routeName);
-        return;
-      }
-
-      if (userSnapshot.exists) {
-        displayToastMessage('You are already part of the party', context);
-        Navigator.pushNamed(context, Home.routeName);
-
-        return;
-      } else {
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(uid)
-            .collection('party')
-            .doc(code)
-            .set({
-          'PartyName': partySnapshot.get('partyName').toString(),
-          'startDate': partySnapshot.get('creationTime'),
-          'code': partySnapshot.get('code').toString(),
-        });
-
-        await FirebaseFirestore.instance
-            .collection('parties')
-            .doc(code)
-            .update({
-          '#partecipant': FieldValue.increment(1),
-          'partecipant_list': FieldValue.arrayUnion([uid]),
-        });
-      }
-
-      Navigator.pushNamed(context, Home.routeName);
-    } on FirebaseFirestore catch (e) {
-      displayToastMessage(e.toString(), context);
+  bool validityCode() {
+    if (result!.code.toString().contains('//')) {
+      newError = 'This Qr is a link';
+      return false;
     }
+    if (result!.code.toString().length != 5) {
+      newError = 'Sorry, this Qr is not a PartyCode';
+      return false;
+    } else {
+      return true;
+    }
+  }
+
+  Future handleInsert() async {
+    setState(() {
+      controller!.pauseCamera();
+    });
+
+    final sp = context.read<SignInProvider>();
+    final ip = context.read<InternetProvider>();
+    final fp = context.read<FirebaseRequests>();
+
+    await ip.checkInternetConnection();
+
+    if (ip.hasInternet == false) {
+      showInSnackBar(context, "Check your Internet connection", Colors.red);
+      return;
+    }
+
+    if (!validityCode()) {
+      if (isErrorNew()) {
+        displayToastMessage(context, error, Colors.red);
+      }
+      setState(() {
+        controller!.resumeCamera();
+      });
+      return;
+    }
+
+    await sp.checkUserExists().then((value) async {
+      if (sp.hasError == true) {
+        showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+        return;
+      }
+      if (value == false) {
+        showInSnackBar(context, 'The user data does not exists', Colors.red);
+        return;
+      }
+
+      await sp.getUserDataFromFirestore(sp.uid).then((value) {
+        if (sp.hasError == true) {
+          showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+          return;
+        }
+        sp.saveDataToSharedPreferences().then((value) async {
+          await fp
+              .checkPartyExists(code: result!.code.toString())
+              .then((value) {
+            if (fp.hasError == true) {
+              showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+              handleAfterError();
+
+              return;
+            }
+            if (value == false) {
+              showInSnackBar(context,
+                  'This code does not correspond to any party', Colors.red);
+              handleAfterError();
+
+              return;
+            }
+
+            fp.getPartyDataFromFirestore(result!.code.toString()).then(
+                (value) => fp.saveDataToSharedPreferences().then((value) =>
+                    fp.isUserInsideParty(sp.uid!).then((value) {
+                      if (value == true) {
+                        displayToastMessage(context,
+                            'You are already part of the party', Colors.green);
+                        handleAfterError();
+                        print('Here');
+
+                        return;
+                      }
+                      fp.userJoinParty(sp.uid!).then((value) {
+                        if (fp.hasError) {
+                          showInSnackBar(
+                              context, sp.errorCode.toString(), Colors.red);
+                          handleAfterError();
+
+                          return;
+                        } else {
+                          fp.addUserToParty(sp.uid!).then((value) {
+                            if (fp.hasError) {
+                              showInSnackBar(
+                                  context, sp.errorCode.toString(), Colors.red);
+                              handleAfterError();
+
+                              return;
+                            } else {
+                              displayToastMessage(
+                                  context, 'Party Joined', Colors.green);
+                              handleAfterAdd();
+                            }
+                          });
+                        }
+                      });
+                    })));
+          });
+        });
+      });
+    });
+  }
+
+  handleAfterError() {
+    Future.delayed(const Duration(milliseconds: 500)).then((value) {
+      nextScreenReplace(context, const InsertCode());
+    });
+  }
+
+  handleStepBack() {
+    Future.delayed(const Duration(milliseconds: 500)).then((value) {
+      nextScreenReplace(context, const InsertCode());
+    });
+  }
+
+  handleAfterAdd() {
+    Future.delayed(const Duration(milliseconds: 500)).then((value) {
+      nextScreenReplace(context, const Home());
+    });
   }
 
   @override
@@ -289,12 +412,23 @@ class _ScannerScreenState extends State<ScannerScreen> {
     return Scaffold(
       backgroundColor: const Color.fromRGBO(25, 20, 20, 0.4),
       appBar: AppBar(
-          backgroundColor: const Color.fromRGBO(30, 215, 96, 0.9),
-          centerTitle: true,
-          title: Text(
-            'Qr Scanner',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          )),
+        backgroundColor: const Color.fromRGBO(30, 215, 96, 0.9),
+        centerTitle: true,
+        title: const Text(
+          'Qr Scanner',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        leading: GestureDetector(
+          child: const Icon(
+            Icons.arrow_back_ios_new,
+            color: Colors.white,
+          ),
+          onTap: () {
+            controller!.pauseCamera();
+            handleStepBack();
+          },
+        ),
+      ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -317,11 +451,11 @@ class _ScannerScreenState extends State<ScannerScreen> {
               child: (result != null)
                   ? Text(
                       '${result!.code}',
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Colors.white,
                       ),
                     )
-                  : Text(
+                  : const Text(
                       'Scan a code',
                       style: TextStyle(
                         color: Colors.white,
@@ -333,145 +467,13 @@ class _ScannerScreenState extends State<ScannerScreen> {
       ),
     );
   }
-}
-/*
 
-class QrScanCode extends StatefulWidget {
-  const QrScanCode({Key? key}) : super(key: key);
-
-  @override
-  State<QrScanCode> createState() => _QrScanCodeState();
-}
-
-class _QrScanCodeState extends State<QrScanCode> {
-  String uid = FirebaseAuth.instance.currentUser!.uid;
-  final qrKey = GlobalKey(debugLabel: 'Qr');
-  QRViewController? controller;
-
-  Barcode? barcode;
-
-  @override
-  void reassemble() async {
-    super
-        .reassemble(); 
-    
-    if (Platform.isAndroid) {
-      await controller!.pauseCamera();
-    }
-    controller!.resumeCamera();
-  }
-
-  @override
-  void dispose() {
-    controller?.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => SafeArea(
-          child: Scaffold(
-        appBar: AppBar(
-          backgroundColor: Color.fromARGB(158, 61, 219, 71),
-          title: const Text('Scan Code'),
-          centerTitle: true,
-        ),
-        body: Stack(
-          alignment: Alignment.center,
-          children: <Widget>[
-            buildQrReader(context),
-            Positioned(
-              bottom: 20,
-              child: buildResult(),
-            )
-          ],
-        ),
-      ));
-
-  Widget buildResult() => Container(
-      height: MediaQuery.of(context).size.height / 25,
-      width: MediaQuery.of(context).size.width / 3.5,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-          color: Colors.white, borderRadius: BorderRadius.circular(15)),
-      child: Text(
-        barcode != null ? 'Result : ${barcode!.code}' : 'Scan a code!',
-        maxLines: 3,
-      ));
-
-  Widget buildQrReader(BuildContext context) => QRView(
-        key: qrKey,
-        onQRViewCreated: onViewCreated,
-        overlay: QrScannerOverlayShape(
-            borderRadius: 10,
-            borderLength: 20,
-            borderWidth: 10,
-            cutOutBottomOffset: MediaQuery.of(context).size.height * 0.2),
-      );
-
-  void onViewCreated(QRViewController controller) {
-    setState(() {
-      this.controller = controller;
-    });
-
-    controller.scannedDataStream.listen((barcode) {
-      this.barcode = barcode;
-    });
-
-    if (barcode != null) {
-      enterCode(barcode!.code.toString());
-    }
-  }
-
-  Future<void> enterCode(String code) async {
-    try {
-      DocumentSnapshot<Map<String, dynamic>> partySnapshot =
-          await FirebaseFirestore.instance
-              .collection('parties')
-              .doc(code)
-              .get();
-
-      DocumentSnapshot<Map<String, dynamic>> userSnapshot =
-          await FirebaseFirestore.instance
-              .collection('users')
-              .doc(uid)
-              .collection('party')
-              .doc(code)
-              .get();
-
-      if (partySnapshot.data()!.isEmpty) {
-        displayToastMessage(
-            'This code does not correspond to any party', context);
-        return;
-      }
-
-      if (userSnapshot.exists) {
-        displayToastMessage('You are already part of the party', context);
-        return;
-      } else {
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(uid)
-            .collection('party')
-            .doc(code)
-            .set({
-          'PartyName': partySnapshot.get('partyName').toString(),
-          'startDate': partySnapshot.get('creationTime'),
-          'code': partySnapshot.get('code').toString(),
-        });
-
-        await FirebaseFirestore.instance
-            .collection('parties')
-            .doc(code)
-            .update({
-          '#partecipant': FieldValue.increment(1),
-          'partecipant_list': FieldValue.arrayUnion([uid]),
-        });
-      }
-
-      Navigator.pushNamed(context, Home.routeName);
-    } on FirebaseFirestore catch (e) {
-      displayToastMessage(e.toString(), context);
+  bool isErrorNew() {
+    if (error == newError) {
+      return false;
+    } else {
+      error = newError;
+      return true;
     }
   }
 }
-*/

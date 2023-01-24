@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+/*import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:djparty/page/Home.dart';
 import 'package:djparty/page/SignIn.dart';
 import 'package:djparty/utils/showOtpDialog.dart';
@@ -139,9 +139,9 @@ class FirebaseAuthMethods {
 
       Map<String, dynamic> userDataMap = {
         'email': googleUser.email.toString(),
-        'image': new Color(0x00000000).value,
         'username': googleUser.email.toString(),
         'description': '',
+        'image': new Color(0x00000000).value,
         'init': googleUser.email[0].toString(),
         'initColor': new Color(0xFFFFFFFF).value
       };
@@ -252,12 +252,4 @@ class FirebaseAuthMethods {
       displayToastMessage(e.toString(), context);
     }
   }
-}
-
-displayToastMessage(String msg, BuildContext context) {
-  Fluttertoast.showToast(msg: msg);
-}
-
-void showInSnackBar(String value, BuildContext context) {
-  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(value)));
-}
+}*/

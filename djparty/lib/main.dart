@@ -5,9 +5,13 @@ import 'package:djparty/page/Home.dart';
 import 'package:djparty/page/Login.dart';
 import 'package:djparty/page/ResetPassword.dart';
 import 'package:djparty/page/SignIn.dart';
+import 'package:djparty/page/SplashScreen.dart';
 import 'package:djparty/page/UserProfile.dart';
 import 'package:djparty/page/spotifyPlayer.dart';
 import 'package:djparty/services/FirebaseAuthMethods.dart';
+import 'package:djparty/services/FirebaseRequests.dart';
+import 'package:djparty/services/InternetProvider.dart';
+import 'package:djparty/services/SignInProvider.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -32,36 +36,21 @@ class Main extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-        title: '',
-        home: AnimatedSplashScreen(
-            splashIconSize: 400,
-            duration: 1000,
-            splash: Image.asset(
-              'assets/images/logo.jpg',
-              width: 10000,
-              height: 10000,
-              colorBlendMode: BlendMode.hardLight,
-            ),
-            nextScreen: connection(context),
-            splashTransition: SplashTransition.fadeTransition,
-            backgroundColor: Colors.black));
-  }
-
-  Widget connection(BuildContext context) {
     return MultiProvider(
       providers: [
-        Provider<FirebaseAuthMethods>(
-          create: (_) => FirebaseAuthMethods(FirebaseAuth.instance),
+        ChangeNotifierProvider(
+          create: ((context) => SignInProvider()),
         ),
-        StreamProvider(
-          create: (context) => context.read<FirebaseAuthMethods>().authState,
-          initialData: null,
+        ChangeNotifierProvider(
+          create: ((context) => InternetProvider()),
+        ),
+        ChangeNotifierProvider(
+          create: ((context) => FirebaseRequests()),
         ),
       ],
       child: MaterialApp(
-        title: 'Dj Party',
-        home: const AuthWrapper(),
+        home: const SplashScreen(),
+        debugShowCheckedModeBanner: true,
         routes: {
           SignIn.routeName: (context) => const SignIn(),
           Home.routeName: (context) => const Home(),
@@ -73,19 +62,5 @@ class Main extends StatelessWidget {
         },
       ),
     );
-  }
-}
-
-class AuthWrapper extends StatelessWidget {
-  const AuthWrapper({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    final firebaseUser = context.watch<User?>();
-
-    if (firebaseUser != null) {
-      return const Home();
-    }
-    return const Login();
   }
 }
