@@ -7,6 +7,8 @@ import 'package:spotify_sdk/models/image_uri.dart';
 import 'package:spotify_sdk/models/player_state.dart';
 import 'package:spotify_sdk/models/player_context.dart';
 import 'package:djparty/Icons/SizedIconButton.dart';
+import 'package:djparty/page/SearchItemScreen.dart';
+import 'package:djparty/page/PartyPlaylist.dart';
 import 'package:djparty/page/Home.dart';
 
 class SpotifyPlayer extends StatefulWidget {
@@ -18,6 +20,7 @@ class SpotifyPlayer extends StatefulWidget {
 }
 
 class _SpotifyPlayerState extends State<SpotifyPlayer> {
+  dynamic isPaused = true;
   double votingIndex = 0;
   bool _loading = false;
   bool _connected = true;
@@ -48,12 +51,12 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
             _connected = data.connected;
           }
           return Scaffold(
-            backgroundColor: Colors.black,
+            backgroundColor: Color.fromARGB(159, 46, 46, 46),
             appBar: AppBar(
-              backgroundColor: const Color.fromRGBO(30, 215, 96, 0.9),
+              backgroundColor: Color.fromARGB(228, 53, 191, 101),
               title: const Text(
                 'Dj Party',
-                style: TextStyle(color: Colors.black),
+                style: TextStyle(color: Colors.white),
               ),
               centerTitle: true,
               actions: [
@@ -66,6 +69,7 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
               ],
             ),
             body: _playerWidget(context),
+            bottomNavigationBar: _buildBottomBar(context),
           );
         },
       ),
@@ -81,11 +85,17 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
         var playerState = snapshot.data;
         var playerPosition = double.parse('${playerState?.playbackPosition}');
         var trackDuration = double.parse('${track?.duration}');
+        double _value = 10.0;
 
         if (playerState == null || track == null) {
           return Center(
             child: Container(),
           );
+        }
+        if (playerState.isPaused == true) {
+          isPaused = true;
+        } else {
+          isPaused = false;
         }
 
         return Stack(
@@ -93,52 +103,14 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
           // crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
             ListView(padding: const EdgeInsets.all(8), children: [
-              SizedBox(height: 50),
+              const SizedBox(height: 50),
               SizedBox(
                 width: 250,
                 height: 250,
                 child: spotifyImageWidget(track.imageUri),
               ),
-              SizedBox(height: 20),
-              SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: <Widget>[
-                  SizedIconButton(
-                    width: 50,
-                    icon: const Icon(
-                      Icons.skip_previous,
-                      color: const Color.fromRGBO(30, 215, 96, 0.9),
-                    ),
-                    onPressed: skipPrevious,
-                  ),
-                  playerState.isPaused
-                      ? SizedIconButton(
-                          width: 50,
-                          icon: const Icon(
-                            Icons.play_arrow,
-                            color: const Color.fromRGBO(30, 215, 96, 0.9),
-                          ),
-                          onPressed: resume,
-                        )
-                      : SizedIconButton(
-                          width: 50,
-                          icon: const Icon(
-                            Icons.pause,
-                            color: const Color.fromRGBO(30, 215, 96, 0.9),
-                          ),
-                          onPressed: pause,
-                        ),
-                  SizedIconButton(
-                    width: 50,
-                    icon: const Icon(
-                      Icons.skip_next,
-                      color: const Color.fromRGBO(30, 215, 96, 0.9),
-                    ),
-                    onPressed: skipNext,
-                  ),
-                ],
-              ),
+              const SizedBox(height: 20),
+              _PlayPauseWidget(),
               Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                 Text(
                   '${track.name}',
@@ -257,6 +229,87 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
     );
   }
 
+  Widget _buildBottomBar(BuildContext context) {
+    return BottomAppBar(
+      color: Color.fromARGB(255, 45, 44, 44),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: <Widget>[
+              IconButton(
+                  icon: const Icon(
+                    Icons.play_arrow_rounded,
+                    color: Colors.white,
+                  ),
+                  onPressed: () {
+                    Navigator.pushNamed(context, SearchItemScreen.routeName);
+                  }),
+              SizedIconButton(
+                  width: 50,
+                  icon: const Icon(
+                    Icons.search,
+                    color: Colors.white,
+                  ),
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => SearchItemScreen()));
+                  }),
+              SizedIconButton(
+                width: 50,
+                icon: Icon(Icons.playlist_play_rounded, color: Colors.white),
+                onPressed: (() {
+                  Navigator.pushReplacement(context,
+                      MaterialPageRoute(builder: (context) => PartyPlaylist()));
+                }),
+              )
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _PlayPauseWidget() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: <Widget>[
+        IconButton(
+          icon: const Icon(
+            Icons.skip_previous,
+            color: const Color.fromRGBO(30, 215, 96, 0.9),
+          ),
+          onPressed: skipPrevious,
+        ),
+        isPaused
+            ? IconButton(
+                iconSize: 50,
+                icon: const Icon(
+                  Icons.play_circle_fill_rounded,
+                  color: const Color.fromRGBO(30, 215, 96, 0.9),
+                ),
+                onPressed: (resume))
+            : IconButton(
+                iconSize: 50,
+                icon: const Icon(
+                  Icons.pause_circle_filled_rounded,
+                  color: const Color.fromRGBO(30, 215, 96, 0.9),
+                ),
+                onPressed: (pause)),
+        IconButton(
+          icon: const Icon(
+            Icons.skip_next,
+            color: const Color.fromRGBO(30, 215, 96, 0.9),
+          ),
+          onPressed: skipNext,
+        ),
+      ],
+    );
+  }
+
   Widget _buildPlayerContextWidget() {
     return StreamBuilder<PlayerContext>(
       stream: SpotifySdk.subscribePlayerContext(),
@@ -280,11 +333,11 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
             SizedBox(
               height: 50,
             ),
-            ElevatedButton(
-                onPressed: (() => SpotifySdk.skipToIndex(
-                    spotifyUri: '${playerContext.uri}',
-                    trackIndex: votingIndex.toInt())),
-                child: const Text('skip to voted'))
+            // ElevatedButton(
+            //     onPressed: (() => SpotifySdk.skipToIndex(
+            //         spotifyUri: '${playerContext.uri}',
+            //         trackIndex: votingIndex.toInt())),
+            //     child: const Text('skip to voted'))
           ],
         );
       },
@@ -355,6 +408,7 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
   }
 
   Future<void> pause() async {
+    isPaused = true;
     try {
       await SpotifySdk.pause();
     } on PlatformException catch (e) {
@@ -365,6 +419,7 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
   }
 
   Future<void> resume() async {
+    isPaused = false;
     try {
       await SpotifySdk.resume();
     } on PlatformException catch (e) {
