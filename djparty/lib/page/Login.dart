@@ -1,6 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:djparty/page/Home.dart';
 import 'package:djparty/page/SignIn.dart';
 import 'package:djparty/services/FirebaseAuthMethods.dart';
+import 'package:djparty/services/InternetProvider.dart';
+import 'package:djparty/services/SignInProvider.dart';
+import 'package:djparty/utils/nextScreen.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -12,6 +16,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
 
 import 'package:djparty/services/FirebaseAuthMethods.dart';
+import 'package:rounded_loading_button/rounded_loading_button.dart';
 
 DatabaseReference dbRef = FirebaseDatabase.instance.ref();
 final FirebaseAuth auth = FirebaseAuth.instance;
@@ -19,6 +24,13 @@ final FirebaseAuth auth = FirebaseAuth.instance;
 final TextEditingController _emailController = TextEditingController();
 final TextEditingController _userPasswordController1 = TextEditingController();
 final TextEditingController _userPasswordController2 = TextEditingController();
+final RoundedLoadingButtonController googleController =
+    RoundedLoadingButtonController();
+
+final RoundedLoadingButtonController facebookController =
+    RoundedLoadingButtonController();
+final RoundedLoadingButtonController registrationController =
+    RoundedLoadingButtonController();
 
 class Login extends StatefulWidget {
   static String routeName = 'init';
@@ -37,27 +49,18 @@ class _LoginState extends State<Login> {
   @override
   void initState() {
     super.initState();
-    final TextEditingController _emailController = TextEditingController();
-    final TextEditingController _userPasswordController1 =
-        TextEditingController();
-    final TextEditingController _userPasswordController2 =
-        TextEditingController();
-    visible = false;
-  }
-
-  @override
-  void dispose() {
     _emailController.clear();
     _userPasswordController1.clear();
     _userPasswordController2.clear();
+    visible = false;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black12,
+      backgroundColor: const Color.fromARGB(128, 53, 74, 62),
       appBar: AppBar(
-        backgroundColor: Colors.black,
+        backgroundColor: const Color.fromARGB(128, 53, 74, 62),
         shadowColor: const Color.fromRGBO(30, 215, 96, 0.9),
         title: const Text('Create Dj Party account',
             textAlign: TextAlign.center,
@@ -88,7 +91,7 @@ class _LoginState extends State<Login> {
                           color: Color.fromRGBO(30, 215, 96, 0.9),
                         ),
                         filled: true,
-                        fillColor: Colors.black12,
+                        fillColor: const Color.fromARGB(128, 53, 74, 62),
                         hintStyle: TextStyle(color: Colors.black),
                         enabledBorder: OutlineInputBorder(
                           borderSide: BorderSide(
@@ -137,7 +140,7 @@ class _LoginState extends State<Login> {
                               });
                             }),
                         filled: true,
-                        fillColor: Colors.black12,
+                        fillColor: const Color.fromARGB(128, 53, 74, 62),
                         hintStyle: const TextStyle(
                             color: Color.fromRGBO(30, 215, 96, 0.9)),
                         enabledBorder: const OutlineInputBorder(
@@ -189,7 +192,7 @@ class _LoginState extends State<Login> {
                               });
                             }),
                         filled: true,
-                        fillColor: Colors.black12,
+                        fillColor: const Color.fromARGB(128, 53, 74, 62),
                         hintStyle: const TextStyle(color: Colors.white54),
                         enabledBorder: const OutlineInputBorder(
                           borderRadius: BorderRadius.all(Radius.circular(5.0)),
@@ -210,57 +213,32 @@ class _LoginState extends State<Login> {
                         hintText: ''),
                   ),
                 ),
-                SizedBox(
-                  height: 70,
-                  width: 350,
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      if (!EmailValidator.validate(
-                          _emailController.text, true)) {
-                        displayToastMessage('Enter a valid Email', context);
-                        err = true;
-                      } else if (_userPasswordController1.text.length < 8) {
-                        displayToastMessage(
-                            'Password should be a minimum of 8 characters',
-                            context);
-                        err = true;
-                      } else if (_userPasswordController1.text !=
-                          _userPasswordController2.text) {
-                        displayToastMessage('Passwords don\'t match', context);
-                        err = true;
-                      } else {
-                        err = false;
-                      }
-                      if (err == false) {
-                        await context
-                            .read<FirebaseAuthMethods>()
-                            .signUpWithEmail(
-                                email: _emailController.text,
-                                password: _userPasswordController1.text,
-                                context: context);
-
-                        Navigator.pushNamed(context, SignIn.routeName);
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Color.fromRGBO(30, 215, 96, 0.9),
-                      surfaceTintColor: Color.fromRGBO(30, 215, 96, 0.9),
-                      foregroundColor: Color.fromRGBO(30, 215, 96, 0.9),
-                      shadowColor: Color.fromRGBO(30, 215, 96, 0.9),
-                      elevation: 8,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15.0),
-                        side: const BorderSide(
-                          color: Color.fromARGB(184, 255, 255, 255),
-                          width: 5,
-                        ),
+                RoundedLoadingButton(
+                  onPressed: () {
+                    signup();
+                  },
+                  controller: registrationController,
+                  successColor: Color.fromRGBO(30, 215, 96, 0.9),
+                  width: MediaQuery.of(context).size.width * 0.80,
+                  elevation: 0,
+                  borderRadius: 25,
+                  color: Color.fromRGBO(30, 215, 96, 0.9),
+                  child: Wrap(
+                    children: const [
+                      Icon(
+                        FontAwesomeIcons.music,
+                        size: 20,
+                        color: Colors.white,
                       ),
-                    ),
-                    child: const Text(
-                      'Register',
-                      selectionColor: Colors.black,
-                      style: TextStyle(fontSize: 22, color: Colors.black),
-                    ),
+                      SizedBox(
+                        width: 15,
+                      ),
+                      Text("Register",
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500)),
+                    ],
                   ),
                 ),
                 const SizedBox(
@@ -278,62 +256,72 @@ class _LoginState extends State<Login> {
                 const SizedBox(
                   height: 10,
                 ),
-                ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      minimumSize: const Size(double.infinity, 60),
-                      side: const BorderSide(
-                          color: Color.fromRGBO(30, 215, 96, 0.9), width: 5),
-                    ),
-                    onPressed: () async {
-                      context
-                          .read<FirebaseAuthMethods>()
-                          .signInWithGoogle(context);
-                    },
-                    icon: const FaIcon(
-                      FontAwesomeIcons.google,
-                      color: Colors.green,
-                    ),
-                    label: const Text(
-                      "Sign Up with Google",
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 22,
+                RoundedLoadingButton(
+                  onPressed: () {
+                    handleGoogleSignIn();
+                  },
+                  controller: googleController,
+                  successColor: Colors.red,
+                  width: MediaQuery.of(context).size.width * 0.80,
+                  elevation: 0,
+                  borderRadius: 25,
+                  color: Colors.red,
+                  child: Wrap(
+                    children: const [
+                      Icon(
+                        FontAwesomeIcons.google,
+                        size: 20,
+                        color: Colors.white,
                       ),
-                    )),
-                const SizedBox(
-                  height: 20,
+                      SizedBox(
+                        width: 15,
+                      ),
+                      Text("Sign in with Google",
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500)),
+                    ],
+                  ),
                 ),
-                ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      minimumSize: const Size(double.infinity, 60),
-                      side: const BorderSide(
-                          color: Color.fromRGBO(30, 215, 96, 0.9), width: 5),
-                    ),
-                    onPressed: () async {
-                      context
-                          .read<FirebaseAuthMethods>()
-                          .signInWithFacebook(context);
-                    },
-                    icon: const FaIcon(
-                      FontAwesomeIcons.facebook,
-                      color: Colors.green,
-                    ),
-                    label: const Text(
-                      "Sign Up with Facebook",
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 22,
+                const SizedBox(
+                  height: 30,
+                ),
+                RoundedLoadingButton(
+                  onPressed: () {
+                    handleFacebookAuth();
+                  },
+                  controller: facebookController,
+                  successColor: Colors.blue,
+                  width: MediaQuery.of(context).size.width * 0.80,
+                  elevation: 0,
+                  borderRadius: 25,
+                  color: Colors.blue,
+                  child: Wrap(
+                    children: const [
+                      Icon(
+                        FontAwesomeIcons.facebook,
+                        size: 20,
+                        color: Colors.white,
                       ),
-                    )),
+                      SizedBox(
+                        width: 15,
+                      ),
+                      Text("Sign in with Facebook",
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500)),
+                    ],
+                  ),
+                ),
                 const SizedBox(
                   height: 10,
                 ),
                 SizedBox(
                   child: TextButton(
                     onPressed: () {
-                      Navigator.pushNamed(context, SignIn.routeName);
+                      handleToSignIn();
                     },
                     child: const Text(
                       'Have already an account? Log in ',
@@ -352,6 +340,108 @@ class _LoginState extends State<Login> {
     );
   }
 
+  handleToSignIn() {
+    Future.delayed(const Duration(milliseconds: 200)).then((value) {
+      nextScreenReplace(context, const SignIn());
+    });
+  }
+
+  // handling facebookauth
+  // handling google sigin in
+  Future handleFacebookAuth() async {
+    final sp = context.read<SignInProvider>();
+    final ip = context.read<InternetProvider>();
+    await ip.checkInternetConnection();
+
+    if (ip.hasInternet == false) {
+      showInSnackBar(context, "Check your Internet connection", Colors.red);
+      facebookController.reset();
+      return;
+    }
+    await sp.signInWithFacebook().then((value) {
+      if (sp.hasError == true) {
+        showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+        facebookController.reset();
+        return;
+      } else if (sp.errorCode == 'Stop') {
+        facebookController.reset();
+
+        return;
+      }
+      // checking whether user exists or not
+      sp.checkUserExists().then((value) async {
+        if (value == true) {
+          // user exists
+          await sp.getUserDataFromFirestore(sp.uid).then((value) => sp
+              .saveDataToSharedPreferences()
+              .then((value) => sp.setSignIn().then((value) {
+                    facebookController.success();
+                    handleAfterSignIn();
+                  })));
+        } else {
+          // user does not exist
+          sp.saveDataToFirestore().then((value) => sp
+              .saveDataToSharedPreferences()
+              .then((value) => sp.setSignIn().then((value) {
+                    facebookController.success();
+                    handleAfterSignIn();
+                  })));
+        }
+      });
+    });
+  }
+
+  Future handleGoogleSignIn() async {
+    final sp = context.read<SignInProvider>();
+    final ip = context.read<InternetProvider>();
+    await ip.checkInternetConnection();
+
+    if (ip.hasInternet == false) {
+      showInSnackBar(context, "Check your Internet connection", Colors.red);
+      googleController.reset();
+      return;
+    }
+
+    await sp.signInWithGoogle().then((value) {
+      if (sp.hasError == true) {
+        showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+        googleController.reset();
+        return;
+      } else if (sp.errorCode == 'Stop') {
+        googleController.reset();
+
+        return;
+      } else {
+        // checking whether user exists or not
+        sp.checkUserExists().then((value) async {
+          if (value == true) {
+            // user exists
+            await sp.getUserDataFromFirestore(sp.uid).then((value) => sp
+                .saveDataToSharedPreferences()
+                .then((value) => sp.setSignIn().then((value) {
+                      googleController.success();
+                      handleAfterSignIn();
+                    })));
+          } else {
+            // user does not exist
+            sp.saveDataToFirestore().then((value) => sp
+                .saveDataToSharedPreferences()
+                .then((value) => sp.setSignIn().then((value) {
+                      googleController.success();
+                      handleAfterSignIn();
+                    })));
+          }
+        });
+      }
+    });
+  }
+
+  handleAfterSignIn() {
+    Future.delayed(const Duration(milliseconds: 1000)).then((value) {
+      nextScreenReplace(context, const Home());
+    });
+  }
+
   void change(int i) {
     if (i == 1) {
       _passwordVisible1 = !_passwordVisible1;
@@ -359,12 +449,72 @@ class _LoginState extends State<Login> {
       _passwordVisible2 = !_passwordVisible2;
     }
   }
-}
 
-displayToastMessage(String msg, BuildContext context) {
-  Fluttertoast.showToast(msg: msg);
-}
+  Future signup() async {
+    final sp = context.read<SignInProvider>();
+    final ip = context.read<InternetProvider>();
+    await ip.checkInternetConnection();
 
-void showInSnackBar(String value, BuildContext context) {
-  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(value)));
+    if (ip.hasInternet == false) {
+      showInSnackBar(context, "Check your Internet connection", Colors.red);
+      registrationController.reset();
+      return;
+    }
+    //check input validity
+    if (!checkvalidity()) {
+      registrationController.reset();
+      return;
+    }
+
+    //try signup
+    sp
+        .signUpWithEmailPassword(
+            email: _emailController.text.trim(),
+            password: _userPasswordController1.text.trim())
+        .then((value) {
+      if (sp.hasError == true) {
+        showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+        registrationController.reset();
+        return;
+      } else {
+        sp.saveDataToFirestore().then((value) {
+          sp.getUserDataFromFirestore(sp.uid).then((value) => sp
+              .saveDataToSharedPreferences()
+              .then((value) => sp.sendEmailVerification(context).then((value) {
+                    if (sp.hasError == true) {
+                      showInSnackBar(
+                          context, sp.errorCode.toString(), Colors.red);
+                      registrationController.reset();
+                      return;
+                    } else {
+                      showInSnackBar(
+                          context, 'Check your Mail Box', Colors.greenAccent);
+                      registrationController.success();
+                      nextScreenReplace(context, const SignIn());
+                    }
+                  })));
+        });
+      }
+      _emailController.clear();
+      _userPasswordController1.clear();
+      _userPasswordController2.clear();
+    });
+  }
+
+  bool checkvalidity() {
+    if (!EmailValidator.validate(_emailController.text.trim(), true)) {
+      showInSnackBar(context, 'Enter a valid Email', Colors.red);
+      return false;
+    } else if (_userPasswordController1.text.trim().length < 8) {
+      showInSnackBar(
+          context, 'Password should be a minimum of 8 characters', Colors.red);
+      return false;
+    } else if (_userPasswordController1.text.trim() !=
+        _userPasswordController2.text.trim()) {
+      showInSnackBar(context, 'Passwords don\'t match', Colors.red);
+      return false;
+    } else {
+      return true;
+    }
+  }
 }

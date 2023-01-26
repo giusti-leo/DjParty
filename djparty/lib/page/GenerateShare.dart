@@ -5,11 +5,16 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:djparty/page/Home.dart';
 import 'package:djparty/page/SignIn.dart';
+import 'package:djparty/services/FirebaseRequests.dart';
+import 'package:djparty/services/InternetProvider.dart';
+import 'package:djparty/services/SignInProvider.dart';
+import 'package:djparty/utils/nextScreen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:rounded_loading_button/rounded_loading_button.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -30,7 +35,7 @@ class GeneratorScreen extends StatefulWidget {
 }
 
 class _insertPartyName extends State<GeneratorScreen> {
-  final controller = TextEditingController();
+  TextEditingController controller = TextEditingController();
 
   final _chars =
       'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890';
@@ -48,13 +53,24 @@ class _insertPartyName extends State<GeneratorScreen> {
   bool showTime = false;
   bool showDateTime = false;
 
+  final RoundedLoadingButtonController submitController =
+      RoundedLoadingButtonController();
+
+  Future getData() async {
+    final sp = context.read<SignInProvider>();
+    final ip = context.read<InternetProvider>();
+    final fr = context.read<FirebaseRequests>();
+
+    sp.getDataFromSharedPreferences();
+  }
+
   @override
   void initState() {
+    super.initState();
     selectedDate = DateTime.now();
     selectedTime = TimeOfDay.now();
     dateTime = DateTime.now();
-
-    super.initState();
+    getData();
   }
 
   Future<DateTime> _selectDate(BuildContext context) async {
@@ -112,25 +128,25 @@ class _insertPartyName extends State<GeneratorScreen> {
   @override
   Widget build(BuildContext context) {
     User? currentUser = _auth.currentUser;
-
-    int _currentIntValue = 30;
+    controller.clear();
 
     return Scaffold(
-        backgroundColor: Colors.black,
+        backgroundColor: Color.fromARGB(128, 53, 74, 62),
         appBar: AppBar(
           backgroundColor: const Color.fromRGBO(30, 215, 96, 0.9),
           title: const Text('Create your Party'),
           centerTitle: true,
         ),
-        body: LayoutBuilder(builder:
-            (BuildContext context, BoxConstraints viewportConstraints) {
-          return SingleChildScrollView(
-            child: Column(
-              children: [
-                const SizedBox(
-                  height: 20,
-                ),
-                TextFormField(
+        body: SingleChildScrollView(
+          child: Column(
+            children: <Widget>[
+              const SizedBox(
+                height: 20,
+              ),
+              SizedBox(
+                height: MediaQuery.of(context).size.height / 18,
+                width: MediaQuery.of(context).size.width / 1.2,
+                child: TextFormField(
                   controller: partyName,
                   style: const TextStyle(
                     color: Colors.white,
@@ -148,200 +164,201 @@ class _insertPartyName extends State<GeneratorScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(
-                  height: 30,
-                ),
-                SizedBox(
-                  height: MediaQuery.of(context).size.height / 18,
-                  width: MediaQuery.of(context).size.width / 2,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      side: const BorderSide(
-                        color: Color.fromARGB(184, 255, 255, 255),
-                        width: 5,
-                      ),
-                      primary: const Color.fromRGBO(
-                          30, 215, 96, 0.9), // Background color
-                      onPrimary: Colors.white, // Text Color (Foreground color)
+              ),
+              const SizedBox(
+                height: 30,
+              ),
+              SizedBox(
+                height: MediaQuery.of(context).size.height / 18,
+                width: MediaQuery.of(context).size.width / 2,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    side: const BorderSide(
+                      color: Color.fromARGB(184, 255, 255, 255),
+                      width: 5,
                     ),
-                    onPressed: () {
-                      _selectDate(context);
-                      showDate = true;
-                    },
-                    child: Text(
-                      getDate(),
-                      style: const TextStyle(color: Colors.black, fontSize: 20),
-                    ),
+                    primary: const Color.fromRGBO(
+                        30, 215, 96, 0.9), // Background color
+                    onPrimary: Colors.white, // Text Color (Foreground color)
                   ),
-                ),
-                const SizedBox(
-                  height: 20,
-                ),
-                const Divider(
-                    color: Color.fromRGBO(30, 215, 96, 0.9), height: 64),
-                const SizedBox(
-                  height: 20,
-                ),
-                const SizedBox(
-                  height: 40,
+                  onPressed: () {
+                    _selectDate(context);
+                    showDate = true;
+                  },
                   child: Text(
-                    'Optional information',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 20, color: Colors.white),
+                    getDate(),
+                    style: const TextStyle(color: Colors.black, fontSize: 20),
                   ),
                 ),
-                const SizedBox(
-                  height: 30,
+              ),
+              const SizedBox(
+                height: 20,
+              ),
+              const Divider(
+                  color: Color.fromRGBO(30, 215, 96, 0.9), height: 64),
+              const SizedBox(
+                height: 20,
+              ),
+              const SizedBox(
+                height: 40,
+                child: Text(
+                  'Optional information',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 20, color: Colors.white),
                 ),
-                SizedBox(
-                  height: MediaQuery.of(context).size.height / 18,
-                  width: MediaQuery.of(context).size.width / 2,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      side: const BorderSide(
-                        color: Color.fromARGB(184, 255, 255, 255),
-                        width: 5,
-                      ),
-                      primary: const Color.fromRGBO(
-                          30, 215, 96, 0.9), // Background color
-                      onPrimary: Colors.white, // Text Color (Foreground color)
+              ),
+              const SizedBox(
+                height: 30,
+              ),
+              SizedBox(
+                height: MediaQuery.of(context).size.height / 18,
+                width: MediaQuery.of(context).size.width / 2,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    side: const BorderSide(
+                      color: Color.fromARGB(184, 255, 255, 255),
+                      width: 5,
                     ),
-                    onPressed: () {
-                      _selectTime(context);
-                      showTime = true;
-                    },
-                    child: Text(getTime(selectedTime),
-                        style:
-                            const TextStyle(color: Colors.black, fontSize: 20)),
+                    primary: const Color.fromRGBO(
+                        30, 215, 96, 0.9), // Background color
+                    onPrimary: Colors.white, // Text Color (Foreground color)
                   ),
+                  onPressed: () {
+                    _selectTime(context);
+                    showTime = true;
+                  },
+                  child: Text(getTime(selectedTime),
+                      style:
+                          const TextStyle(color: Colors.black, fontSize: 20)),
                 ),
-                /*
-                const SizedBox(
-                  height: 20,
-                ),
-                NumberPicker(
-                  value: _currentHorizontalIntValue,
-                  minValue: 0,
-                  maxValue: 100,
-                  step: 5,
-                  itemHeight: 100,
-                  axis: Axis.horizontal,
-                  selectedTextStyle: const TextStyle(
-                      color: Colors.greenAccent,
-                      fontSize: 30,
-                      fontStyle: FontStyle.normal),
-                  textStyle: const TextStyle(color: Colors.grey, fontSize: 18),
-                  onChanged: (value) =>
-                      setState(() => _currentHorizontalIntValue = value),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                        color: Colors.greenAccent, style: BorderStyle.solid),
-                  ),
-                ),*/
-                const SizedBox(
-                  height: 50,
-                ),
-                SizedBox(
-                    child: SizedBox(
-                  height: MediaQuery.of(context).size.height / 15,
-                  width: MediaQuery.of(context).size.width / 1.3,
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      if (partyName.text.isEmpty) {
-                        displayToastMessage(
-                            'The Party Name cannot be empty', context);
-                        return;
-                      }
-                      if (choosenDate == '') {
-                        displayToastMessage('Choose a date', context);
-                        return;
-                      }
-                      try {
-                        CollectionReference<Map<String, dynamic>> parties =
-                            FirebaseFirestore.instance.collection('parties');
-
-                        while (true) {
-                          controller.text = getRandomString(5);
-                          var tmp = await parties
-                              .where('code', isEqualTo: controller.text)
-                              .get();
-                          if (tmp.docs.isEmpty) {
-                            break;
-                          }
-                        }
-
-                        CollectionReference<Map<String, dynamic>> users =
-                            FirebaseFirestore.instance.collection('users');
-
-                        if (currentUser != null) {
-                          var members = <String>[currentUser.uid.toString()];
-
-                          Map<String, dynamic> party = {
-                            'admin': currentUser.uid,
-                            'partyName': partyName.text,
-                            'code': controller.text,
-                            'creationTime': Timestamp.now(),
-                            'PartyDate': selectedDate,
-                            'PartyTime': choosenTime.toString(),
-                            'isStarted': false,
-                            'isEnded': false,
-                            '#partecipant': 1,
-                            'partecipant_list': members,
-                          };
-
-                          await parties
-                              .doc(controller.text)
-                              .set(party)
-                              .then((value) => print('Party added'));
-
-                          final userDoc = users
-                              .doc(currentUser.uid)
-                              .collection('party')
-                              .doc(controller.text);
-
-                          if (userDoc != null) {
-                            userDoc.set({
-                              'PartyName': partyName.text,
-                              'startDate': selectedDate,
-                              'code': controller.text,
-                              'admin': currentUser.uid,
-                            });
-                          }
-                          displayToastMessage('Party Created', context);
-                        }
-                      } on FirebaseAuthException catch (e) {
-                        displayToastMessage(e.message.toString(), context);
-                      }
-                      partyName.clear();
-
-                      Navigator.pushNamed(context, Home.routeName);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color.fromRGBO(30, 215, 96, 0.9),
-                      surfaceTintColor: const Color.fromRGBO(30, 215, 96, 0.9),
-                      foregroundColor: const Color.fromRGBO(30, 215, 96, 0.9),
-                      shadowColor: const Color.fromRGBO(30, 215, 96, 0.9),
-                      elevation: 8,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15.0),
-                        side: const BorderSide(
-                          color: Color.fromARGB(184, 255, 255, 255),
-                          width: 5,
-                        ),
-                      ),
-                    ),
-                    child: const Text(
+              ),
+              const SizedBox(
+                height: 50,
+              ),
+              RoundedLoadingButton(
+                onPressed: () {
+                  handleCreation();
+                },
+                controller: submitController,
+                successColor: const Color.fromRGBO(30, 215, 96, 0.9),
+                width: MediaQuery.of(context).size.width * 0.80,
+                elevation: 0,
+                borderRadius: 25,
+                color: const Color.fromRGBO(30, 215, 96, 0.9),
+                child: Wrap(
+                  children: const [
+                    Text(
                       'Confirm',
                       selectionColor: Colors.black,
-                      style: TextStyle(fontSize: 22, color: Colors.black),
+                      style: TextStyle(fontSize: 22, color: Colors.white),
                     ),
-                  ),
-                ))
-              ],
-            ),
-          );
-        }));
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ));
+  }
+
+  Future<void> handleCreation() async {
+    final sp = context.read<SignInProvider>();
+    final ip = context.read<InternetProvider>();
+    final fp = context.read<FirebaseRequests>();
+
+    await ip.checkInternetConnection();
+
+    if (ip.hasInternet == false) {
+      showInSnackBar(context, "Check your Internet connection", Colors.red);
+      submitController.reset();
+      return;
+    }
+    if (!isValid()) {
+      submitController.reset();
+      return;
+    }
+
+    // check if a Code already exist
+
+    controller.text = getRandomString(5);
+    var tmp = fp.checkPartyExists(code: controller.text).then((value) {
+      if (value == true) {
+        handleCreation();
+      } else {
+        if (sp.uid != null) {
+          var members = <String>[sp.uid.toString()];
+
+          fp
+              .createParty(sp.uid.toString(), partyName.text, controller.text,
+                  selectedDate, choosenTime.toString(), members)
+              .then((value) {
+            fp.checkPartyExists(code: controller.text).then((value) {
+              if (value == true) {
+                fp.getPartyDataFromFirestore(controller.text).then((value) =>
+                    fp.saveDataToSharedPreferences().then((value) {
+                      if (fp.hasError == true) {
+                        print('maj');
+                        showInSnackBar(
+                            context, sp.errorCode.toString(), Colors.red);
+                        submitController.reset();
+                        return;
+                      } else {
+                        fp
+                            .checkPartyExists(code: controller.text)
+                            .then((value) {
+                          if (value == true) {
+                            fp
+                                .getPartyDataFromFirestore(controller.text)
+                                .then((value) => fp
+                                    .saveDataToSharedPreferences()
+                                    .then((value) => fp.createPartyForAUser(
+                                        sp.uid.toString(),
+                                        sp.uid.toString(),
+                                        partyName.text,
+                                        controller.text,
+                                        selectedDate)))
+                                .then((value) {
+                              if (fp.hasError == true) {
+                                print('mah');
+                                showInSnackBar(context, sp.errorCode.toString(),
+                                    Colors.red);
+                                submitController.reset();
+                                return;
+                              }
+                              submitController.success();
+                              displayToastMessage(
+                                  context, 'Party Created', Colors.greenAccent);
+
+                              handleAfterSubmit();
+                            });
+                          }
+                        });
+                      }
+                    }));
+              }
+            });
+          });
+        }
+      }
+    });
+  }
+
+  bool isValid() {
+    if (partyName.text.isEmpty) {
+      displayToastMessage(
+          context, 'The Party Name cannot be empty', Colors.red);
+      return false;
+    }
+    if (choosenDate == '') {
+      displayToastMessage(context, 'Choose a date', Colors.red);
+      return false;
+    }
+    return true;
+  }
+
+  handleAfterSubmit() {
+    Future.delayed(const Duration(milliseconds: 1000)).then((value) {
+      nextScreenReplace(context, const Home());
+    });
   }
 
 /*

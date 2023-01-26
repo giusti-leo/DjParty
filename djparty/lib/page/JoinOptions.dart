@@ -32,13 +32,7 @@ class JoinOptions extends StatelessWidget {
                 ),
                 child:
                     const Text('Scan Qr-Code', style: TextStyle(fontSize: 17)),
-                onPressed: () {
-                  // Navigator.push(
-                  //     context,
-                  //     MaterialPageRoute(
-                  //         builder: (context) =>
-                  //             ScannerScreen(title: 'Join Party')));
-                }),
+                onPressed: () {}),
           ),
           const SizedBox(height: 30),
           SizedBox(
@@ -46,7 +40,7 @@ class JoinOptions extends StatelessWidget {
             width: 170,
             child: ElevatedButton(
                 style: ButtonStyle(
-                  backgroundColor: MaterialStatePropertyAll<Color>(
+                  backgroundColor: const MaterialStatePropertyAll<Color>(
                       Color.fromRGBO(30, 215, 96, 0.9)),
                   shape: MaterialStateProperty.all<RoundedRectangleBorder>(
                     RoundedRectangleBorder(
@@ -60,8 +54,7 @@ class JoinOptions extends StatelessWidget {
                   Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) =>
-                              InsertCode(title: 'Join a Party')));
+                          builder: (context) => const InsertCode()));
                 }),
           ),
         ]),

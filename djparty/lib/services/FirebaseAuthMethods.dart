@@ -1,5 +1,6 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+/*import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:djparty/page/Home.dart';
+import 'package:djparty/page/SignIn.dart';
 import 'package:djparty/utils/showOtpDialog.dart';
 import 'package:djparty/utils/showSnackbar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -55,15 +56,15 @@ class FirebaseAuthMethods {
         }
       });
       await sendEmailVerification(context);
+      Navigator.pushNamed(context, SignIn.routeName);
     } on FirebaseAuthException catch (e) {
       // if you want to display your own custom error message
       if (e.code == 'weak-password') {
-        print('The password provided is too weak.');
+        displayToastMessage('The password provided is too weak.', context);
       } else if (e.code == 'email-already-in-use') {
-        print('The account already exists for that email.');
-      }
-      showSnackBar(
-          context, e.message!); // Displaying the usual firebase error message
+        displayToastMessage(
+            'The account already exists for that email.', context);
+      } // Displaying the usual firebase error message
     }
   }
 
@@ -121,6 +122,7 @@ class FirebaseAuthMethods {
             insertGoogleUser(context, googleUser);
             displayToastMessage('User added', context);
           }
+          Navigator.pushNamed(context, Home.routeName);
         }
       });
     } on FirebaseAuthException catch (e) {
@@ -137,9 +139,9 @@ class FirebaseAuthMethods {
 
       Map<String, dynamic> userDataMap = {
         'email': googleUser.email.toString(),
-        'image': new Color(0x00000000).value,
         'username': googleUser.email.toString(),
         'description': '',
+        'image': new Color(0x00000000).value,
         'init': googleUser.email[0].toString(),
         'initColor': new Color(0xFFFFFFFF).value
       };
@@ -179,80 +181,49 @@ class FirebaseAuthMethods {
   // FACEBOOK SIGN IN
   Future<void> signInWithFacebook(BuildContext context) async {
     try {
-      final LoginResult loginResult = await FacebookAuth.instance.login();
+      final loginResult = await FacebookAuth.instance.login();
+
+      if (loginResult.accessToken == null) return;
 
       final OAuthCredential facebookAuthCredential =
           FacebookAuthProvider.credential(loginResult.accessToken!.token);
 
-      await _auth.signInWithCredential(facebookAuthCredential);
+      await _auth.signInWithCredential(facebookAuthCredential).then((value) {
+        if (value.user != null) {
+          if (value.additionalUserInfo!.isNewUser) {
+            insertFacebookUser(context, value.user!);
+            displayToastMessage('User added', context);
+          }
+          Navigator.pushNamed(context, Home.routeName);
+        }
+      });
     } on FirebaseAuthException catch (e) {
       displayToastMessage(e.message!, context); // Displaying the error message
     }
   }
 
-/*
-  // PHONE SIGN IN
-  Future<void> phoneSignIn(
-    BuildContext context,
-    String phoneNumber,
-  ) async {
-    TextEditingController codeController = TextEditingController();
-    if (kIsWeb) {
-      // !!! Works only on web !!!
-      ConfirmationResult result =
-          await _auth.signInWithPhoneNumber(phoneNumber);
+  Future<void> insertFacebookUser(BuildContext context, User user) async {
+    try {
+      CollectionReference<Map<String, dynamic>> users =
+          FirebaseFirestore.instance.collection('users');
 
-      // Diplay Dialog Box To accept OTP
-      showOTPDialog(
-        codeController: codeController,
-        context: context,
-        onPressed: () async {
-          PhoneAuthCredential credential = PhoneAuthProvider.credential(
-            verificationId: result.verificationId,
-            smsCode: codeController.text.trim(),
-          );
+      Map<String, dynamic> userDataMap = {
+        'email': user.email!.toString(),
+        'image': new Color(0x00000000).value,
+        'username': user.displayName!.toString(),
+        'description': '',
+        'init': user.email![0].toString(),
+        'initColor': new Color(0xFFFFFFFF).value
+      };
 
-          await _auth.signInWithCredential(credential);
-          Navigator.of(context).pop(); // Remove the dialog box
-        },
-      );
-    } else {
-      // FOR ANDROID, IOS
-      await _auth.verifyPhoneNumber(
-        phoneNumber: phoneNumber,
-        //  Automatic handling of the SMS code
-        verificationCompleted: (PhoneAuthCredential credential) async {
-          // !!! works only on android !!!
-          await _auth.signInWithCredential(credential);
-        },
-        // Displays a message when verification fails
-        verificationFailed: (e) {
-          showSnackBar(context, e.message!);
-        },
-        // Displays a dialog box when OTP is sent
-        codeSent: ((String verificationId, int? resendToken) async {
-          showOTPDialog(
-            codeController: codeController,
-            context: context,
-            onPressed: () async {
-              PhoneAuthCredential credential = PhoneAuthProvider.credential(
-                verificationId: verificationId,
-                smsCode: codeController.text.trim(),
-              );
-
-              // !!! Works only on Android, iOS !!!
-              await _auth.signInWithCredential(credential);
-              Navigator.of(context).pop(); // Remove the dialog box
-            },
-          );
-        }),
-        codeAutoRetrievalTimeout: (String verificationId) {
-          // Auto-resolution timed out...
-        },
-      );
+      await users
+          .doc(_auth.currentUser!.uid)
+          .set(userDataMap)
+          .then((value) => print('User added'));
+    } on FirebaseAuthException catch (e) {
+      displayToastMessage(e.code, context);
     }
   }
-*/
 
   // SIGN OUT
   Future<void> signOut(BuildContext context) async {
@@ -281,12 +252,4 @@ class FirebaseAuthMethods {
       displayToastMessage(e.toString(), context);
     }
   }
-}
-
-displayToastMessage(String msg, BuildContext context) {
-  Fluttertoast.showToast(msg: msg);
-}
-
-void showInSnackBar(String value, BuildContext context) {
-  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(value)));
-}
+}*/

@@ -2,6 +2,9 @@ import 'package:djparty/page/Home.dart';
 import 'package:djparty/page/Login.dart';
 import 'package:djparty/page/ResetPassword.dart';
 import 'package:djparty/services/FirebaseAuthMethods.dart';
+import 'package:djparty/services/InternetProvider.dart';
+import 'package:djparty/services/SignInProvider.dart';
+import 'package:djparty/utils/nextScreen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -9,7 +12,9 @@ import 'package:djparty/animations/ScaleRoute.dart';
 
 import 'package:flutter/scheduler.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:rounded_loading_button/rounded_loading_button.dart';
 
 class SignIn extends StatefulWidget {
   static String routeName = '/login-email-password';
@@ -28,6 +33,8 @@ class _SignInState extends State<SignIn> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final TextEditingController _emailidController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final RoundedLoadingButtonController signinController =
+      RoundedLoadingButtonController();
 
   @override
   void initState() {
@@ -36,15 +43,21 @@ class _SignInState extends State<SignIn> {
     gvisible = false;
   }
 
+  handleStepBack() {
+    Future.delayed(const Duration(milliseconds: 200)).then((value) {
+      nextScreenReplace(context, const Login());
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: MaterialApp(
         home: Scaffold(
           key: _scaffoldKey,
-          backgroundColor: Colors.black12,
+          backgroundColor: const Color.fromARGB(128, 53, 74, 62),
           appBar: AppBar(
-            backgroundColor: Colors.black,
+            backgroundColor: const Color.fromARGB(128, 53, 74, 62),
             shadowColor: Color.fromRGBO(30, 215, 96, 0.9),
             title: const Text('Login',
                 textAlign: TextAlign.center,
@@ -59,8 +72,7 @@ class _SignInState extends State<SignIn> {
                 color: Color.fromRGBO(30, 215, 96, 0.9),
               ),
               onTap: () {
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => const Login()));
+                handleStepBack();
               },
             ),
           ),
@@ -134,7 +146,7 @@ class _SignInState extends State<SignIn> {
                                 });
                               }),
                           //filled: true,
-                          fillColor: Colors.black12,
+                          fillColor: const Color.fromARGB(128, 53, 74, 62),
                           enabledBorder: const OutlineInputBorder(
                             borderRadius:
                                 BorderRadius.all(Radius.circular(5.0)),
@@ -157,44 +169,33 @@ class _SignInState extends State<SignIn> {
                           hintText: ''),
                     ),
                   ),
-                  SizedBox(
-                    height: 70,
-                    width: 350,
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        if (!_emailidController.text.contains('@')) {
-                          displayToastMessage('Invalid Email-ID', context);
-                        } else if (_passwordController.text.length < 8) {
-                          displayToastMessage(
-                              'Password should be a minimum of 8 characters',
-                              context);
-                        } else {
-                          context.read<FirebaseAuthMethods>().loginWithEmail(
-                                email: _emailidController.text,
-                                password: _passwordController.text,
-                                context: context,
-                              );
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color.fromRGBO(30, 215, 96, 0.9),
-                        surfaceTintColor: Color.fromRGBO(30, 215, 96, 0.9),
-                        foregroundColor: Color.fromRGBO(30, 215, 96, 0.9),
-                        shadowColor: Color.fromRGBO(30, 215, 96, 0.9),
-                        elevation: 8,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15.0),
-                          side: const BorderSide(
-                            color: Color.fromARGB(184, 255, 255, 255),
-                            width: 5,
-                          ),
+                  RoundedLoadingButton(
+                    onPressed: () {
+                      login(context, _emailidController.text,
+                          _passwordController.text);
+                    },
+                    controller: signinController,
+                    successColor: Color.fromRGBO(30, 215, 96, 0.9),
+                    width: MediaQuery.of(context).size.width * 0.80,
+                    elevation: 0,
+                    borderRadius: 25,
+                    color: Color.fromRGBO(30, 215, 96, 0.9),
+                    child: Wrap(
+                      children: const [
+                        Icon(
+                          FontAwesomeIcons.music,
+                          size: 20,
+                          color: Colors.white,
                         ),
-                      ),
-                      child: const Text(
-                        'Login',
-                        selectionColor: Colors.white,
-                        style: TextStyle(fontSize: 20, color: Colors.black),
-                      ),
+                        SizedBox(
+                          width: 15,
+                        ),
+                        Text("Sign in",
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w500)),
+                      ],
                     ),
                   ),
                   Visibility(
@@ -211,7 +212,8 @@ class _SignInState extends State<SignIn> {
                               margin: const EdgeInsets.only(),
                               child: const LinearProgressIndicator(
                                 minHeight: 2,
-                                backgroundColor: Colors.black12,
+                                backgroundColor:
+                                    const Color.fromARGB(128, 53, 74, 62),
                                 valueColor:
                                     AlwaysStoppedAnimation(Colors.white),
                               )))),
@@ -257,20 +259,69 @@ class _SignInState extends State<SignIn> {
     );
   }
 
-  FirebaseAuth auth = FirebaseAuth.instance;
+  handleAfterSignIn() {
+    Future.delayed(const Duration(milliseconds: 1000)).then((value) {
+      nextScreenReplace(context, const Home());
+    });
+  }
+
+  bool validity(String email, String password) {
+    if (!_emailidController.text.contains('@')) {
+      displayToastMessage(context, 'Invalid Email-ID', Colors.red);
+
+      return false;
+    } else if (_passwordController.text.length < 8) {
+      displayToastMessage(
+          context, 'Password should be a minimum of 8 characters', Colors.red);
+
+      return false;
+    }
+    return true;
+  }
+
+  Future login(
+    BuildContext context,
+    String email,
+    String password,
+  ) async {
+    final sp = context.read<SignInProvider>();
+    final ip = context.read<InternetProvider>();
+    await ip.checkInternetConnection();
+
+    if (ip.hasInternet == false) {
+      displayToastMessage(
+          context, "Check your internet connection", Colors.red);
+      signinController.reset();
+      return;
+    }
+
+    if (!validity(email, password)) {
+      signinController.reset();
+      return;
+    }
+
+    sp.signInWithEmailPassword(email: email, password: password).then((value) {
+      if (sp.hasError == true) {
+        displayToastMessage(context, sp.errorCode.toString(), Colors.red);
+        sp.sendEmailVerification(context);
+        signinController.reset();
+        return;
+      } else {
+        // checking whether user exists or not
+        sp.getUserDataFromFirestore(sp.uid).then((value) => sp
+            .saveDataToSharedPreferences()
+            .then((value) => sp.setSignIn().then((value) {
+                  signinController.success();
+                  handleAfterSignIn();
+                })));
+      }
+    });
+  }
 
   @override
   void dispose() {
     _emailidController.dispose();
     _passwordController.dispose();
     super.dispose();
-  }
-
-  displayToastMessage(String msg, BuildContext context) {
-    Fluttertoast.showToast(msg: msg);
-  }
-
-  void showInSnackBar(String value, BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(value)));
   }
 }
