@@ -27,6 +27,7 @@ class _SearchItemScreen extends State<SearchItemScreen> {
   String currentUri = "";
   var artistList = [];
   var myColor = Colors.white;
+  bool isCalled = false;
   //List<bool> isSelected = [];
   final Logger _logger = Logger(
     //filter: CustomLogFilter(), // custom logfilter can be used to have logs in release mode
@@ -65,77 +66,81 @@ class _SearchItemScreen extends State<SearchItemScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        backgroundColor: Color.fromARGB(159, 46, 46, 46),
-        appBar: AppBar(
-          backgroundColor: Color.fromARGB(228, 53, 191, 101),
-          title: const Text(
-            'Search',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          centerTitle: true,
-        ),
-        body: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            IconButton(
-              icon: const Icon(
-                Spotify.spotify,
-                color: Color.fromARGB(228, 53, 191, 101),
-              ),
-              onPressed: (getAuthToken),
-            ),
-            TextField(
-              textAlign: TextAlign.start,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                color: Colors.white,
-              ),
-              onChanged: (input) async =>
-                  _tracks = await _updateTracks(input, myToken),
-            ),
-            Expanded(
-              child: ListView.builder(
-                  shrinkWrap: false,
-                  itemCount: _tracks.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    final track = _tracks[index];
-                    var artistList = track['artists'].toList();
-                    return GestureDetector(
-                      onTapDown: (details) => _getTapPosition(details),
-                      onLongPress: () {
-                        currentUri = track["uri"];
-                        _showContextMenu(context);
-                        setState(() {
-                          selectedIndex = index;
-                        });
-                      },
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.all(10.0),
-                        title: Text(track["name"],
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w800,
-                              color: myColor,
-                            )),
-                        tileColor: selectedIndex == index
-                            ? Color.fromARGB(228, 53, 191, 101)
-                            : null,
-                        subtitle: Text(artistList[0]["name"],
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w800,
-                              color: Color.fromARGB(255, 134, 132, 132),
-                            )),
-                      ),
-                    );
-                  }),
-            )
-          ],
-        ));
+    if (isCalled == false) {
+      setState(() {
+        getAuthToken();
+      });
+      isCalled = true;
+    }
+    return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+            colorScheme: ColorScheme.fromSwatch().copyWith(
+                primary: const Color.fromARGB(228, 53, 191, 101),
+                secondary: const Color.fromARGB(228, 53, 191, 101))),
+        home: Scaffold(
+            backgroundColor: Color.fromARGB(255, 35, 34, 34),
+            body: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // IconButton(
+                //   icon: const Icon(
+                //     Spotify.spotify,
+                //     color: Color.fromARGB(228, 53, 191, 101),
+                //   ),
+                //   onPressed: (getAuthToken),
+                // ),
+                TextField(
+                  textAlign: TextAlign.start,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                  ),
+                  onChanged: (input) async =>
+                      _tracks = await _updateTracks(input, myToken),
+                ),
+                Expanded(
+                  child: ListView.builder(
+                      shrinkWrap: false,
+                      itemCount: _tracks.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        final track = _tracks[index];
+                        var artistList = track['artists'].toList();
+                        return GestureDetector(
+                          onTapDown: (details) => _getTapPosition(details),
+                          onLongPress: () {
+                            currentUri = track["uri"];
+                            _showContextMenu(context);
+                            setState(() {
+                              selectedIndex = index;
+                            });
+                          },
+                          child: ListTile(
+                            contentPadding: const EdgeInsets.all(10.0),
+                            title: Text(track["name"],
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w800,
+                                  color: myColor,
+                                )),
+                            tileColor: selectedIndex == index
+                                ? Color.fromARGB(228, 53, 191, 101)
+                                : null,
+                            subtitle: Text(artistList[0]["name"],
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w800,
+                                  color: Color.fromARGB(255, 134, 132, 132),
+                                )),
+                          ),
+                        );
+                      }),
+                )
+              ],
+            )));
   }
 
   Future<String> getAuthToken() async {
@@ -193,10 +198,6 @@ class _SearchItemScreen extends State<SearchItemScreen> {
               child: Text('Add To Party Queue'),
               onPressed: () => _addItemToQueue(),
             ),
-          ),
-          const PopupMenuItem(
-            value: 'hide',
-            child: Text('Hide'),
           ),
         ]);
   }

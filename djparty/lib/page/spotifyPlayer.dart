@@ -41,38 +41,36 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: StreamBuilder<ConnectionStatus>(
-        stream: SpotifySdk.subscribeConnectionStatus(),
-        builder: (context, snapshot) {
-          _connected = false;
-          var data = snapshot.data;
-          if (data != null) {
-            _connected = data.connected;
-          }
-          return Scaffold(
-            backgroundColor: Color.fromARGB(159, 46, 46, 46),
-            appBar: AppBar(
-              backgroundColor: Color.fromARGB(228, 53, 191, 101),
-              title: const Text(
-                'Dj Party',
-                style: TextStyle(color: Colors.white),
-              ),
-              centerTitle: true,
-              actions: [
-                _connected
-                    ? IconButton(
-                        onPressed: disconnect,
-                        icon: const Icon(Icons.exit_to_app),
-                      )
-                    : Container()
-              ],
-            ),
-            body: _playerWidget(context),
-            bottomNavigationBar: _buildBottomBar(context),
-          );
-        },
-      ),
+    return StreamBuilder<ConnectionStatus>(
+      stream: SpotifySdk.subscribeConnectionStatus(),
+      builder: (context, snapshot) {
+        _connected = false;
+        var data = snapshot.data;
+        if (data != null) {
+          _connected = data.connected;
+        }
+        return Scaffold(
+          backgroundColor: Color.fromARGB(255, 35, 34, 34),
+          // appBar: AppBar(
+          //   backgroundColor: Color.fromARGB(228, 53, 191, 101),
+          //   title: const Text(
+          //     'Dj Party',
+          //     style: TextStyle(color: Colors.white),
+          //   ),
+          //   centerTitle: true,
+          //   actions: [
+          //     _connected
+          //         ? IconButton(
+          //             onPressed: disconnect,
+          //             icon: const Icon(Icons.exit_to_app),
+          //           )
+          //         : Container()
+          //   ],
+          // ),
+          body: _playerWidget(context),
+          //bottomNavigationBar: _buildBottomBar(context),
+        );
+      },
     );
   }
 
@@ -100,7 +98,7 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
 
         return Stack(
           // mainAxisAlignment: MainAxisAlignment.start,
-          // crossAxisAlignment: CrossAxisAlignment.center,
+          //crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
             ListView(padding: const EdgeInsets.all(8), children: [
               const SizedBox(height: 50),
@@ -329,9 +327,6 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
             Text(
               'From: ${playerContext.title} (${playerContext.type})',
               style: TextStyle(color: Colors.grey),
-            ),
-            SizedBox(
-              height: 50,
             ),
             // ElevatedButton(
             //     onPressed: (() => SpotifySdk.skipToIndex(
