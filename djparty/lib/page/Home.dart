@@ -493,8 +493,8 @@ class _HomeState extends State<Home> {
     try {
       var image = await QrPainter(
         data: string,
-        version: 10,
-        gapless: true,
+        version: 1,
+        gapless: false,
         color: const Color(0x00000000),
         emptyColor: const Color(0xFFFFFFFF),
       ).toImage(300);
