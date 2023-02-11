@@ -59,14 +59,6 @@ class _Queue extends State<Queue> {
                 secondary: const Color.fromARGB(228, 53, 191, 101))),
         home: Scaffold(
             backgroundColor: Color.fromARGB(255, 35, 34, 34),
-            // appBar: AppBar(
-            //   backgroundColor: Color.fromARGB(228, 53, 191, 101),
-            //   title: const Text(
-            //     'Party Playlist',
-            //     style: TextStyle(fontWeight: FontWeight.bold),
-            //   ),
-            //   centerTitle: true,
-            // ),
             body: Column(children: [
               Expanded(
                 child: ListView.builder(
@@ -75,6 +67,7 @@ class _Queue extends State<Queue> {
                     itemBuilder: (BuildContext context, int index) {
                       final track = _tracks[index];
                       var artistList = track["artists"].toList();
+                      var imageList = track["album"]["images"].toList();
                       return ListTile(
                         contentPadding: const EdgeInsets.all(10.0),
                         title: Text(track["name"],
@@ -89,6 +82,12 @@ class _Queue extends State<Queue> {
                               fontWeight: FontWeight.w800,
                               color: Color.fromARGB(255, 134, 132, 132),
                             )),
+                        leading: Image.network(
+                          imageList[1]["url"],
+                          fit: BoxFit.cover,
+                          height: 60,
+                          width: 60,
+                        ),
                       );
                     }),
               )

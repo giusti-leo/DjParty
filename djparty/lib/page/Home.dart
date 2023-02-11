@@ -454,7 +454,6 @@ class _HomeState extends State<Home> {
 
   Future handleEnterInLobby(String code) async {
     connectToSpotify();
-    getAuthToken();
     final sp = context.read<SignInProvider>();
     final ip = context.read<InternetProvider>();
     final fp = context.read<FirebaseRequests>();
@@ -812,11 +811,7 @@ class _HomeState extends State<Home> {
 
   handlePassToLobby() {
     Future.delayed(const Duration(milliseconds: 200)).then((value) {
-      nextScreen(
-          context,
-          SpotifyTabController(
-            myToken: myToken,
-          ));
+      nextScreen(context, SpotifyTabController());
     });
   }
 

@@ -130,134 +130,141 @@ class _insertPartyName extends State<GeneratorScreen> {
     User? currentUser = _auth.currentUser;
     controller.clear();
 
-    return Scaffold(
-        backgroundColor: Color.fromARGB(128, 53, 74, 62),
-        appBar: AppBar(
-          backgroundColor: const Color.fromRGBO(30, 215, 96, 0.9),
-          title: const Text('Create your Party'),
-          centerTitle: true,
-        ),
-        body: SingleChildScrollView(
-          child: Column(
-            children: <Widget>[
-              const SizedBox(
-                height: 20,
-              ),
-              SizedBox(
-                height: MediaQuery.of(context).size.height / 18,
-                width: MediaQuery.of(context).size.width / 1.2,
-                child: TextFormField(
-                  controller: partyName,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                  ),
-                  decoration: InputDecoration(
-                    hintText: 'Enter your Party Name',
-                    hintStyle: const TextStyle(color: Colors.grey),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(18),
-                      borderSide: const BorderSide(
-                        color: Color.fromRGBO(30, 215, 96, 0.9),
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+          colorScheme: ColorScheme.fromSwatch().copyWith(
+              primary: const Color.fromARGB(228, 53, 191, 101),
+              secondary: const Color.fromARGB(228, 53, 191, 101))),
+      home: Scaffold(
+          backgroundColor: Color.fromARGB(255, 35, 34, 34),
+          appBar: AppBar(
+            backgroundColor: const Color.fromARGB(228, 53, 191, 101),
+            title: const Text('Create your Party'),
+            centerTitle: true,
+          ),
+          body: SingleChildScrollView(
+            child: Column(
+              children: <Widget>[
+                const SizedBox(
+                  height: 20,
+                ),
+                SizedBox(
+                  height: MediaQuery.of(context).size.height / 18,
+                  width: MediaQuery.of(context).size.width / 1.2,
+                  child: TextFormField(
+                    controller: partyName,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: 'Enter your Party Name',
+                      hintStyle: const TextStyle(color: Colors.grey),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(18),
+                        borderSide: const BorderSide(
+                          color: Color.fromRGBO(30, 215, 96, 0.9),
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(
-                height: 30,
-              ),
-              SizedBox(
-                height: MediaQuery.of(context).size.height / 18,
-                width: MediaQuery.of(context).size.width / 2,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    side: const BorderSide(
-                      color: Color.fromARGB(184, 255, 255, 255),
-                      width: 5,
+                const SizedBox(
+                  height: 30,
+                ),
+                SizedBox(
+                  height: MediaQuery.of(context).size.height / 18,
+                  width: MediaQuery.of(context).size.width / 2,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      side: const BorderSide(
+                        color: Color.fromARGB(184, 255, 255, 255),
+                        width: 5,
+                      ),
+                      primary: const Color.fromRGBO(
+                          30, 215, 96, 0.9), // Background color
+                      onPrimary: Colors.white, // Text Color (Foreground color)
                     ),
-                    primary: const Color.fromRGBO(
-                        30, 215, 96, 0.9), // Background color
-                    onPrimary: Colors.white, // Text Color (Foreground color)
+                    onPressed: () {
+                      _selectDate(context);
+                      showDate = true;
+                    },
+                    child: Text(
+                      getDate(),
+                      style: const TextStyle(color: Colors.black, fontSize: 20),
+                    ),
                   ),
-                  onPressed: () {
-                    _selectDate(context);
-                    showDate = true;
-                  },
+                ),
+                const SizedBox(
+                  height: 20,
+                ),
+                const Divider(
+                    color: Color.fromRGBO(30, 215, 96, 0.9), height: 64),
+                const SizedBox(
+                  height: 20,
+                ),
+                const SizedBox(
+                  height: 40,
                   child: Text(
-                    getDate(),
-                    style: const TextStyle(color: Colors.black, fontSize: 20),
+                    'Optional information',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 20, color: Colors.white),
                   ),
                 ),
-              ),
-              const SizedBox(
-                height: 20,
-              ),
-              const Divider(
-                  color: Color.fromRGBO(30, 215, 96, 0.9), height: 64),
-              const SizedBox(
-                height: 20,
-              ),
-              const SizedBox(
-                height: 40,
-                child: Text(
-                  'Optional information',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 20, color: Colors.white),
+                const SizedBox(
+                  height: 30,
                 ),
-              ),
-              const SizedBox(
-                height: 30,
-              ),
-              SizedBox(
-                height: MediaQuery.of(context).size.height / 18,
-                width: MediaQuery.of(context).size.width / 2,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    side: const BorderSide(
-                      color: Color.fromARGB(184, 255, 255, 255),
-                      width: 5,
+                SizedBox(
+                  height: MediaQuery.of(context).size.height / 18,
+                  width: MediaQuery.of(context).size.width / 2,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      side: const BorderSide(
+                        color: Color.fromARGB(184, 255, 255, 255),
+                        width: 5,
+                      ),
+                      primary: const Color.fromRGBO(
+                          30, 215, 96, 0.9), // Background color
+                      onPrimary: Colors.white, // Text Color (Foreground color)
                     ),
-                    primary: const Color.fromRGBO(
-                        30, 215, 96, 0.9), // Background color
-                    onPrimary: Colors.white, // Text Color (Foreground color)
+                    onPressed: () {
+                      _selectTime(context);
+                      showTime = true;
+                    },
+                    child: Text(getTime(selectedTime),
+                        style:
+                            const TextStyle(color: Colors.black, fontSize: 20)),
                   ),
+                ),
+                const SizedBox(
+                  height: 50,
+                ),
+                RoundedLoadingButton(
                   onPressed: () {
-                    _selectTime(context);
-                    showTime = true;
+                    handleCreation();
                   },
-                  child: Text(getTime(selectedTime),
-                      style:
-                          const TextStyle(color: Colors.black, fontSize: 20)),
+                  controller: submitController,
+                  successColor: const Color.fromRGBO(30, 215, 96, 0.9),
+                  width: MediaQuery.of(context).size.width * 0.80,
+                  elevation: 0,
+                  borderRadius: 25,
+                  color: const Color.fromRGBO(30, 215, 96, 0.9),
+                  child: Wrap(
+                    children: const [
+                      Text(
+                        'Confirm',
+                        selectionColor: Colors.black,
+                        style: TextStyle(fontSize: 22, color: Colors.white),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(
-                height: 50,
-              ),
-              RoundedLoadingButton(
-                onPressed: () {
-                  handleCreation();
-                },
-                controller: submitController,
-                successColor: const Color.fromRGBO(30, 215, 96, 0.9),
-                width: MediaQuery.of(context).size.width * 0.80,
-                elevation: 0,
-                borderRadius: 25,
-                color: const Color.fromRGBO(30, 215, 96, 0.9),
-                child: Wrap(
-                  children: const [
-                    Text(
-                      'Confirm',
-                      selectionColor: Colors.black,
-                      style: TextStyle(fontSize: 22, color: Colors.white),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ));
+              ],
+            ),
+          )),
+    );
   }
 
   Future<void> handleCreation() async {
