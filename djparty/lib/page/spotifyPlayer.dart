@@ -26,7 +26,6 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
   bool _connected = true;
 
   final Logger _logger = Logger(
-    //filter: CustomLogFilter(), // custom logfilter can be used to have logs in release mode
     printer: PrettyPrinter(
       methodCount: 2, // number of method calls to be displayed
       errorMethodCount: 8, // number of method calls if stacktrace is provided
@@ -41,38 +40,19 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: StreamBuilder<ConnectionStatus>(
-        stream: SpotifySdk.subscribeConnectionStatus(),
-        builder: (context, snapshot) {
-          _connected = false;
-          var data = snapshot.data;
-          if (data != null) {
-            _connected = data.connected;
-          }
-          return Scaffold(
-            backgroundColor: Color.fromARGB(159, 46, 46, 46),
-            appBar: AppBar(
-              backgroundColor: Color.fromARGB(228, 53, 191, 101),
-              title: const Text(
-                'Dj Party',
-                style: TextStyle(color: Colors.white),
-              ),
-              centerTitle: true,
-              actions: [
-                _connected
-                    ? IconButton(
-                        onPressed: disconnect,
-                        icon: const Icon(Icons.exit_to_app),
-                      )
-                    : Container()
-              ],
-            ),
-            body: _playerWidget(context),
-            bottomNavigationBar: _buildBottomBar(context),
-          );
-        },
-      ),
+    return StreamBuilder<ConnectionStatus>(
+      stream: SpotifySdk.subscribeConnectionStatus(),
+      builder: (context, snapshot) {
+        _connected = false;
+        var data = snapshot.data;
+        if (data != null) {
+          _connected = data.connected;
+        }
+        return Scaffold(
+          backgroundColor: Color.fromARGB(255, 35, 34, 34),
+          body: _playerWidget(context),
+        );
+      },
     );
   }
 
@@ -100,7 +80,7 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
 
         return Stack(
           // mainAxisAlignment: MainAxisAlignment.start,
-          // crossAxisAlignment: CrossAxisAlignment.center,
+          //crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
             ListView(padding: const EdgeInsets.all(8), children: [
               const SizedBox(height: 50),
@@ -132,96 +112,7 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
               ),
               Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                 _buildPlayerContextWidget(),
-                //_skiptoIndexWidget(),
-                // Slider(
-                //   value: votingIndex,
-                //   max: 10,
-                //   divisions: 5,
-                //   label: votingIndex.round().toString(),
-                //   onChanged: (double value) {
-                //     setState(() {
-                //       votingIndex = value;
-                //     });
-                //   },
-                // ),
               ]),
-
-              // Text(
-              //   '${track.album.name}',
-              //   style: TextStyle(
-              //     color: Colors.grey,
-              //     fontSize: 13,
-              //   ),
-              // ),
-              // Row(
-              //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              //   children: [
-              //     Text('Playback speed: ${playerState.playbackSpeed}'),
-              //     Text(
-              //         'Progress: ${playerState.playbackPosition}ms/${track.duration}ms'),
-              //   ],
-              // ),
-              // Row(
-              //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              //   children: [
-              //     Text('Paused: ${playerState.isPaused}'),
-              //     Text('Shuffling: ${playerState.playbackOptions.isShuffling}'),
-              //   ],
-              // ),
-              // Text('RepeatMode: ${playerState.playbackOptions.repeatMode}'),
-              // Text('Image URI: ${track.imageUri.raw}'),
-              // Text('Is episode? ${track.isEpisode}'),
-              // Text('Is podcast? ${track.isPodcast}'),
-              // _connected
-              //     ? spotifyImageWidget(track.imageUri)
-              //     : const Text('Connect to see an image...'),
-              // Column(
-              //   crossAxisAlignment: CrossAxisAlignment.start,
-              //   children: [
-              //     const Divider(),
-              //     const Text(
-              //       'Set Shuffle and Repeat',
-              //       style: TextStyle(fontSize: 16),
-              //     ),
-              //     Row(
-              //       children: [
-              //         const Text(
-              //           'Repeat Mode:',
-              //         ),
-              //         DropdownButton<RepeatMode>(
-              //           value: RepeatMode
-              //               .values[playerState.playbackOptions.repeatMode.index],
-              //           items: const [
-              //             DropdownMenuItem(
-              //               value: RepeatMode.off,
-              //               child: Text('off'),
-              //             ),
-              //             DropdownMenuItem(
-              //               value: RepeatMode.track,
-              //               child: Text('track'),
-              //             ),
-              //             DropdownMenuItem(
-              //               value: RepeatMode.context,
-              //               child: Text('context'),
-              //             ),
-              //           ],
-              //           onChanged: (repeatMode) => setRepeatMode(repeatMode!),
-              //         ),
-              //       ],
-              //     ),
-              //     Row(
-              //       children: [
-              //         const Text('Set shuffle: '),
-              //         Switch.adaptive(
-              //           value: playerState.playbackOptions.isShuffling,
-              //           onChanged: (bool shuffle) => setShuffle(
-              //             shuffle,
-              //           ),
-              //         ),
-              //       ],
-              //     ),
-              //   ],
-              // ),
             ])
           ],
         );
@@ -278,8 +169,9 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
         IconButton(
+          iconSize: 32,
           icon: const Icon(
-            Icons.skip_previous,
+            Icons.skip_previous_rounded,
             color: const Color.fromRGBO(30, 215, 96, 0.9),
           ),
           onPressed: skipPrevious,
@@ -300,8 +192,9 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
                 ),
                 onPressed: (pause)),
         IconButton(
+          iconSize: 32,
           icon: const Icon(
-            Icons.skip_next,
+            Icons.skip_next_rounded,
             color: const Color.fromRGBO(30, 215, 96, 0.9),
           ),
           onPressed: skipNext,
@@ -330,46 +223,11 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
               'From: ${playerContext.title} (${playerContext.type})',
               style: TextStyle(color: Colors.grey),
             ),
-            SizedBox(
-              height: 50,
-            ),
-            // ElevatedButton(
-            //     onPressed: (() => SpotifySdk.skipToIndex(
-            //         spotifyUri: '${playerContext.uri}',
-            //         trackIndex: votingIndex.toInt())),
-            //     child: const Text('skip to voted'))
           ],
         );
       },
     );
   }
-
-  // Widget _skiptoIndexWidget() {
-  //   return StreamBuilder<PlayerContext>(
-  //     stream: SpotifySdk.subscribePlayerContext(),
-  //     initialData: PlayerContext('', '', '', ''),
-  //     builder: (BuildContext context, AsyncSnapshot<PlayerContext> snapshot) {
-  //       var playerContext2 = snapshot.data;
-  //       if (playerContext2 == null) {
-  //         return const Center(
-  //           child: Text('Not connected'),
-  //         );
-  //       }
-
-  //       return Column(
-  //         mainAxisAlignment: MainAxisAlignment.start,
-  //         crossAxisAlignment: CrossAxisAlignment.start,
-  //         children: <Widget>[
-  //           ElevatedButton(
-  //               onPressed: (() => SpotifySdk.skipToIndex(
-  //                   spotifyUri: '${playerContext2.uri}',
-  //                   trackIndex: votingIndex.toInt())),
-  //               child: Text('skip to voted'))
-  //         ],
-  //       );
-  //     },
-  //   );
-  // }
 
   Widget spotifyImageWidget(ImageUri image) {
     return FutureBuilder(

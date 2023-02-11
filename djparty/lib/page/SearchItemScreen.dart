@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:djparty/page/SearchItemScreen.dart';
 import 'package:djparty/Icons/spotify_icons.dart';
 import 'package:spotify_sdk/spotify_sdk.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:logger/logger.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -15,18 +16,21 @@ class SearchItemScreen extends StatefulWidget {
 }
 
 class _SearchItemScreen extends State<SearchItemScreen> {
+  var db = FirebaseFirestore.instance;
   String endpoint = "https://api.spotify.com/v1/search";
   String addEndpoint =
       "https://api.spotify.com/v1/playlists/6fdrai0JDoaEVlvUPrfy7t/tracks";
   String queueEndpoint = "https://api.spotify.com/v1/me/player/queue";
+  String checkEndpoint = "https://api.spotify.com/v1/me/player";
   Offset _tapPosition = Offset.zero;
-  int selectedIndex = 0;
+  int selectedIndex = 100;
   List _tracks = [];
   String myToken = "";
   String input = "";
   String currentUri = "";
   var artistList = [];
   var myColor = Colors.white;
+  bool isCalled = false;
   //List<bool> isSelected = [];
   final Logger _logger = Logger(
     //filter: CustomLogFilter(), // custom logfilter can be used to have logs in release mode
@@ -65,77 +69,93 @@ class _SearchItemScreen extends State<SearchItemScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        backgroundColor: Color.fromARGB(159, 46, 46, 46),
-        appBar: AppBar(
-          backgroundColor: Color.fromARGB(228, 53, 191, 101),
-          title: const Text(
-            'Search',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          centerTitle: true,
-        ),
-        body: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            IconButton(
-              icon: const Icon(
-                Spotify.spotify,
-                color: Color.fromARGB(228, 53, 191, 101),
-              ),
-              onPressed: (getAuthToken),
-            ),
-            TextField(
-              textAlign: TextAlign.start,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                color: Colors.white,
-              ),
-              onChanged: (input) async =>
-                  _tracks = await _updateTracks(input, myToken),
-            ),
-            Expanded(
-              child: ListView.builder(
-                  shrinkWrap: false,
-                  itemCount: _tracks.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    final track = _tracks[index];
-                    var artistList = track['artists'].toList();
-                    return GestureDetector(
-                      onTapDown: (details) => _getTapPosition(details),
-                      onLongPress: () {
-                        currentUri = track["uri"];
-                        _showContextMenu(context);
-                        setState(() {
-                          selectedIndex = index;
-                        });
-                      },
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.all(10.0),
-                        title: Text(track["name"],
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w800,
-                              color: myColor,
-                            )),
-                        tileColor: selectedIndex == index
-                            ? Color.fromARGB(228, 53, 191, 101)
-                            : null,
-                        subtitle: Text(artistList[0]["name"],
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w800,
-                              color: Color.fromARGB(255, 134, 132, 132),
-                            )),
-                      ),
-                    );
-                  }),
-            )
-          ],
-        ));
+    if (isCalled == false) {
+      setState(() {
+        getAuthToken();
+      });
+      isCalled = true;
+    }
+    return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+            colorScheme: ColorScheme.fromSwatch().copyWith(
+                primary: const Color.fromARGB(228, 53, 191, 101),
+                secondary: const Color.fromARGB(228, 53, 191, 101))),
+        home: Scaffold(
+            backgroundColor: Color.fromARGB(255, 35, 34, 34),
+            body: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                TextField(
+                  decoration: const InputDecoration(
+                      hintText: 'Search for a track',
+                      hintStyle: TextStyle(color: Colors.grey)),
+                  textAlign: TextAlign.start,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                  ),
+                  onChanged: (input) async =>
+                      _tracks = await _updateTracks(input, myToken),
+                ),
+                Expanded(
+                  child: ListView.builder(
+                      shrinkWrap: false,
+                      itemCount: _tracks.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        final track = _tracks[index];
+                        var artistList = track['artists'].toList();
+                        var imageList = track["album"]["images"].toList();
+                        return GestureDetector(
+                          onTapDown: (details) => _getTapPosition(details),
+                          onLongPress: () {
+                            currentUri = track["uri"];
+                            _showContextMenu(context);
+                            setState(() {
+                              selectedIndex = index;
+                            });
+                          },
+                          child: ListTile(
+                            contentPadding: const EdgeInsets.all(10.0),
+                            title: Text(track["name"],
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w800,
+                                  color: myColor,
+                                )),
+                            tileColor: selectedIndex == index
+                                ? Color.fromARGB(228, 53, 191, 101)
+                                : null,
+                            subtitle: Text(printArtists(artistList),
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w800,
+                                  color: Color.fromARGB(255, 134, 132, 132),
+                                )),
+                            leading: Image.network(
+                              imageList[1]["url"],
+                              fit: BoxFit.cover,
+                              height: 60,
+                              width: 60,
+                            ),
+                          ),
+                        );
+                      }),
+                )
+              ],
+            )));
+  }
+
+  String printArtists(List artistList) {
+    String result = "";
+    for (int i = 0; i < artistList.length; i++) {
+      artistList[i] = artistList[i]["name"];
+    }
+    result = artistList.join(" , ");
+    return result;
   }
 
   Future<String> getAuthToken() async {
@@ -146,7 +166,8 @@ class _SearchItemScreen extends State<SearchItemScreen> {
             'user-modify-playback-state, '
             'playlist-read-private, '
             'playlist-modify-public,user-read-currently-playing,'
-            'playlist-modify-private');
+            'playlist-modify-private,'
+            'user-read-playback-state');
     setStatus('Got a token: $authenticationToken');
     myToken = '$authenticationToken';
     return authenticationToken;
@@ -191,12 +212,12 @@ class _SearchItemScreen extends State<SearchItemScreen> {
             value: 'favorites',
             child: TextButton(
               child: Text('Add To Party Queue'),
-              onPressed: () => _addItemToQueue(),
+              onPressed: () {
+                //_addItemToQueue();
+                firestoreUpload(currentUri, "91oyCAW3O8MSt5uXNxBSWhIdfG92", 0);
+                checkDiffMs();
+              },
             ),
-          ),
-          const PopupMenuItem(
-            value: 'hide',
-            child: Text('Hide'),
           ),
         ]);
   }
@@ -219,5 +240,63 @@ class _SearchItemScreen extends State<SearchItemScreen> {
         'Authorization': "Bearer " + myToken
       },
     );
+  }
+
+  Future<void> firestoreUpload(String uri, String id, int votes) async {
+    Map<String, dynamic> track = {'uri': uri, 'id': id, 'votes': votes};
+    List list = [track];
+    final docRef = db.collection("parties").doc("tq09O");
+    await docRef.update({'queue': FieldValue.arrayUnion(list)});
+  }
+
+  Future<void> checkDiffMs() async {
+    var response = await http.get(
+      Uri.parse(checkEndpoint),
+      headers: <String, String>{
+        'Content-Type': 'application/json',
+        'Authorization': "Bearer " + myToken
+      },
+    );
+    final playerJson = json.decode(response.body);
+    //var playerList = playerJson.toList();
+    if (playerJson["item"]["duration_ms"] - playerJson["progress_ms"] <=
+        10000) {
+      //currentUri = "spotify:track:2qSAO6IlPb5HpoySjTJsn7";
+      _addItemToQueue();
+    } else {
+      checkDiffMs();
+    }
+  }
+}
+
+class Track {
+  final String? uri;
+  final String? id;
+  final int? votes;
+
+  Track({
+    this.uri,
+    this.id,
+    this.votes,
+  });
+
+  factory Track.fromFirestore(
+    DocumentSnapshot<Map<String, dynamic>> snapshot,
+    SnapshotOptions? options,
+  ) {
+    final data = snapshot.data();
+    return Track(
+      uri: data?['uri'],
+      id: data?['id'],
+      votes: data?['votes'],
+    );
+  }
+
+  Map<String, dynamic> toFirestore() {
+    return {
+      if (uri != null) "uri": uri,
+      if (id != null) "id": id,
+      if (votes != null) "votes": votes,
+    };
   }
 }

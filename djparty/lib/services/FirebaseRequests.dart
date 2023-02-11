@@ -185,6 +185,7 @@ class FirebaseRequests extends ChangeNotifier {
 
   Future createParty(String admin, String partyName, String code,
       DateTime selectedDate, String choosenTime, List<String> members) async {
+    List<Map<String, dynamic>> queue = [];
     try {
       await partyCollection.doc(code).set({
         'admin': admin,
@@ -197,7 +198,8 @@ class FirebaseRequests extends ChangeNotifier {
         'isEnded': false,
         '#partecipant': 1,
         'partecipant_list': members,
-        'timer': 15
+        'timer': 15,
+        'queue': queue
       }).then((value) => print('Party added'));
       notifyListeners();
     } on FirebaseException catch (e) {
