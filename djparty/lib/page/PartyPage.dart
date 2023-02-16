@@ -413,7 +413,7 @@
 //     }
 //   }
 // }
-
+/*
     if (party.data!.get('admin').toString() == sp.uid &&
         !party.data!.get('isStarted')) {
       return (Positioned(
