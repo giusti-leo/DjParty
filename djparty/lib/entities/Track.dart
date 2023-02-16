@@ -23,9 +23,15 @@ class Track {
       bool this.inQueue);
 
   factory Track.getTrackFromFirestore(dynamic track) {
+    List<dynamic> artists = track['artists'].toList();
+    List<String> currentArtistList = [];
+
+    artists.forEach((element) {
+      currentArtistList.add(element['name']);
+    });
     return Track(
         track["uri"],
-        track["artists"],
+        currentArtistList,
         track["image"],
         track["songName"],
         track["admin"],
