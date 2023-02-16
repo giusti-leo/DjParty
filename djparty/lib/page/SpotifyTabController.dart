@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter_countdown_timer/flutter_countdown_timer.dart';
 import 'package:flutter/material.dart';
+import 'package:djparty/services/SignInProvider.dart';
 import 'package:djparty/page/SearchItemScreen.dart';
 import 'package:djparty/page/spotifyPlayer.dart';
 import 'package:djparty/page/Queue.dart';
@@ -8,18 +9,21 @@ import 'package:djparty/page/VotingPage.dart';
 import 'package:djparty/utils/nextScreen.dart';
 import 'package:djparty/Icons/c_d_icons.dart';
 import 'package:spotify_sdk/spotify_sdk.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:logger/logger.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:djparty/services/FirebaseRequests.dart';
+import 'package:djparty/services/InternetProvider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class SpotifyTabController extends StatefulWidget {
   static String routeName = 'SpotifyTabController';
   final String code;
-
   const SpotifyTabController({Key? key, required this.code}) : super(key: key);
 
   @override
-  State<SpotifyTabController> createState() => _SpotifyTabController();
+  _SpotifyTabController createState() => _SpotifyTabController();
 }
 
 class _SpotifyTabController extends State<SpotifyTabController>
@@ -46,9 +50,10 @@ class _SpotifyTabController extends State<SpotifyTabController>
       home: Scaffold(
         backgroundColor: const Color.fromARGB(255, 35, 34, 34),
         appBar: AppBar(
+          elevation: 0,
           backgroundColor: const Color.fromARGB(255, 35, 34, 34),
-          title: const Text(
-            'Party Name',
+          title: Text(
+            widget.code,
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           centerTitle: false,
@@ -62,8 +67,9 @@ class _SpotifyTabController extends State<SpotifyTabController>
             ),
           ],
         ),
-        body: SingleChildScrollView(
-          child: Column(children: [
+        body: LayoutBuilder(
+            builder: (BuildContext context, BoxConstraints constraints) {
+          return Column(children: [
             Container(
               child: Align(
                 alignment: Alignment.center,
@@ -84,7 +90,7 @@ class _SpotifyTabController extends State<SpotifyTabController>
             ),
             SizedBox(
               width: double.maxFinite,
-              height: 550,
+              height: constraints.maxHeight - 50,
               child: TabBarView(
                 controller: _tabController,
                 children: [
@@ -97,8 +103,8 @@ class _SpotifyTabController extends State<SpotifyTabController>
                 ],
               ),
             )
-          ]),
-        ),
+          ]);
+        }),
         bottomNavigationBar:
             SizedBox(height: 55, child: _buildBottomBar(context)),
       ),

@@ -126,11 +126,12 @@ class _SearchItemScreen extends State<SearchItemScreen> {
                 primary: const Color.fromARGB(228, 53, 191, 101),
                 secondary: const Color.fromARGB(228, 53, 191, 101))),
         home: Scaffold(
+            resizeToAvoidBottomInset: false,
             backgroundColor: Color.fromARGB(255, 35, 34, 34),
             body: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
+              // crossAxisAlignment: CrossAxisAlignment.center,
+              // mainAxisSize: MainAxisSize.min,
+              // mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 TextField(
                   decoration: const InputDecoration(

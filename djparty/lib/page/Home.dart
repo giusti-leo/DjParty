@@ -54,6 +54,7 @@ class _HomeState extends State<Home> {
   bool _connected = false;
   String myToken = "";
   Stream<QuerySnapshot>? parties;
+  String title = "";
 
   final RoundedLoadingButtonController partyController =
       RoundedLoadingButtonController();
@@ -281,75 +282,37 @@ class _HomeState extends State<Home> {
                                             SizedBox(
                                               width: width * .08,
                                             ),
-                                            (snapshot.data.docs[index]['admin']
-                                                        .toString() ==
-                                                    sp.uid)
-                                                ? RoundedLoadingButton(
-                                                    onPressed: () {
-                                                      handleEnterInLobby(
-                                                          snapshot
-                                                              .data
-                                                              .docs[index]
-                                                                  ['code']
-                                                              .toString());
-                                                    },
-                                                    controller: partyController,
-                                                    successColor:
-                                                        const Color.fromRGBO(
-                                                            30, 215, 96, 0.9),
-                                                    width: width * 0.25,
-                                                    elevation: 0,
-                                                    borderRadius: 25,
-                                                    color: const Color.fromRGBO(
-                                                        30, 215, 96, 0.9),
-                                                    child: Wrap(
-                                                      children: const [
-                                                        Center(
-                                                          child: Text(
-                                                              "Join Party",
-                                                              style: TextStyle(
-                                                                  color: Colors
-                                                                      .white,
-                                                                  fontSize: 14,
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .w500)),
-                                                        )
-                                                      ],
-                                                    ),
+                                            RoundedLoadingButton(
+                                              onPressed: () {
+                                                handleJoinLobby(snapshot
+                                                    .data.docs[index]['code']
+                                                    .toString());
+                                                title = snapshot.data
+                                                    .docs[index]['partyName'];
+                                              },
+                                              controller: partyController,
+                                              successColor:
+                                                  const Color.fromRGBO(
+                                                      30, 215, 96, 0.9),
+                                              width: width * 0.25,
+                                              elevation: 0,
+                                              borderRadius: 25,
+                                              color: const Color.fromRGBO(
+                                                  30, 215, 96, 0.9),
+                                              child: Wrap(
+                                                children: const [
+                                                  Center(
+                                                    child: Text("Join Party",
+                                                        style: TextStyle(
+                                                            color: Colors.white,
+                                                            fontSize: 14,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .w500)),
                                                   )
-                                                : RoundedLoadingButton(
-                                                    onPressed: () {
-                                                      handleJoinLobby(snapshot
-                                                          .data
-                                                          .docs[index]['code']
-                                                          .toString());
-                                                    },
-                                                    controller: partyController,
-                                                    successColor:
-                                                        const Color.fromRGBO(
-                                                            30, 215, 96, 0.9),
-                                                    width: width * 0.25,
-                                                    elevation: 0,
-                                                    borderRadius: 25,
-                                                    color: const Color.fromRGBO(
-                                                        30, 215, 96, 0.9),
-                                                    child: Wrap(
-                                                      children: const [
-                                                        Center(
-                                                          child: Text(
-                                                              "Join Party",
-                                                              style: TextStyle(
-                                                                  color: Colors
-                                                                      .white,
-                                                                  fontSize: 14,
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .w500)),
-                                                        )
-                                                      ],
-                                                    ),
-                                                  ),
+                                                ],
+                                              ),
+                                            ),
                                           ],
                                         ),
                                         Row(
@@ -493,7 +456,7 @@ class _HomeState extends State<Home> {
               }
               fp.saveDataToSharedPreferences().then((value) {
                 partyController.success();
-                handlePassToLobby(code);
+                handlePassToLobby(code: code);
               });
             });
           });
@@ -761,61 +724,63 @@ class _HomeState extends State<Home> {
         partyController.reset();
         return;
       }
-      if (value == true) {
-        fp.isPartyStarted().then((value) {
-          if (sp.hasError == true) {
-            showInSnackBar(context, sp.errorCode.toString(), Colors.red);
-            partyController.reset();
-            return;
-          }
+      //if (value == true) {
+      // fp.isPartyStarted().then((value) {
+      //   if (sp.hasError == true) {
+      //     showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+      //     partyController.reset();
+      //     return;
+      //   }
 
-          if (value == true) {
-            fp.getPartyDataFromFirestore(code).then((value) {
-              if (sp.hasError == true) {
-                showInSnackBar(context, sp.errorCode.toString(), Colors.red);
-                partyController.reset();
-                return;
-              }
-              fp.saveDataToSharedPreferences().then((value) {
-                partyController.success();
-                handlePassToLobby(code);
-              });
-            });
-          } else {
-            displayToastMessage(
-                context, 'Wait the Admin starts the party', Colors.red);
-          }
-
-          fp.setPartyStarted(code).then((value) {
-            if (sp.hasError == true) {
-              showInSnackBar(context, sp.errorCode.toString(), Colors.red);
-              partyController.reset();
-              return;
-            }
-            fp.getPartyDataFromFirestore(code).then((value) {
-              if (sp.hasError == true) {
-                showInSnackBar(context, sp.errorCode.toString(), Colors.red);
-                partyController.reset();
-                return;
-              }
-              fp.saveDataToSharedPreferences().then((value) {
-                partyController.success();
-                handlePassToLobby(code);
-              });
-            });
-          });
+      //   if (value == true) {
+      fp.getPartyDataFromFirestore(code).then((value) {
+        if (sp.hasError == true) {
+          showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+          partyController.reset();
+          return;
+        }
+        fp.saveDataToSharedPreferences().then((value) {
+          partyController.success();
+          handlePassToLobby(code: code);
+          partyController.reset();
         });
-      }
+        //});
+        //});
+      });
     });
+    // else {
+    //     displayToastMessage(
+    //         context, 'Wait the Admin starts the party', Colors.red);
+    // }
+
+    //       fp.setPartyStarted(code).then((value) {
+    //         if (sp.hasError == true) {
+    //           showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+    //           partyController.reset();
+    //           return;
+    //         }
+    //         fp.getPartyDataFromFirestore(code).then((value) {
+    //           if (sp.hasError == true) {
+    //             showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+    //             partyController.reset();
+    //             return;
+    //           }
+    //           fp.saveDataToSharedPreferences().then((value) {
+    //             partyController.success();
+    //             handlePassToLobby();
+    //           });
+    //         });
+    //       });
+    //     });
+    //   }
+    // });
   }
 
-  handlePassToLobby(String code) {
+  handlePassToLobby({required String code}) {
+    connectToSpotify();
+    final sp = context.read<SignInProvider>();
     Future.delayed(const Duration(milliseconds: 200)).then((value) {
-      nextScreen(
-          context,
-          SpotifyTabController(
-            code: code,
-          ));
+      nextScreen(context, SpotifyTabController(code: code));
     });
   }
 

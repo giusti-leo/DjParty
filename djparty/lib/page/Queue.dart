@@ -8,6 +8,7 @@ import 'package:djparty/page/SearchItemScreen.dart';
 import 'package:djparty/Icons/spotify_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:spotify_sdk/spotify_sdk.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:logger/logger.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -30,6 +31,7 @@ class _Queue extends State<Queue> {
   String myToken = "";
   String input = "";
   List _tracks = [];
+  List _queue = [];
   bool isCalled = false;
   bool changed = false;
 
@@ -47,7 +49,7 @@ class _Queue extends State<Queue> {
         });
     final tracksJson = json.decode(response.body);
     var trackList = tracksJson['queue'].toList();
-    print(trackList);
+    //print(trackList);
     _tracks = trackList;
 
     return trackList;
