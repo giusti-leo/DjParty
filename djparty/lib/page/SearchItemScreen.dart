@@ -1,6 +1,13 @@
+import 'package:djparty/entities/Track.dart';
+import 'package:djparty/services/FirebaseRequests.dart';
+import 'package:djparty/services/InternetProvider.dart';
+import 'package:djparty/services/SignInProvider.dart';
+import 'package:djparty/utils/nextScreen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:djparty/page/SearchItemScreen.dart';
 import 'package:djparty/Icons/spotify_icons.dart';
+import 'package:provider/provider.dart';
 import 'package:spotify_sdk/spotify_sdk.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:logger/logger.dart';
@@ -9,7 +16,11 @@ import 'dart:convert';
 
 class SearchItemScreen extends StatefulWidget {
   static String routeName = 'SearchItemScreen';
-  const SearchItemScreen({Key? key}) : super(key: key);
+  final String code;
+  const SearchItemScreen({
+    Key? key,
+    required this.code,
+  }) : super(key: key);
 
   @override
   State<SearchItemScreen> createState() => _SearchItemScreen();
@@ -27,8 +38,11 @@ class _SearchItemScreen extends State<SearchItemScreen> {
   List _tracks = [];
   String myToken = "";
   String input = "";
-  String currentUri = "";
-  var artistList = [];
+
+  late Track currentTrack;
+
+  String uid = FirebaseAuth.instance.currentUser!.uid;
+
   var myColor = Colors.white;
   bool isCalled = false;
   //List<bool> isSelected = [];
@@ -43,6 +57,18 @@ class _SearchItemScreen extends State<SearchItemScreen> {
       printTime: true,
     ),
   );
+
+  Future getData() async {
+    final sp = context.read<SignInProvider>();
+
+    sp.getDataFromSharedPreferences();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getData();
+  }
 
   Future<List<dynamic>> GetTracks(String input, String myToken) async {
     var response = await http.get(Uri.parse(
@@ -65,6 +91,24 @@ class _SearchItemScreen extends State<SearchItemScreen> {
     setState(() {
       _tapPosition = referenceBox.globalToLocal(details.globalPosition);
     });
+  }
+
+  void setCurrentTrack(track) {
+    final sp = context.read<SignInProvider>();
+
+    String currentUri = track['uri'];
+    String currentImage = track["album"]['images'].toList()[1]["url"];
+    String currentName = track['name'];
+    int currentDuration = track['duration_ms'];
+    List<dynamic> artists = track['artists'].toList();
+    List<String> currentArtistList = [];
+
+    artists.forEach((element) {
+      currentArtistList.add(element['name']);
+    });
+
+    currentTrack = Track(currentUri, currentArtistList, currentImage,
+        currentName, sp.uid!, currentDuration, Timestamp.now(), 0, false);
   }
 
   @override
@@ -107,12 +151,10 @@ class _SearchItemScreen extends State<SearchItemScreen> {
                       itemCount: _tracks.length,
                       itemBuilder: (BuildContext context, int index) {
                         final track = _tracks[index];
-                        var artistList = track['artists'].toList();
-                        var imageList = track["album"]["images"].toList();
+                        Track currentTrack = Track.getTrackFromFirestore(track);
                         return GestureDetector(
                           onTapDown: (details) => _getTapPosition(details),
                           onLongPress: () {
-                            currentUri = track["uri"];
                             _showContextMenu(context);
                             setState(() {
                               selectedIndex = index;
@@ -120,7 +162,7 @@ class _SearchItemScreen extends State<SearchItemScreen> {
                           },
                           child: ListTile(
                             contentPadding: const EdgeInsets.all(10.0),
-                            title: Text(track["name"],
+                            title: Text(currentTrack.name!,
                                 style: TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.w800,
@@ -129,14 +171,14 @@ class _SearchItemScreen extends State<SearchItemScreen> {
                             tileColor: selectedIndex == index
                                 ? Color.fromARGB(228, 53, 191, 101)
                                 : null,
-                            subtitle: Text(printArtists(artistList),
+                            subtitle: Text(printArtists(currentTrack.artists!),
                                 style: const TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w800,
                                   color: Color.fromARGB(255, 134, 132, 132),
                                 )),
                             leading: Image.network(
-                              imageList[1]["url"],
+                              currentTrack.images!,
                               fit: BoxFit.cover,
                               height: 60,
                               width: 60,
@@ -152,9 +194,11 @@ class _SearchItemScreen extends State<SearchItemScreen> {
   String printArtists(List artistList) {
     String result = "";
     for (int i = 0; i < artistList.length; i++) {
-      artistList[i] = artistList[i]["name"];
+      result += artistList[i];
+      if (i < artistList.length - 1) {
+        result += " , ";
+      }
     }
-    result = artistList.join(" , ");
     return result;
   }
 
@@ -204,27 +248,72 @@ class _SearchItemScreen extends State<SearchItemScreen> {
           PopupMenuItem(
             value: 'favorites',
             child: TextButton(
-              child: Text('Add To Party Playlist'),
-              onPressed: () => _addItemToPlaylist(),
-            ),
-          ),
-          PopupMenuItem(
-            value: 'favorites',
-            child: TextButton(
-              child: Text('Add To Party Queue'),
-              onPressed: () {
-                //_addItemToQueue();
-                firestoreUpload(currentUri, "91oyCAW3O8MSt5uXNxBSWhIdfG92", 0);
-                checkDiffMs();
-              },
-            ),
+                child: Text('Add To Party Queue'),
+                onPressed: () => _handleAddSongToQueue(currentTrack)),
           ),
         ]);
   }
 
+  Future _handleAddSongToQueue(Track currentTrack) async {
+    //connectToSpotify();
+    final sp = context.read<SignInProvider>();
+    final ip = context.read<InternetProvider>();
+    final fp = context.read<FirebaseRequests>();
+
+    await ip.checkInternetConnection();
+
+    if (ip.hasInternet == false) {
+      showInSnackBar(context, "Check your Internet connection", Colors.red);
+      return;
+    }
+
+    fp.checkPartyExists(code: widget.code).then((value) async {
+      if (value == false) {
+        showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+        return;
+      } else {
+        fp.isPartyEnded().then((value) {
+          if (value == true) {
+            showInSnackBar(
+                context,
+                'You cannot add a new song when the Party is not on',
+                Colors.red);
+            return;
+          } else {
+            fp.songExists(currentTrack).then(
+              (value) {
+                if (fp.hasError) {
+                  showInSnackBar(context, fp.errorCode.toString(), Colors.red);
+                  return;
+                } else {
+                  if (value == false) {
+                    fp.addSongToFirebase(currentTrack).then(
+                      (value) {
+                        if (fp.hasError) {
+                          showInSnackBar(
+                              context, fp.errorCode.toString(), Colors.red);
+                        } else {
+                          displayToastMessage(
+                              context, 'Song Added', Colors.green);
+                        }
+                      },
+                    );
+                  } else {
+                    displayToastMessage(
+                        context, 'Song already present!', Colors.green);
+                  }
+                }
+              },
+            );
+          }
+        });
+      }
+    });
+  }
+
   Future<http.Response> _addItemToPlaylist() async {
     return http.post(
-      Uri.parse(addEndpoint + "?uris=" + currentUri),
+      Uri.parse(addEndpoint + "?uris=" + currentTrack.uri!),
       headers: <String, String>{
         'Content-Type': 'application/json',
         'Authorization': "Bearer " + myToken
@@ -232,9 +321,9 @@ class _SearchItemScreen extends State<SearchItemScreen> {
     );
   }
 
-  Future<http.Response> _addItemToQueue() async {
+  Future<http.Response> _addItemToSpotifyQueue() async {
     return http.post(
-      Uri.parse(queueEndpoint + "?uri=" + currentUri),
+      Uri.parse(queueEndpoint + "?uri=" + currentTrack.uri!),
       headers: <String, String>{
         'Content-Type': 'application/json',
         'Authorization': "Bearer " + myToken
@@ -242,12 +331,7 @@ class _SearchItemScreen extends State<SearchItemScreen> {
     );
   }
 
-  Future<void> firestoreUpload(String uri, String id, int votes) async {
-    Map<String, dynamic> track = {'uri': uri, 'id': id, 'votes': votes};
-    List list = [track];
-    final docRef = db.collection("parties").doc("tq09O");
-    await docRef.update({'queue': FieldValue.arrayUnion(list)});
-  }
+  Future<void> firestoreUpload(String uri, String) async {}
 
   Future<void> checkDiffMs() async {
     var response = await http.get(
@@ -262,41 +346,9 @@ class _SearchItemScreen extends State<SearchItemScreen> {
     if (playerJson["item"]["duration_ms"] - playerJson["progress_ms"] <=
         10000) {
       //currentUri = "spotify:track:2qSAO6IlPb5HpoySjTJsn7";
-      _addItemToQueue();
+      //_addItemToQueue();
     } else {
       checkDiffMs();
     }
-  }
-}
-
-class Track {
-  final String? uri;
-  final String? id;
-  final int? votes;
-
-  Track({
-    this.uri,
-    this.id,
-    this.votes,
-  });
-
-  factory Track.fromFirestore(
-    DocumentSnapshot<Map<String, dynamic>> snapshot,
-    SnapshotOptions? options,
-  ) {
-    final data = snapshot.data();
-    return Track(
-      uri: data?['uri'],
-      id: data?['id'],
-      votes: data?['votes'],
-    );
-  }
-
-  Map<String, dynamic> toFirestore() {
-    return {
-      if (uri != null) "uri": uri,
-      if (id != null) "id": id,
-      if (votes != null) "votes": votes,
-    };
   }
 }

@@ -60,10 +60,8 @@ class Main extends StatelessWidget {
           Home.routeName: (context) => const Home(),
           GeneratorScreen.routeName: (context) => GeneratorScreen(),
           ResetPassword.routeName: ((context) => const ResetPassword()),
-          SpotifyPlayer.routeName: ((context) => const SpotifyPlayer()),
           UserProfile.routeName: (context) => UserProfile(),
           EditProfile.routeName: (context) => EditProfile(),
-          SearchItemScreen.routeName: ((context) => const SearchItemScreen()),
           PartyPlaylist.routeName: ((context) => const PartyPlaylist())
         },
       ),

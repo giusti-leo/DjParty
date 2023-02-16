@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:djparty/entities/Track.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -52,6 +55,21 @@ class FirebaseRequests extends ChangeNotifier {
   int? _timer;
   int? get timer => _timer;
 
+  String? _songUri;
+  String? get songUri => _songUri;
+
+  String? _songName;
+  String? get songName => _songName;
+
+  String? _songArtist;
+  String? get songArtist => _songArtist;
+
+  String? _songUrlImage;
+  String? get songUrlImage => _songUrlImage;
+
+  int? _songDuration;
+  int? get songDuration => _songDuration;
+
   /*
 
   // creating a group
@@ -81,12 +99,43 @@ class FirebaseRequests extends ChangeNotifier {
   */
 
   // getting the parties
-  getParties({required String uid}) async {
+  Future<Stream<QuerySnapshot<Map<String, dynamic>>>> getParties(
+      {required String uid}) async {
     return userCollection
         .doc(uid)
         .collection("party")
         .orderBy("startDate")
         .snapshots();
+  }
+
+  Future<List<String>> getMySongs({required String code, String? user}) async {
+    try {
+      List<String> mySongs = [];
+      await userCollection
+          .doc(user)
+          .collection("party")
+          .doc(code)
+          .get()
+          .then((value) => mySongs = value.get("mySongs"));
+      return mySongs;
+    } on FirebaseException catch (e) {
+      switch (e.code) {
+        default:
+          _errorCode = e.toString();
+          _hasError = true;
+          notifyListeners();
+          return [];
+      }
+    }
+  }
+
+  Future<Stream<QuerySnapshot<Map<String, dynamic>>>> getSongs(
+      {required String code}) async {
+    return partyCollection
+        .doc(code)
+        .collection("queue")
+        .where('inQueue', isEqualTo: true)
+        .orderBy(['timestamp', 'votes']).snapshots();
   }
 
   savePartyDataFromFirebase({required String code}) async {
@@ -135,10 +184,8 @@ class FirebaseRequests extends ChangeNotifier {
   Future<bool> checkPartyExists({required String code}) async {
     DocumentSnapshot snap = await partyCollection.doc(code).get();
     if (snap.exists) {
-      print("EXISTING PARTY");
       return true;
     } else {
-      print("Party No Exist ");
       return false;
     }
   }
@@ -215,10 +262,8 @@ class FirebaseRequests extends ChangeNotifier {
   Future<bool> checkUserExists(String user) async {
     DocumentSnapshot snap = await userCollection.doc(user).get();
     if (snap.exists) {
-      print("EXISTING USER");
       return true;
     } else {
-      print("NEW USER");
       return false;
     }
   }
@@ -226,21 +271,17 @@ class FirebaseRequests extends ChangeNotifier {
   Future<bool> isPartyStarted() async {
     DocumentSnapshot snap = await partyCollection.doc(partyCode).get();
     if (snap.exists) {
-      print("EXISTING USER");
       return true;
     } else {
-      print("NEW USER");
       return false;
     }
   }
 
-  Future<bool> isPartyEnded(String user) async {
-    DocumentSnapshot snap = await userCollection.doc(user).get();
-    if (snap.exists) {
-      print("EXISTING USER");
+  Future<bool> isPartyEnded() async {
+    DocumentSnapshot snap = await partyCollection.doc(partyCode).get();
+    if (snap.get('isEnded')) {
       return true;
     } else {
-      print("NEW USER");
       return false;
     }
   }
@@ -337,10 +378,8 @@ class FirebaseRequests extends ChangeNotifier {
     DocumentSnapshot snap =
         await userCollection.doc(user).collection('party').doc(partyCode).get();
     if (snap.exists) {
-      print("USER ALREADY PART OF THE PARTY");
       return true;
     } else {
-      print("NEW USER");
       return false;
     }
   }
@@ -390,6 +429,55 @@ class FirebaseRequests extends ChangeNotifier {
           _errorCode = e.toString();
           _hasError = true;
           notifyListeners();
+      }
+    }
+  }
+
+  Future addSongToFirebase(Track track) async {
+    try {
+      await partyCollection
+          .doc(partyCode)
+          .collection('queue')
+          .doc(track.uri)
+          .set({
+        'admin': admin,
+        'songName': track.name,
+        'uri': track.uri,
+        'votes': 0,
+        'artists': FieldValue.arrayUnion(track.artists!),
+        'duration_ms': track.duration,
+        'image': track.images,
+        'timestamp': Timestamp.now(),
+        'inQueue': true
+      }).then((value) => print('Song added to Collection'));
+    } on FirebaseException catch (e) {
+      switch (e.code) {
+        default:
+          _errorCode = e.toString();
+          _hasError = true;
+          notifyListeners();
+      }
+    }
+  }
+
+  Future<bool> songExists(Track track) async {
+    try {
+      DocumentSnapshot snap = await partyCollection
+          .doc(partyCode)
+          .collection('queue')
+          .doc(track.uri)
+          .get();
+      if (snap.exists) {
+        return true;
+      } else {
+        return false;
+      }
+    } on FirebaseException catch (e) {
+      switch (e.code) {
+        default:
+          _errorCode = e.toString();
+          _hasError = true;
+          return true;
       }
     }
   }

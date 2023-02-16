@@ -14,7 +14,8 @@ import 'package:flutter_animation_progress_bar/flutter_animation_progress_bar.da
 
 class VotingPage extends StatefulWidget {
   static String routeName = 'VotingPage';
-  const VotingPage({Key? key}) : super(key: key);
+  final String code;
+  const VotingPage({Key? key, required this.code}) : super(key: key);
   @override
   State<VotingPage> createState() => _VotingPage();
 }
@@ -90,7 +91,7 @@ class _VotingPage extends State<VotingPage> {
 
   Widget _buildBottomBar(BuildContext context) {
     void goToTabPage() {
-      nextScreenReplace(context, const SpotifyTabController());
+      nextScreenReplace(context, SpotifyTabController(code: widget.code));
     }
 
     int endTime = DateTime.now().millisecondsSinceEpoch + 10000;

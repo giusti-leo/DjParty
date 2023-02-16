@@ -14,7 +14,9 @@ import 'dart:convert';
 
 class SpotifyTabController extends StatefulWidget {
   static String routeName = 'SpotifyTabController';
-  const SpotifyTabController({Key? key}) : super(key: key);
+  final String code;
+
+  const SpotifyTabController({Key? key, required this.code}) : super(key: key);
 
   @override
   State<SpotifyTabController> createState() => _SpotifyTabController();
@@ -22,6 +24,16 @@ class SpotifyTabController extends StatefulWidget {
 
 class _SpotifyTabController extends State<SpotifyTabController>
     with TickerProviderStateMixin {
+  bool voting = false;
+  bool changed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    voting = false;
+    changed = false;
+  }
+
   @override
   Widget build(BuildContext context) {
     TabController _tabController = TabController(length: 3, vsync: this);
@@ -40,15 +52,6 @@ class _SpotifyTabController extends State<SpotifyTabController>
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           centerTitle: false,
-          // leading: IconButton(
-          //   icon: const Icon(
-          //     Icons.favorite,
-          //     color: Colors.white,
-          //   ),
-          //   onPressed: () {
-          //     nextScreen(context, const VotingPage());
-          //   },
-          // ),
           actions: const [
             Icon(
               CD.cd,
@@ -84,10 +87,13 @@ class _SpotifyTabController extends State<SpotifyTabController>
               height: 550,
               child: TabBarView(
                 controller: _tabController,
-                children: const [
-                  SpotifyPlayer(),
-                  Queue(),
-                  SearchItemScreen(),
+                children: [
+                  SpotifyPlayer(code: widget.code),
+                  Queue(
+                    code: widget.code,
+                    voting: voting,
+                  ),
+                  SearchItemScreen(code: widget.code),
                 ],
               ),
             )
@@ -101,7 +107,7 @@ class _SpotifyTabController extends State<SpotifyTabController>
 
   Widget _buildBottomBar(BuildContext context) {
     void goToVotingPage() {
-      nextScreenReplace(context, const VotingPage());
+      nextScreenReplace(context, VotingPage(code: widget.code));
     }
 
     int endTime = DateTime.now().millisecondsSinceEpoch + 100000;

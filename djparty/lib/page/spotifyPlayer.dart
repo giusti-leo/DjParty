@@ -13,7 +13,11 @@ import 'package:djparty/page/Home.dart';
 
 class SpotifyPlayer extends StatefulWidget {
   static String routeName = 'SpotifyPlayer';
-  const SpotifyPlayer({Key? key}) : super(key: key);
+  final String code;
+  const SpotifyPlayer({
+    Key? key,
+    required this.code,
+  }) : super(key: key);
 
   @override
   _SpotifyPlayerState createState() => _SpotifyPlayerState();
@@ -147,7 +151,8 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
                     Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => SearchItemScreen()));
+                            builder: (context) =>
+                                SearchItemScreen(code: widget.code)));
                   }),
               SizedIconButton(
                 width: 50,

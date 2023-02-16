@@ -493,7 +493,7 @@ class _HomeState extends State<Home> {
               }
               fp.saveDataToSharedPreferences().then((value) {
                 partyController.success();
-                handlePassToLobby();
+                handlePassToLobby(code);
               });
             });
           });
@@ -778,7 +778,7 @@ class _HomeState extends State<Home> {
               }
               fp.saveDataToSharedPreferences().then((value) {
                 partyController.success();
-                handlePassToLobby();
+                handlePassToLobby(code);
               });
             });
           } else {
@@ -800,7 +800,7 @@ class _HomeState extends State<Home> {
               }
               fp.saveDataToSharedPreferences().then((value) {
                 partyController.success();
-                handlePassToLobby();
+                handlePassToLobby(code);
               });
             });
           });
@@ -809,9 +809,13 @@ class _HomeState extends State<Home> {
     });
   }
 
-  handlePassToLobby() {
+  handlePassToLobby(String code) {
     Future.delayed(const Duration(milliseconds: 200)).then((value) {
-      nextScreen(context, SpotifyTabController());
+      nextScreen(
+          context,
+          SpotifyTabController(
+            code: code,
+          ));
     });
   }
 
