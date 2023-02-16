@@ -3,6 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:spotify_sdk/spotify_sdk.dart';
 import 'package:logger/logger.dart';
 import 'package:spotify_sdk/models/connection_status.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:djparty/services/SignInProvider.dart';
+import 'package:provider/provider.dart';
 import 'package:spotify_sdk/models/image_uri.dart';
 import 'package:spotify_sdk/models/player_state.dart';
 import 'package:spotify_sdk/models/player_context.dart';
@@ -13,13 +16,36 @@ import 'package:djparty/page/Home.dart';
 
 class SpotifyPlayer extends StatefulWidget {
   static String routeName = 'SpotifyPlayer';
-  const SpotifyPlayer({Key? key}) : super(key: key);
+
+  final String code;
+  const SpotifyPlayer({Key? key, required this.code}) : super(key: key);
 
   @override
   _SpotifyPlayerState createState() => _SpotifyPlayerState();
 }
 
 class _SpotifyPlayerState extends State<SpotifyPlayer> {
+  String admin = "";
+  Future getData() async {
+    final sp = context.read<SignInProvider>();
+    sp.getDataFromSharedPreferences();
+
+    var db = FirebaseFirestore.instance;
+    final docRef = db
+        .collection("parties")
+        .doc(widget.code)
+        .get()
+        .then((DocumentSnapshot doc) {
+      admin = doc.get("admin");
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getData();
+  }
+
   dynamic isPaused = true;
   double votingIndex = 0;
   bool _loading = false;
@@ -57,6 +83,7 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
   }
 
   Widget _playerWidget(BuildContext context) {
+    final sp = context.read<SignInProvider>();
     return StreamBuilder<PlayerState>(
       stream: SpotifySdk.subscribePlayerState(),
       builder: (BuildContext context, AsyncSnapshot<PlayerState> snapshot) {
@@ -78,89 +105,48 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
           isPaused = false;
         }
 
-        return Stack(
-          // mainAxisAlignment: MainAxisAlignment.start,
-          //crossAxisAlignment: CrossAxisAlignment.center,
-          children: <Widget>[
-            ListView(padding: const EdgeInsets.all(8), children: [
-              const SizedBox(height: 50),
-              SizedBox(
-                width: 250,
-                height: 250,
-                child: spotifyImageWidget(track.imageUri),
-              ),
-              const SizedBox(height: 20),
-              _PlayPauseWidget(),
-              Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                Text(
-                  '${track.name}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                  ),
+        return Scaffold(
+          backgroundColor: Color.fromARGB(255, 35, 34, 34),
+          body: Container(
+            child: Center(
+              child: ListView(padding: const EdgeInsets.all(8), children: [
+                const SizedBox(height: 50),
+                SizedBox(
+                  width: 250,
+                  height: 250,
+                  child: spotifyImageWidget(track.imageUri),
                 ),
-                Text(
-                  '${track.artist.name}',
-                  style: const TextStyle(
-                    color: Colors.grey,
-                    fontSize: 17,
+                const SizedBox(height: 20),
+                (admin == sp.uid)
+                    ? _PlayPauseWidget()
+                    : const SizedBox(height: 1),
+                Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  Text(
+                    '${track.name}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                    ),
                   ),
+                  Text(
+                    '${track.artist.name}',
+                    style: const TextStyle(
+                      color: Colors.grey,
+                      fontSize: 17,
+                    ),
+                  ),
+                ]),
+                const SizedBox(
+                  height: 20,
                 ),
+                Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  _buildPlayerContextWidget(),
+                ]),
               ]),
-              const SizedBox(
-                height: 20,
-              ),
-              Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                _buildPlayerContextWidget(),
-              ]),
-            ])
-          ],
+            ),
+          ),
         );
       },
-    );
-  }
-
-  Widget _buildBottomBar(BuildContext context) {
-    return BottomAppBar(
-      color: Color.fromARGB(255, 45, 44, 44),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: <Widget>[
-              IconButton(
-                  icon: const Icon(
-                    Icons.play_arrow_rounded,
-                    color: Colors.white,
-                  ),
-                  onPressed: () {
-                    Navigator.pushNamed(context, SearchItemScreen.routeName);
-                  }),
-              SizedIconButton(
-                  width: 50,
-                  icon: const Icon(
-                    Icons.search,
-                    color: Colors.white,
-                  ),
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => SearchItemScreen()));
-                  }),
-              SizedIconButton(
-                width: 50,
-                icon: Icon(Icons.playlist_play_rounded, color: Colors.white),
-                onPressed: (() {
-                  Navigator.pushReplacement(context,
-                      MaterialPageRoute(builder: (context) => PartyPlaylist()));
-                }),
-              )
-            ],
-          ),
-        ],
-      ),
     );
   }
 
