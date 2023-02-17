@@ -8,6 +8,7 @@ import 'package:djparty/page/Queue.dart';
 import 'package:djparty/page/VotingPage.dart';
 import 'package:djparty/utils/nextScreen.dart';
 import 'package:djparty/Icons/c_d_icons.dart';
+import 'package:provider/provider.dart';
 import 'package:spotify_sdk/spotify_sdk.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:logger/logger.dart';
@@ -31,15 +32,22 @@ class _SpotifyTabController extends State<SpotifyTabController>
   bool voting = false;
   bool changed = false;
 
+  Future getData() async {
+    final fr = context.read<FirebaseRequests>();
+    fr.getDataFromSharedPreferences();
+  }
+
   @override
   void initState() {
     super.initState();
+    getData();
     voting = false;
     changed = false;
   }
 
   @override
   Widget build(BuildContext context) {
+    final fr = context.read<FirebaseRequests>();
     TabController _tabController = TabController(length: 3, vsync: this);
     return MaterialApp(
       debugShowCheckedModeBanner: false,
@@ -53,7 +61,7 @@ class _SpotifyTabController extends State<SpotifyTabController>
           elevation: 0,
           backgroundColor: const Color.fromARGB(255, 35, 34, 34),
           title: Text(
-            widget.code,
+            fr.partyName!,
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           centerTitle: false,
@@ -72,11 +80,11 @@ class _SpotifyTabController extends State<SpotifyTabController>
           return Column(children: [
             Container(
               child: Align(
-                alignment: Alignment.center,
+                alignment: Alignment.centerLeft,
                 child: TabBar(
                     controller: _tabController,
                     isScrollable: true,
-                    labelPadding: const EdgeInsets.only(left: 20, right: 20),
+                    labelPadding: const EdgeInsets.only(left: 25, right: 25),
                     labelColor: Colors.white,
                     unselectedLabelColor: Colors.grey,
                     indicator:

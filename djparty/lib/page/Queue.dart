@@ -108,6 +108,7 @@ class _Queue extends State<Queue> {
                 .collection('parties')
                 .doc(widget.code)
                 .collection('queue')
+                .orderBy("timestamp")
                 .snapshots(),
             builder: (context, AsyncSnapshot snapshot) {
               return snapshot.hasData

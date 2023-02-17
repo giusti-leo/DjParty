@@ -105,14 +105,6 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
               ),
             ),
           );
-          /*
-          return const Center(
-                  child: CircularProgressIndicator(
-                  color: Color.fromARGB(158, 61, 219, 71),
-                  backgroundColor: Color.fromARGB(128, 52, 74, 61),
-                  strokeWidth: 10,
-                ));
-                */
         }
 
         if (snapshot.data!.get('isStarted') && !snapshot.data!.get('isEnded')) {
@@ -127,6 +119,13 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
 
           //
         }
+
+        return const Center(
+            child: CircularProgressIndicator(
+          color: Color.fromARGB(158, 61, 219, 71),
+          backgroundColor: Color.fromARGB(128, 52, 74, 61),
+          strokeWidth: 10,
+        ));
       },
     );
   }

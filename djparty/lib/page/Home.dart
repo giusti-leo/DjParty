@@ -96,6 +96,9 @@ class _HomeState extends State<Home> {
 
   @override
   void initState() {
+    partyController.reset();
+    exitController.reset();
+    shareController.reset();
     super.initState();
     getData();
   }
@@ -742,7 +745,6 @@ class _HomeState extends State<Home> {
         fp.saveDataToSharedPreferences().then((value) {
           partyController.success();
           handlePassToLobby(code: code);
-          partyController.reset();
         });
         //});
         //});

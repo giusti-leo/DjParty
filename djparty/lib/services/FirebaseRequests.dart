@@ -495,6 +495,11 @@ class FirebaseRequests extends ChangeNotifier {
     }
   }
 
+  Future getDataFromSharedPreferences() async {
+    final SharedPreferences s = await SharedPreferences.getInstance();
+    _partyName = s.getString('partyName');
+    notifyListeners();
+  }
   /*
 
   Future getGroupAdmin(String groupId) async {
