@@ -108,15 +108,17 @@ class FirebaseRequests extends ChangeNotifier {
         .snapshots();
   }
 
-  Future<List<String>> getMySongs({required String code, String? user}) async {
+  Future<List<dynamic>> getMySongs({required String code, String? user}) async {
     try {
-      List<String> mySongs = [];
+      List<dynamic> mySongs = [];
       await userCollection
           .doc(user)
           .collection("party")
           .doc(code)
           .get()
-          .then((value) => mySongs = value.get("mySongs"));
+          .then((value) {
+        mySongs = value.get("mySongs");
+      });
       return mySongs;
     } on FirebaseException catch (e) {
       switch (e.code) {
@@ -129,13 +131,23 @@ class FirebaseRequests extends ChangeNotifier {
     }
   }
 
-  Future<Stream<QuerySnapshot<Map<String, dynamic>>>> getSongs(
-      {required String code}) async {
-    return partyCollection
-        .doc(code)
-        .collection("queue")
-        .where('inQueue', isEqualTo: true)
-        .orderBy(['timestamp', 'votes']).snapshots();
+  getSongs({required String code}) async {
+    Stream<QuerySnapshot<Map<String, dynamic>>> res;
+    try {
+      res = partyCollection
+          .doc(code)
+          .collection("queue")
+          .where('inQueue', isEqualTo: true)
+          .orderBy(['timestamp', 'votes']).snapshots();
+      return res;
+    } on FirebaseException catch (e) {
+      switch (e.code) {
+        default:
+          _errorCode = e.toString();
+          _hasError = true;
+          notifyListeners();
+      }
+    }
   }
 
   savePartyDataFromFirebase({required String code}) async {
@@ -363,6 +375,7 @@ class FirebaseRequests extends ChangeNotifier {
         'PartyName': partyName,
         'code': code,
         'startDate': selectedDate,
+        'mySongs': []
       }).then((value) => print('Party added'));
     } on FirebaseException catch (e) {
       switch (e.code) {

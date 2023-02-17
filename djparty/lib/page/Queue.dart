@@ -37,6 +37,8 @@ class _Queue extends State<Queue> {
 
   Stream<QuerySnapshot>? songs;
 
+  List<dynamic>? firebaseSongs = [];
+  List<Track>? queueSongs = [];
   List<String>? mySongs = [];
   List<String>? newDeletedSongs = [];
   List<String>? newLikedSongs = [];
@@ -70,15 +72,14 @@ class _Queue extends State<Queue> {
     sp.getDataFromSharedPreferences();
     changed = false;
 
-    fr.getSongs(code: widget.code).then((val) {
-      setState(() {
-        songs = val;
-      });
-    });
-
     fr.getMySongs(code: widget.code, user: sp.uid).then((val) {
+      List<String> songList = [];
+
+      for (var element in val) {
+        songList.add(element.toString());
+      }
       setState(() {
-        mySongs = val;
+        mySongs = songList;
       });
     });
   }
@@ -103,7 +104,11 @@ class _Queue extends State<Queue> {
                 primary: const Color.fromARGB(228, 53, 191, 101),
                 secondary: const Color.fromARGB(228, 53, 191, 101))),
         home: StreamBuilder(
-            stream: songs,
+            stream: FirebaseFirestore.instance
+                .collection('parties')
+                .doc(widget.code)
+                .collection('queue')
+                .snapshots(),
             builder: (context, AsyncSnapshot snapshot) {
               return snapshot.hasData
                   ? Scaffold(

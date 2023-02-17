@@ -35,13 +35,9 @@ class _SearchItemScreen extends State<SearchItemScreen> {
   String checkEndpoint = "https://api.spotify.com/v1/me/player";
   Offset _tapPosition = Offset.zero;
   int selectedIndex = 100;
-  List _tracks = [];
+  List<Track> _tracks = [];
   String myToken = "";
   String input = "";
-
-  late Track currentTrack;
-
-  String uid = FirebaseAuth.instance.currentUser!.uid;
 
   var myColor = Colors.white;
   bool isCalled = false;
@@ -79,10 +75,15 @@ class _SearchItemScreen extends State<SearchItemScreen> {
     return trackList;
   }
 
-  Future _updateTracks(String input, String myToken) async {
+  Future _updateTracks(String input, String myToken, String user) async {
     List<dynamic> tracks = await GetTracks(input, myToken);
+    List<Track> tmp = [];
+    for (var element in tracks) {
+      tmp.add(Track.getTrackFromSpotify(element, user));
+    }
+
     setState(() {
-      _tracks = tracks;
+      _tracks = tmp;
     });
   }
 
@@ -93,24 +94,6 @@ class _SearchItemScreen extends State<SearchItemScreen> {
     });
   }
 
-  void setCurrentTrack(track) {
-    final sp = context.read<SignInProvider>();
-
-    String currentUri = track['uri'];
-    String currentImage = track["album"]['images'].toList()[1]["url"];
-    String currentName = track['name'];
-    int currentDuration = track['duration_ms'];
-    List<dynamic> artists = track['artists'].toList();
-    List<String> currentArtistList = [];
-
-    artists.forEach((element) {
-      currentArtistList.add(element['name']);
-    });
-
-    currentTrack = Track(currentUri, currentArtistList, currentImage,
-        currentName, sp.uid!, currentDuration, Timestamp.now(), 0, false);
-  }
-
   @override
   Widget build(BuildContext context) {
     if (isCalled == false) {
@@ -119,6 +102,9 @@ class _SearchItemScreen extends State<SearchItemScreen> {
       });
       isCalled = true;
     }
+
+    final sp = context.read<SignInProvider>();
+
     return MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
@@ -129,9 +115,6 @@ class _SearchItemScreen extends State<SearchItemScreen> {
             resizeToAvoidBottomInset: false,
             backgroundColor: Color.fromARGB(255, 35, 34, 34),
             body: Column(
-              // crossAxisAlignment: CrossAxisAlignment.center,
-              // mainAxisSize: MainAxisSize.min,
-              // mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 TextField(
                   decoration: const InputDecoration(
@@ -144,26 +127,25 @@ class _SearchItemScreen extends State<SearchItemScreen> {
                     color: Colors.white,
                   ),
                   onChanged: (input) async =>
-                      _tracks = await _updateTracks(input, myToken),
+                      _tracks = await _updateTracks(input, myToken, sp.uid!),
                 ),
                 Expanded(
                   child: ListView.builder(
                       shrinkWrap: false,
                       itemCount: _tracks.length,
                       itemBuilder: (BuildContext context, int index) {
-                        final track = _tracks[index];
-                        Track currentTrack = Track.getTrackFromFirestore(track);
+                        Track track = _tracks[index];
                         return GestureDetector(
                           onTapDown: (details) => _getTapPosition(details),
                           onLongPress: () {
-                            _showContextMenu(context);
+                            _showContextMenu(context, track);
                             setState(() {
                               selectedIndex = index;
                             });
                           },
                           child: ListTile(
                             contentPadding: const EdgeInsets.all(10.0),
-                            title: Text(currentTrack.name!,
+                            title: Text(track.name!,
                                 style: TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.w800,
@@ -172,14 +154,14 @@ class _SearchItemScreen extends State<SearchItemScreen> {
                             tileColor: selectedIndex == index
                                 ? Color.fromARGB(228, 53, 191, 101)
                                 : null,
-                            subtitle: Text(printArtists(currentTrack.artists!),
+                            subtitle: Text(printArtists(track.artists!),
                                 style: const TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w800,
                                   color: Color.fromARGB(255, 134, 132, 132),
                                 )),
                             leading: Image.network(
-                              currentTrack.images!,
+                              track.images!,
                               fit: BoxFit.cover,
                               height: 60,
                               width: 60,
@@ -236,7 +218,7 @@ class _SearchItemScreen extends State<SearchItemScreen> {
     return selected;
   }
 
-  void _showContextMenu(BuildContext context) async {
+  void _showContextMenu(BuildContext context, Track currentTrack) async {
     final RenderObject? overlay =
         Overlay.of(context)?.context.findRenderObject();
     final result = await showMenu(
@@ -311,7 +293,7 @@ class _SearchItemScreen extends State<SearchItemScreen> {
       }
     });
   }
-
+/*
   Future<http.Response> _addItemToPlaylist() async {
     return http.post(
       Uri.parse(addEndpoint + "?uris=" + currentTrack.uri!),
@@ -330,7 +312,7 @@ class _SearchItemScreen extends State<SearchItemScreen> {
         'Authorization': "Bearer " + myToken
       },
     );
-  }
+  }*/
 
   Future<void> firestoreUpload(String uri, String) async {}
 

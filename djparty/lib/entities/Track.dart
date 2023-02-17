@@ -26,9 +26,9 @@ class Track {
     List<dynamic> artists = track['artists'].toList();
     List<String> currentArtistList = [];
 
-    artists.forEach((element) {
-      currentArtistList.add(element['name']);
-    });
+    for (var element in artists) {
+      currentArtistList.add(element.toString());
+    }
     return Track(
         track["uri"],
         currentArtistList,
@@ -39,5 +39,23 @@ class Track {
         track["timestamp"],
         track["votes"],
         track["inQueue"]);
+  }
+
+  factory Track.getTrackFromSpotify(dynamic track, String user) {
+    List<dynamic> artists = track['artists'];
+    List<String> currentArtistList = [];
+
+    for (var element in artists) {
+      currentArtistList.add(element['name']);
+    }
+
+    List<dynamic> images = track['album']['images'];
+    List<String> currentImages = [];
+    for (var element in images) {
+      currentImages.add(element['url']);
+    }
+
+    return Track(track["uri"], currentArtistList, currentImages[0],
+        track["name"], user, track["duration_ms"], Timestamp.now(), 0, false);
   }
 }
