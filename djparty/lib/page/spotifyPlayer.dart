@@ -63,9 +63,10 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
   );
 
   late ImageUri? currentTrackImageUri;
-
+/*
   @override
   Widget build(BuildContext context) {
+
     return StreamBuilder<ConnectionStatus>(
       stream: SpotifySdk.subscribeConnectionStatus(),
       builder: (context, snapshot) {
@@ -78,6 +79,54 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
           backgroundColor: Color.fromARGB(255, 35, 34, 34),
           body: _playerWidget(context),
         );
+      },
+    );
+  }
+  */
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder(
+      stream: FirebaseFirestore.instance
+          .collection('parties')
+          .doc(widget.code)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return Container(
+            alignment: Alignment.topCenter,
+            child: const Text(
+              "Server problems",
+              style: TextStyle(
+                fontSize: 20,
+                color: Colors.grey,
+                fontWeight: FontWeight.normal,
+                fontFamily: 'Roboto',
+              ),
+            ),
+          );
+          /*
+          return const Center(
+                  child: CircularProgressIndicator(
+                  color: Color.fromARGB(158, 61, 219, 71),
+                  backgroundColor: Color.fromARGB(128, 52, 74, 61),
+                  strokeWidth: 10,
+                ));
+                */
+        }
+
+        if (snapshot.data!.get('isStarted') && !snapshot.data!.get('isEnded')) {
+          return Scaffold(
+            backgroundColor: Color.fromARGB(255, 35, 34, 34),
+            body: _playerWidget(context),
+          );
+        } else if (snapshot.data!.get('isEnded')) {
+          // all user can save the playlist
+        } else if (!snapshot.data!.get('isStarted')) {
+          // admin can start the voting page or change the timer
+
+          //
+        }
       },
     );
   }
