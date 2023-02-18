@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class FirebaseRequests extends ChangeNotifier {
   final String? uid;
+
   FirebaseRequests({this.uid});
 
   // reference for our collections
@@ -24,6 +25,12 @@ class FirebaseRequests extends ChangeNotifier {
 
   int? _partecipantNumber;
   int? get partecipantNumber => _partecipantNumber;
+
+  int? _firstResearch;
+  int? get firstResearch => _firstResearch;
+
+  int? _startParty;
+  int? get startParty => _startParty;
 
   Timestamp? _partyDate;
   Timestamp? get partyDate => _partyDate;
@@ -42,6 +49,9 @@ class FirebaseRequests extends ChangeNotifier {
 
   bool? _isStarted;
   bool? get isStarted => _isStarted;
+
+  bool? _isVoting;
+  bool? get isVoting => _isVoting;
 
   bool? _isEnded;
   bool? get isEnded => _isEnded;
@@ -69,6 +79,9 @@ class FirebaseRequests extends ChangeNotifier {
 
   int? _songDuration;
   int? get songDuration => _songDuration;
+
+  int? _votingTimer;
+  int? get votingTimer => _votingTimer;
 
   /*
 
@@ -218,7 +231,11 @@ class FirebaseRequests extends ChangeNotifier {
                 _isStarted = snapshot['isStarted'],
                 _isEnded = snapshot['isEnded'],
                 _partecipantList = snapshot['partecipant_list'],
-                _partyName = snapshot['partyName']
+                _partyName = snapshot['partyName'],
+                _timer = snapshot['timer'],
+                _firstResearch = snapshot['firstResearch'],
+                _votingTimer = snapshot['votingTime'],
+                _startParty = snapshot['startParty'],
               });
     } on FirebaseException catch (e) {
       switch (e.code) {
@@ -230,9 +247,21 @@ class FirebaseRequests extends ChangeNotifier {
     }
   }
 
+  Future getDataFromSharedPreferences() async {
+    final SharedPreferences s = await SharedPreferences.getInstance();
+    _partyName = s.getString('partyName');
+    _admin = s.getString('admin');
+    _partyCode = s.getString('code');
+    notifyListeners();
+  }
+
   Future saveDataToSharedPreferences() async {
     final SharedPreferences s = await SharedPreferences.getInstance();
     await s.setInt('#partecipant', _partecipantNumber!);
+    await s.setInt('votingTime', _votingTimer!);
+    await s.setInt('timer', _timer!);
+    await s.setInt('startParty', _startParty!);
+    await s.setInt('firstResearch', _firstResearch!);
     await s.setString('admin', _admin!);
     await s.setString('PartyTime', _partyTime!);
     await s.setString('code', _partyCode!);
@@ -257,8 +286,11 @@ class FirebaseRequests extends ChangeNotifier {
         'isEnded': false,
         '#partecipant': 1,
         'partecipant_list': members,
-        'timer': 15,
-        'queue': queue
+        'queue': queue,
+        'timer': 60,
+        'votingTime': 120,
+        'firstResearch': 60,
+        'startParty': Timestamp.now().seconds,
       }).then((value) => print('Party added'));
       notifyListeners();
     } on FirebaseException catch (e) {
@@ -419,6 +451,7 @@ class FirebaseRequests extends ChangeNotifier {
     try {
       await partyCollection.doc(code).update({
         'isStarted': true,
+        'startParty': Timestamp.now().seconds,
       });
     } on FirebaseException catch (e) {
       switch (e.code) {

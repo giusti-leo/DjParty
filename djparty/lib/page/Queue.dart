@@ -17,10 +17,8 @@ import '../entities/Track.dart';
 
 class Queue extends StatefulWidget {
   static String routeName = 'Queue';
-  final String code;
   final bool voting;
-  const Queue({Key? key, required this.code, required this.voting})
-      : super(key: key);
+  const Queue({Key? key, required this.voting}) : super(key: key);
   @override
   State<Queue> createState() => _Queue();
 }
@@ -66,13 +64,14 @@ class _Queue extends State<Queue> {
 
   Future getData() async {
     final sp = context.read<SignInProvider>();
-    final ip = context.read<InternetProvider>();
     final fr = context.read<FirebaseRequests>();
 
     sp.getDataFromSharedPreferences();
+
+    fr.getDataFromSharedPreferences();
     changed = false;
 
-    fr.getMySongs(code: widget.code, user: sp.uid).then((val) {
+    fr.getMySongs(code: fr.partyCode!, user: sp.uid).then((val) {
       List<String> songList = [];
 
       for (var element in val) {
@@ -97,6 +96,8 @@ class _Queue extends State<Queue> {
 
   @override
   Widget build(BuildContext context) {
+    final fr = context.read<FirebaseRequests>();
+
     return MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
@@ -106,9 +107,9 @@ class _Queue extends State<Queue> {
         home: StreamBuilder(
             stream: FirebaseFirestore.instance
                 .collection('parties')
-                .doc(widget.code)
+                .doc(fr.partyCode)
                 .collection('queue')
-                .snapshots(),
+                .orderBy(['votes', 'timestamp']).snapshots(),
             builder: (context, AsyncSnapshot snapshot) {
               return snapshot.hasData
                   ? Scaffold(

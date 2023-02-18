@@ -8,6 +8,7 @@ import 'package:djparty/page/Queue.dart';
 import 'package:djparty/page/VotingPage.dart';
 import 'package:djparty/utils/nextScreen.dart';
 import 'package:djparty/Icons/c_d_icons.dart';
+import 'package:provider/provider.dart';
 import 'package:spotify_sdk/spotify_sdk.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:logger/logger.dart';
@@ -28,19 +29,69 @@ class SpotifyTabController extends StatefulWidget {
 
 class _SpotifyTabController extends State<SpotifyTabController>
     with TickerProviderStateMixin {
+  bool error = false;
   bool voting = false;
   bool changed = false;
+  bool countdown = false;
+
+  int _startParty = 0;
+  int _timer = 0;
+  int _firstResearch = 0;
+  int _votingTime = 0;
+  int endCountdown = 100000;
+
+  int _computeCountdown(
+      int startParty, int timer, int firstResearch, int votingTime) {
+    int tmp = Timestamp.now().seconds;
+    int endFirstBlock = (startParty + firstResearch);
+    int endVoting;
+    int endTimer;
+    bool inside = false;
+
+    if (tmp <= endFirstBlock) {
+      voting = false;
+      endCountdown = endFirstBlock;
+      inside = true;
+    }
+    while (!inside) {
+      endVoting = endFirstBlock + votingTime;
+      endTimer = endVoting + timer;
+
+      if (tmp > endFirstBlock && tmp <= endVoting) {
+        inside = true;
+        endCountdown = endVoting;
+        voting = true;
+      }
+      if (tmp > endVoting && tmp <= endTimer) {
+        endCountdown = endTimer;
+        voting = false;
+
+        inside = true;
+      }
+    }
+    return endCountdown;
+  }
+
+  Future getData() async {
+    final sp = context.read<SignInProvider>();
+    final fr = context.read<FirebaseRequests>();
+    sp.getDataFromSharedPreferences();
+    fr.getDataFromSharedPreferences();
+  }
 
   @override
   void initState() {
-    super.initState();
     voting = false;
     changed = false;
+    getData();
+    super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    TabController _tabController = TabController(length: 3, vsync: this);
+    TabController tabController = TabController(length: 3, vsync: this);
+    final fr = context.read<FirebaseRequests>();
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
@@ -53,10 +104,10 @@ class _SpotifyTabController extends State<SpotifyTabController>
           elevation: 0,
           backgroundColor: const Color.fromARGB(255, 35, 34, 34),
           title: Text(
-            widget.code,
-            style: TextStyle(fontWeight: FontWeight.bold),
+            fr.partyName!,
+            style: const TextStyle(fontWeight: FontWeight.bold),
           ),
-          centerTitle: false,
+          centerTitle: true,
           actions: const [
             Icon(
               CD.cd,
@@ -70,53 +121,86 @@ class _SpotifyTabController extends State<SpotifyTabController>
         body: LayoutBuilder(
             builder: (BuildContext context, BoxConstraints constraints) {
           return Column(children: [
-            Container(
-              child: Align(
-                alignment: Alignment.center,
-                child: TabBar(
-                    controller: _tabController,
-                    isScrollable: true,
-                    labelPadding: const EdgeInsets.only(left: 20, right: 20),
-                    labelColor: Colors.white,
-                    unselectedLabelColor: Colors.grey,
-                    indicator:
-                        CircleTabIndicator(color: Colors.white, radius: 4),
-                    tabs: const [
-                      Tab(text: "Player"),
-                      Tab(text: "Queue"),
-                      Tab(text: "Search"),
-                    ]),
-              ),
+            Align(
+              alignment: Alignment.center,
+              child: TabBar(
+                  controller: tabController,
+                  isScrollable: true,
+                  labelPadding: const EdgeInsets.only(left: 20, right: 20),
+                  labelColor: Colors.white,
+                  unselectedLabelColor: Colors.grey,
+                  indicator: CircleTabIndicator(color: Colors.white, radius: 4),
+                  tabs: const [
+                    Tab(text: "Player"),
+                    Tab(text: "Queue"),
+                    Tab(text: "Search"),
+                  ]),
             ),
             SizedBox(
               width: double.maxFinite,
               height: constraints.maxHeight - 50,
               child: TabBarView(
-                controller: _tabController,
+                controller: tabController,
                 children: [
-                  SpotifyPlayer(code: widget.code),
+                  const SpotifyPlayer(),
                   Queue(
-                    code: widget.code,
                     voting: voting,
                   ),
-                  SearchItemScreen(code: widget.code),
+                  const SearchItemScreen(),
                 ],
               ),
             )
           ]);
         }),
-        bottomNavigationBar:
-            SizedBox(height: 55, child: _buildBottomBar(context)),
+        bottomNavigationBar: _buildBottomBar(context),
       ),
     );
   }
 
   Widget _buildBottomBar(BuildContext context) {
-    void goToVotingPage() {
-      nextScreenReplace(context, VotingPage(code: widget.code));
-    }
+    return SizedBox(
+        height: 55,
+        child: StreamBuilder(
+            stream: FirebaseFirestore.instance
+                .collection('parties')
+                .doc(widget.code)
+                .snapshots(),
+            builder: (context, AsyncSnapshot snapshot) {
+              if (!snapshot.hasData) {
+                return Container(
+                  alignment: Alignment.topCenter,
+                  child: const Text(
+                    "Server problems",
+                    style: TextStyle(
+                      fontSize: 20,
+                      color: Colors.grey,
+                      fontWeight: FontWeight.normal,
+                      fontFamily: 'Roboto',
+                    ),
+                  ),
+                );
+              } else {
+                if (!(snapshot.data.get('isStarted') &&
+                    !snapshot.data.get('isEnded'))) {
+                  voting = false;
+                  countdown = false;
 
-    int endTime = DateTime.now().millisecondsSinceEpoch + 100000;
+                  return const SizedBox();
+                } else {
+                  countdown = true;
+                  _startParty = snapshot.data!.get("startParty");
+                  _timer = snapshot.data!.get('timer');
+                  _firstResearch = snapshot.data!.get('firstResearch');
+                  _votingTime = snapshot.data!.get('votingTime');
+
+                  return _bottomAppBar(context);
+                }
+              }
+            }));
+  }
+
+  Widget _bottomAppBar(BuildContext context) {
+    _updateCountdown();
     return BottomAppBar(
       elevation: 8.0,
       notchMargin: 8.0,
@@ -128,105 +212,117 @@ class _SpotifyTabController extends State<SpotifyTabController>
             height: 10,
           ),
           Row(mainAxisAlignment: MainAxisAlignment.start, children: [
-            const Text("Next Voting in: ",
-                style: TextStyle(
+            Text(changed ? "Next voting in : " : "Voting ends in : ",
+                style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 )),
-            CountdownTimer(
-              endTime: endTime,
-              widgetBuilder: (_, time) {
-                if (time == null) {
-                  return const Text('');
-                }
-                if (time.hours == null) {
-                  if (time.min != null && time.min! / 10 < 1) {
-                    if (time.sec! / 10 < 1) {
-                      return Text("00:0${time.min}:0${time.sec}",
-                          style: const TextStyle(
-                            fontSize: 25,
-                            fontWeight: FontWeight.w700,
-                            color: Color.fromARGB(228, 53, 191, 101),
-                          ));
-                    }
-                    return Text("00:0${time.min}:${time.sec}",
-                        style: const TextStyle(
-                          fontSize: 25,
-                          fontWeight: FontWeight.w700,
-                          color: Color.fromARGB(228, 53, 191, 101),
-                        ));
-                  }
-
-                  if (time.min == null) {
-                    if (time.sec! / 10 < 1) {
-                      return Text("00:00:0${time.sec}",
-                          style: const TextStyle(
-                            fontSize: 25,
-                            fontWeight: FontWeight.w700,
-                            color: Color.fromARGB(228, 53, 191, 101),
-                          ));
-                    }
-                    return Text("00:00:${time.sec}",
-                        style: const TextStyle(
-                          fontSize: 25,
-                          fontWeight: FontWeight.w700,
-                          color: Color.fromARGB(228, 53, 191, 101),
-                        ));
-                  }
-                  if (time.sec! / 10 < 1) {
-                    return Text("00:${time.min}:0${time.sec}",
-                        style: const TextStyle(
-                          fontSize: 25,
-                          fontWeight: FontWeight.w700,
-                          color: Color.fromARGB(228, 53, 191, 101),
-                        ));
-                  }
-                  return Text("00:${time.min}:${time.sec}",
-                      style: const TextStyle(
-                        fontSize: 25,
-                        fontWeight: FontWeight.w700,
-                        color: Color.fromARGB(228, 53, 191, 101),
-                      ));
-                }
-                if (time.hours! / 10 < 1) {
-                  if (time.min! / 10 < 1) {
-                    if (time.sec! / 10 < 1) {
-                      return Text("0${time.hours}:${time.min}:0${time.sec}",
-                          style: const TextStyle(
-                            fontSize: 25,
-                            fontWeight: FontWeight.w700,
-                            color: Color.fromARGB(228, 53, 191, 101),
-                          ));
-                    }
-                    return Text("0${time.hours}:0${time.min}:${time.sec}",
-                        style: const TextStyle(
-                          fontSize: 25,
-                          fontWeight: FontWeight.w700,
-                          color: Color.fromARGB(228, 53, 191, 101),
-                        ));
-                  }
-                  return Text("0${time.hours}:${time.min}:${time.sec}",
-                      style: const TextStyle(
-                        fontSize: 25,
-                        fontWeight: FontWeight.w700,
-                        color: Color.fromARGB(228, 53, 191, 101),
-                      ));
-                }
-
-                return Text("${time.hours}:${time.min}:${time.sec}",
-                    style: const TextStyle(
-                      fontSize: 25,
-                      fontWeight: FontWeight.w700,
-                      color: Color.fromARGB(228, 53, 191, 101),
-                    ));
-              },
-              onEnd: goToVotingPage,
-            ),
+            _countdown(context)
           ])
         ],
       ),
     );
+  }
+
+  Widget _countdown(BuildContext context) {
+    return CountdownTimer(
+      endTime: endCountdown * 1000,
+      widgetBuilder: (_, time) {
+        if (time == null) {
+          return const Text('');
+        }
+        if (time.hours == null) {
+          if (time.min != null && time.min! / 10 < 1) {
+            if (time.sec! / 10 < 1) {
+              return Text("00:0${time.min}:0${time.sec}",
+                  style: const TextStyle(
+                    fontSize: 25,
+                    fontWeight: FontWeight.w700,
+                    color: Color.fromARGB(228, 53, 191, 101),
+                  ));
+            }
+            return Text("00:0${time.min}:${time.sec}",
+                style: const TextStyle(
+                  fontSize: 25,
+                  fontWeight: FontWeight.w700,
+                  color: Color.fromARGB(228, 53, 191, 101),
+                ));
+          }
+
+          if (time.min == null) {
+            if (time.sec! / 10 < 1) {
+              return Text("00:00:0${time.sec}",
+                  style: const TextStyle(
+                    fontSize: 25,
+                    fontWeight: FontWeight.w700,
+                    color: Color.fromARGB(228, 53, 191, 101),
+                  ));
+            }
+            return Text("00:00:${time.sec}",
+                style: const TextStyle(
+                  fontSize: 25,
+                  fontWeight: FontWeight.w700,
+                  color: Color.fromARGB(228, 53, 191, 101),
+                ));
+          }
+          if (time.sec! / 10 < 1) {
+            return Text("00:${time.min}:0${time.sec}",
+                style: const TextStyle(
+                  fontSize: 25,
+                  fontWeight: FontWeight.w700,
+                  color: Color.fromARGB(228, 53, 191, 101),
+                ));
+          }
+          return Text("00:${time.min}:${time.sec}",
+              style: const TextStyle(
+                fontSize: 25,
+                fontWeight: FontWeight.w700,
+                color: Color.fromARGB(228, 53, 191, 101),
+              ));
+        }
+        if (time.hours! / 10 < 1) {
+          if (time.min! / 10 < 1) {
+            if (time.sec! / 10 < 1) {
+              return Text("0${time.hours}:${time.min}:0${time.sec}",
+                  style: const TextStyle(
+                    fontSize: 25,
+                    fontWeight: FontWeight.w700,
+                    color: Color.fromARGB(228, 53, 191, 101),
+                  ));
+            }
+            return Text("0${time.hours}:0${time.min}:${time.sec}",
+                style: const TextStyle(
+                  fontSize: 25,
+                  fontWeight: FontWeight.w700,
+                  color: Color.fromARGB(228, 53, 191, 101),
+                ));
+          }
+          return Text("0${time.hours}:${time.min}:${time.sec}",
+              style: const TextStyle(
+                fontSize: 25,
+                fontWeight: FontWeight.w700,
+                color: Color.fromARGB(228, 53, 191, 101),
+              ));
+        }
+
+        return Text("${time.hours}:${time.min}:${time.sec}",
+            style: const TextStyle(
+              fontSize: 25,
+              fontWeight: FontWeight.w700,
+              color: Color.fromARGB(228, 53, 191, 101),
+            ));
+      },
+      onEnd: _updateCountdown(),
+    );
+  }
+
+  _updateCountdown() {
+    int newCountdown =
+        _computeCountdown(_startParty, _timer, _firstResearch, _votingTime);
+
+    endCountdown = newCountdown;
+    changed = !changed;
   }
 }
 

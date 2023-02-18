@@ -16,11 +16,7 @@ import 'dart:convert';
 
 class SearchItemScreen extends StatefulWidget {
   static String routeName = 'SearchItemScreen';
-  final String code;
-  const SearchItemScreen({
-    Key? key,
-    required this.code,
-  }) : super(key: key);
+  const SearchItemScreen({Key? key}) : super(key: key);
 
   @override
   State<SearchItemScreen> createState() => _SearchItemScreen();
@@ -56,8 +52,10 @@ class _SearchItemScreen extends State<SearchItemScreen> {
 
   Future getData() async {
     final sp = context.read<SignInProvider>();
+    final fr = context.read<FirebaseRequests>();
 
     sp.getDataFromSharedPreferences();
+    fr.getDataFromSharedPreferences();
   }
 
   @override
@@ -241,7 +239,7 @@ class _SearchItemScreen extends State<SearchItemScreen> {
     //connectToSpotify();
     final sp = context.read<SignInProvider>();
     final ip = context.read<InternetProvider>();
-    final fp = context.read<FirebaseRequests>();
+    final fr = context.read<FirebaseRequests>();
 
     await ip.checkInternetConnection();
 
@@ -250,12 +248,12 @@ class _SearchItemScreen extends State<SearchItemScreen> {
       return;
     }
 
-    fp.checkPartyExists(code: widget.code).then((value) async {
+    fr.checkPartyExists(code: fr.partyCode!).then((value) async {
       if (value == false) {
         showInSnackBar(context, sp.errorCode.toString(), Colors.red);
         return;
       } else {
-        fp.isPartyEnded().then((value) {
+        fr.isPartyEnded().then((value) {
           if (value == true) {
             showInSnackBar(
                 context,
@@ -263,18 +261,18 @@ class _SearchItemScreen extends State<SearchItemScreen> {
                 Colors.red);
             return;
           } else {
-            fp.songExists(currentTrack).then(
+            fr.songExists(currentTrack).then(
               (value) {
-                if (fp.hasError) {
-                  showInSnackBar(context, fp.errorCode.toString(), Colors.red);
+                if (fr.hasError) {
+                  showInSnackBar(context, fr.errorCode.toString(), Colors.red);
                   return;
                 } else {
                   if (value == false) {
-                    fp.addSongToFirebase(currentTrack).then(
+                    fr.addSongToFirebase(currentTrack).then(
                       (value) {
-                        if (fp.hasError) {
+                        if (fr.hasError) {
                           showInSnackBar(
-                              context, fp.errorCode.toString(), Colors.red);
+                              context, fr.errorCode.toString(), Colors.red);
                         } else {
                           displayToastMessage(
                               context, 'Song Added', Colors.green);

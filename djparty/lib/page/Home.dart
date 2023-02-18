@@ -54,7 +54,6 @@ class _HomeState extends State<Home> {
   bool _connected = false;
   String myToken = "";
   Stream<QuerySnapshot>? parties;
-  String title = "";
 
   final RoundedLoadingButtonController partyController =
       RoundedLoadingButtonController();
@@ -287,8 +286,6 @@ class _HomeState extends State<Home> {
                                                 handleJoinLobby(snapshot
                                                     .data.docs[index]['code']
                                                     .toString());
-                                                title = snapshot.data
-                                                    .docs[index]['partyName'];
                                               },
                                               controller: partyController,
                                               successColor:
@@ -415,7 +412,7 @@ class _HomeState extends State<Home> {
         ));
   }
 
-  Future handleEnterInLobby(String code) async {
+/*  Future handleEnterInLobby(String code) async {
     connectToSpotify();
     final sp = context.read<SignInProvider>();
     final ip = context.read<InternetProvider>();
@@ -464,6 +461,8 @@ class _HomeState extends State<Home> {
       }
     });
   }
+  
+  */
 
   Widget qrImage(String string, GlobalKey key) {
     return RepaintBoundary(
@@ -742,7 +741,6 @@ class _HomeState extends State<Home> {
         fp.saveDataToSharedPreferences().then((value) {
           partyController.success();
           handlePassToLobby(code: code);
-          partyController.reset();
         });
         //});
         //});
@@ -778,10 +776,10 @@ class _HomeState extends State<Home> {
 
   handlePassToLobby({required String code}) {
     connectToSpotify();
-    final sp = context.read<SignInProvider>();
     Future.delayed(const Duration(milliseconds: 200)).then((value) {
       nextScreen(context, SpotifyTabController(code: code));
     });
+    print('1');
   }
 
   Future handleExitPartyAdmin(String code) async {
