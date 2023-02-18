@@ -95,6 +95,9 @@ class _HomeState extends State<Home> {
 
   @override
   void initState() {
+    partyController.reset();
+    exitController.reset();
+    shareController.reset();
     super.initState();
     getData();
   }
