@@ -48,24 +48,25 @@ class _SpotifyTabController extends State<SpotifyTabController>
     int endTimer;
     bool inside = false;
 
-    if (tmp <= endFirstBlock) {
+    if (tmp < endFirstBlock) {
       voting = false;
       endCountdown = endFirstBlock;
       inside = true;
+      print('1');
+      print('Adesso ' + tmp.toString());
     }
     while (!inside) {
       endVoting = endFirstBlock + votingTime;
       endTimer = endVoting + timer;
 
-      if (tmp > endFirstBlock && tmp <= endVoting) {
+      if (tmp >= endFirstBlock && tmp < endVoting) {
         inside = true;
         endCountdown = endVoting;
         voting = true;
       }
-      if (tmp > endVoting && tmp <= endTimer) {
+      if (tmp >= endVoting && tmp < endTimer) {
         endCountdown = endTimer;
         voting = false;
-
         inside = true;
       }
     }
@@ -149,7 +150,7 @@ class _SpotifyTabController extends State<SpotifyTabController>
                   const SearchItemScreen(),
                 ],
               ),
-            )
+            ),
           ]);
         }),
         bottomNavigationBar: _buildBottomBar(context),
@@ -200,7 +201,6 @@ class _SpotifyTabController extends State<SpotifyTabController>
   }
 
   Widget _bottomAppBar(BuildContext context) {
-    _updateCountdown();
     return BottomAppBar(
       elevation: 8.0,
       notchMargin: 8.0,
@@ -212,13 +212,19 @@ class _SpotifyTabController extends State<SpotifyTabController>
             height: 10,
           ),
           Row(mainAxisAlignment: MainAxisAlignment.start, children: [
-            Text(changed ? "Next voting in : " : "Voting ends in : ",
+            Text(voting ? "Next voting in : " : "Voting ends in : ",
                 style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 )),
-            _countdown(context)
+            _countdown(context),
+            Text(endCountdown.toString(),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                )),
           ])
         ],
       ),
@@ -226,6 +232,7 @@ class _SpotifyTabController extends State<SpotifyTabController>
   }
 
   Widget _countdown(BuildContext context) {
+    _updateCountdown();
     return CountdownTimer(
       endTime: endCountdown * 1000,
       widgetBuilder: (_, time) {
@@ -313,14 +320,13 @@ class _SpotifyTabController extends State<SpotifyTabController>
               color: Color.fromARGB(228, 53, 191, 101),
             ));
       },
-      onEnd: _updateCountdown(),
+      onEnd: () => build(context),
     );
   }
 
   _updateCountdown() {
     int newCountdown =
         _computeCountdown(_startParty, _timer, _firstResearch, _votingTime);
-
     endCountdown = newCountdown;
     changed = !changed;
   }
