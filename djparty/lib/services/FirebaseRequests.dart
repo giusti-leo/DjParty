@@ -23,14 +23,8 @@ class FirebaseRequests extends ChangeNotifier {
   String? _errorCode;
   String? get errorCode => _errorCode;
 
-  int? _partecipantNumber;
-  int? get partecipantNumber => _partecipantNumber;
-
-  int? _firstResearch;
-  int? get firstResearch => _firstResearch;
-
-  int? _startParty;
-  int? get startParty => _startParty;
+  DateTime? _startParty;
+  DateTime? get startParty => _startParty;
 
   Timestamp? _partyDate;
   Timestamp? get partyDate => _partyDate;
@@ -44,8 +38,8 @@ class FirebaseRequests extends ChangeNotifier {
   String? _partyCode;
   String? get partyCode => _partyCode;
 
-  Timestamp? _creationTime;
-  Timestamp? get creationTime => _creationTime;
+  DateTime? _creationTime;
+  DateTime? get creationTime => _creationTime;
 
   bool? _isStarted;
   bool? get isStarted => _isStarted;
@@ -117,11 +111,11 @@ class FirebaseRequests extends ChangeNotifier {
     return userCollection
         .doc(uid)
         .collection("party")
-        .orderBy("startDate")
+        .orderBy("startDate", descending: true)
         .snapshots();
   }
 
-  Future<List<dynamic>> getMySongs({required String code, String? user}) async {
+  /*Future<List<dynamic>> getMySongs({required String code, String? user}) async {
     try {
       List<dynamic> mySongs = [];
       await userCollection
@@ -142,7 +136,7 @@ class FirebaseRequests extends ChangeNotifier {
           return [];
       }
     }
-  }
+  }*/
 
   getSongs({required String code}) async {
     Stream<QuerySnapshot<Map<String, dynamic>>> res;
@@ -151,7 +145,8 @@ class FirebaseRequests extends ChangeNotifier {
           .doc(code)
           .collection("queue")
           .where('inQueue', isEqualTo: true)
-          .orderBy(['timestamp', 'votes']).snapshots();
+          .orderBy('votes')
+          .snapshots();
       return res;
     } on FirebaseException catch (e) {
       switch (e.code) {
@@ -190,10 +185,29 @@ class FirebaseRequests extends ChangeNotifier {
       await partyCollection
           .doc(_partyCode)
           .update({
-            '#partecipant': FieldValue.increment(-1),
             'partecipant_list': FieldValue.arrayRemove([user]),
           })
           .then((_) => print('Party Deleted'))
+          .catchError((error) => print('Failed: $error'));
+    } on FirebaseException catch (e) {
+      switch (e.code) {
+        default:
+          _errorCode = e.toString();
+          _hasError = true;
+          notifyListeners();
+      }
+    }
+  }
+
+  Future<void> changeStatus(bool val, DateTime nextVotingPhase) async {
+    try {
+      await partyCollection
+          .doc(_partyCode)
+          .update({
+            'votingStatus': val,
+            'nextVotingPhase': nextVotingPhase,
+          })
+          .then((_) => print('Party status changed'))
           .catchError((error) => print('Failed: $error'));
     } on FirebaseException catch (e) {
       switch (e.code) {
@@ -222,20 +236,16 @@ class FirebaseRequests extends ChangeNotifier {
           .doc(code)
           .get()
           .then((DocumentSnapshot snapshot) => {
-                _partecipantNumber = snapshot['#partecipant'],
                 _admin = snapshot['admin'],
-                _partyDate = snapshot['PartyDate'],
-                _partyTime = snapshot['PartyTime'],
                 _partyCode = snapshot['code'],
-                _creationTime = snapshot['creationTime'],
+                _creationTime =
+                    (snapshot['creationTime'] as Timestamp).toDate(),
                 _isStarted = snapshot['isStarted'],
                 _isEnded = snapshot['isEnded'],
                 _partecipantList = snapshot['partecipant_list'],
                 _partyName = snapshot['partyName'],
                 _timer = snapshot['timer'],
-                _firstResearch = snapshot['firstResearch'],
                 _votingTimer = snapshot['votingTime'],
-                _startParty = snapshot['startParty'],
               });
     } on FirebaseException catch (e) {
       switch (e.code) {
@@ -252,18 +262,15 @@ class FirebaseRequests extends ChangeNotifier {
     _partyName = s.getString('partyName');
     _admin = s.getString('admin');
     _partyCode = s.getString('code');
+    _timer = s.getInt('timer');
     notifyListeners();
   }
 
   Future saveDataToSharedPreferences() async {
     final SharedPreferences s = await SharedPreferences.getInstance();
-    await s.setInt('#partecipant', _partecipantNumber!);
     await s.setInt('votingTime', _votingTimer!);
     await s.setInt('timer', _timer!);
-    await s.setInt('startParty', _startParty!);
-    await s.setInt('firstResearch', _firstResearch!);
     await s.setString('admin', _admin!);
-    await s.setString('PartyTime', _partyTime!);
     await s.setString('code', _partyCode!);
     await s.setBool('isStarted', _isStarted!);
     await s.setBool('isEnded', _isEnded!);
@@ -271,26 +278,29 @@ class FirebaseRequests extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future createParty(String admin, String partyName, String code,
-      DateTime selectedDate, String choosenTime, List<String> members) async {
+  Future createParty(
+    String admin,
+    String partyName,
+    String code,
+  ) async {
     List<Map<String, dynamic>> queue = [];
+    List<String> members = [admin];
     try {
       await partyCollection.doc(code).set({
         'admin': admin,
         'partyName': partyName,
         'code': code,
-        'creationTime': Timestamp.now(),
-        'PartyDate': selectedDate,
-        'PartyTime': choosenTime,
+        'creationTime': DateTime.now(),
         'isStarted': false,
         'isEnded': false,
-        '#partecipant': 1,
         'partecipant_list': members,
         'queue': queue,
-        'timer': 60,
-        'votingTime': 120,
-        'firstResearch': 60,
-        'startParty': Timestamp.now().seconds,
+        'votingStatus': false,
+        'nextVotingPhase': DateTime.now(),
+        'startParty': DateTime.now(),
+        'timer': 2,
+        'votingTime': 3,
+        'songCurrentlyPlayed': ''
       }).then((value) => print('Party added'));
       notifyListeners();
     } on FirebaseException catch (e) {
@@ -399,15 +409,13 @@ class FirebaseRequests extends ChangeNotifier {
     String admin,
     String partyName,
     String code,
-    DateTime selectedDate,
   ) async {
     try {
       await userCollection.doc(uid).collection('party').doc(code).set({
         'admin': admin,
         'PartyName': partyName,
         'code': code,
-        'startDate': selectedDate,
-        'mySongs': []
+        "startDate": DateTime.now()
       }).then((value) => print('Party added'));
     } on FirebaseException catch (e) {
       switch (e.code) {
@@ -447,11 +455,74 @@ class FirebaseRequests extends ChangeNotifier {
     }
   }
 
-  Future<void> setPartyStarted(String code) async {
+  Future<void> updateParty(
+    String code,
+    int timer,
+    int interval,
+  ) async {
     try {
       await partyCollection.doc(code).update({
+        'timer': timer,
+        'votingTime': interval,
+      });
+    } on FirebaseException catch (e) {
+      switch (e.code) {
+        default:
+          _errorCode = e.toString();
+          _hasError = true;
+          notifyListeners();
+      }
+    }
+  }
+
+  Future<void> setPartyStarted(String code) async {
+    try {
+      DateTime now = DateTime.now();
+      await partyCollection.doc(code).update({
         'isStarted': true,
-        'startParty': Timestamp.now().seconds,
+        'startParty': now,
+        'votingStatus': false,
+        'nextVotingPhase': now.add(const Duration(minutes: 1)),
+      });
+    } on FirebaseException catch (e) {
+      switch (e.code) {
+        default:
+          _errorCode = e.toString();
+          _hasError = true;
+          notifyListeners();
+      }
+    }
+  }
+
+  Future<void> userLikesSong(String song, String user) async {
+    List<String> users = [user];
+    try {
+      await partyCollection
+          .doc(partyCode)
+          .collection('queue')
+          .doc(song)
+          .update({
+        'votes': FieldValue.arrayUnion(users),
+      });
+    } on FirebaseException catch (e) {
+      switch (e.code) {
+        default:
+          _errorCode = e.toString();
+          _hasError = true;
+          notifyListeners();
+      }
+    }
+  }
+
+  Future<void> userDoesNotLikeSong(String song, String user) async {
+    List<String> users = [user];
+    try {
+      await partyCollection
+          .doc(partyCode)
+          .collection('queue')
+          .doc(song)
+          .update({
+        'votes': FieldValue.arrayRemove(users),
       });
     } on FirebaseException catch (e) {
       switch (e.code) {
@@ -466,7 +537,6 @@ class FirebaseRequests extends ChangeNotifier {
   Future<void> addUserToParty(String uid) async {
     try {
       await partyCollection.doc(partyCode).update({
-        '#partecipant': FieldValue.increment(1),
         'partecipant_list': FieldValue.arrayUnion([uid]),
       });
     } on FirebaseException catch (e) {
@@ -489,7 +559,7 @@ class FirebaseRequests extends ChangeNotifier {
         'admin': admin,
         'songName': track.name,
         'uri': track.uri,
-        'votes': 0,
+        'votes': [],
         'artists': FieldValue.arrayUnion(track.artists!),
         'duration_ms': track.duration,
         'image': track.images,

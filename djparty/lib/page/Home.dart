@@ -113,54 +113,63 @@ class _HomeState extends State<Home> {
             colorScheme: ColorScheme.fromSwatch()
                 .copyWith(primary: const Color.fromARGB(228, 53, 191, 101))),
         home: StreamBuilder(
-          stream: parties,
-          builder: (context, AsyncSnapshot snapshot) {
-            return snapshot.hasData && snapshot.data.docs.length > 0
-                ? ListView.builder(
-                    itemCount: snapshot.data.docs.length,
-                    itemBuilder: (context, index) {
-                      var tmp = snapshot.data.docs[index]['startDate'];
-                      return Padding(
-                          padding: const EdgeInsets.all(8),
-                          child: Card(
-                            color: const Color.fromARGB(255, 215, 208, 208),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10.0),
-                            ),
-                            child: ExpansionTile(
-                              trailing:
-                                  (snapshot.data.docs[index]['admin'] == uid)
-                                      ? const Icon(Icons.emoji_people)
-                                      : const Icon(Icons.people),
-                              title: Text(
-                                snapshot.data.docs[index]['PartyName'],
-                                style: const TextStyle(
-                                    color: Colors.black, fontSize: 18),
+            stream: parties,
+            builder: (context, AsyncSnapshot snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(
+                    child: CircularProgressIndicator(
+                  color: Color.fromARGB(158, 61, 219, 71),
+                  backgroundColor: Color.fromARGB(128, 52, 74, 61),
+                  strokeWidth: 10,
+                ));
+              }
+              return snapshot.data.docs.length > 0
+                  ? ListView.builder(
+                      itemCount: snapshot.data.docs.length,
+                      itemBuilder: (context, index) {
+                        var tmp = snapshot.data.docs[index]['startDate'];
+                        return Padding(
+                            padding: const EdgeInsets.all(8),
+                            child: Card(
+                              color: const Color.fromARGB(255, 215, 208, 208),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10.0),
                               ),
-                              subtitle: Text(
-                                "${tmp.toDate().day} / ${tmp.toDate().month} / ${tmp.toDate().year}",
-                                style: const TextStyle(
-                                    color: Colors.blueGrey, fontSize: 14),
-                              ),
-                              children: [
-                                Stack(
-                                  children: [
-                                    Column(
-                                      children: [
-                                        Text(
-                                          'Party Code : ' +
-                                              snapshot.data.docs[index]['code'],
-                                          style: const TextStyle(
-                                            color: Colors.black,
-                                            fontSize: 20,
+                              child: ExpansionTile(
+                                trailing:
+                                    (snapshot.data.docs[index]['admin'] == uid)
+                                        ? const Icon(Icons.emoji_people)
+                                        : const Icon(Icons.people),
+                                title: Text(
+                                  snapshot.data.docs[index]['PartyName'],
+                                  style: const TextStyle(
+                                      color: Colors.black, fontSize: 18),
+                                ),
+                                subtitle: Text(
+                                  "${tmp.toDate().day} / ${tmp.toDate().month} / ${tmp.toDate().year}",
+                                  style: const TextStyle(
+                                      color: Colors.blueGrey, fontSize: 14),
+                                ),
+                                children: [
+                                  Stack(
+                                    children: [
+                                      Column(
+                                        children: [
+                                          Text(
+                                            'Party Code : ' +
+                                                snapshot.data.docs[index]
+                                                    ['code'],
+                                            style: const TextStyle(
+                                              color: Colors.black,
+                                              fontSize: 20,
+                                            ),
                                           ),
-                                        ),
-                                        Row(
-                                          children: const [
-                                            Divider(height: 32),
-                                          ],
-                                        ),
-                                        /*
+                                          Row(
+                                            children: const [
+                                              Divider(height: 32),
+                                            ],
+                                          ),
+                                          /*
                                     Center(
                                       child: RepaintBoundary(
                                         key: Key(index),
@@ -172,160 +181,169 @@ class _HomeState extends State<Home> {
                                         ),
                                       ),
                                     ),*/
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            (snapshot.data.docs[index]['admin']
-                                                        .toString() ==
-                                                    sp.uid)
-                                                ? RoundedLoadingButton(
-                                                    onPressed: () {
-                                                      handleExitPartyAdmin(
-                                                          snapshot
-                                                              .data
-                                                              .docs[index]
-                                                                  ['code']
-                                                              .toString());
-                                                    },
-                                                    controller: exitController,
-                                                    successColor:
-                                                        const Color.fromRGBO(
-                                                            30, 215, 96, 0.9),
-                                                    width: width * 0.25,
-                                                    elevation: 0,
-                                                    borderRadius: 25,
-                                                    color: const Color.fromRGBO(
-                                                        30, 215, 96, 0.9),
-                                                    child: Wrap(
-                                                      children: const [
-                                                        Center(
-                                                          child: Text(
-                                                              "Delete Party",
-                                                              style: TextStyle(
-                                                                  color: Colors
-                                                                      .white,
-                                                                  fontSize: 14,
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .w500)),
-                                                        )
-                                                      ],
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              (snapshot.data
+                                                          .docs[index]['admin']
+                                                          .toString() ==
+                                                      sp.uid)
+                                                  ? RoundedLoadingButton(
+                                                      onPressed: () {
+                                                        handleExitPartyAdmin(
+                                                            snapshot
+                                                                .data
+                                                                .docs[index]
+                                                                    ['code']
+                                                                .toString());
+                                                      },
+                                                      controller:
+                                                          exitController,
+                                                      successColor:
+                                                          const Color.fromRGBO(
+                                                              30, 215, 96, 0.9),
+                                                      width: width * 0.25,
+                                                      elevation: 0,
+                                                      borderRadius: 25,
+                                                      color:
+                                                          const Color.fromRGBO(
+                                                              30, 215, 96, 0.9),
+                                                      child: Wrap(
+                                                        children: const [
+                                                          Center(
+                                                            child: Text(
+                                                                "Delete Party",
+                                                                style: TextStyle(
+                                                                    color: Colors
+                                                                        .white,
+                                                                    fontSize:
+                                                                        14,
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .w500)),
+                                                          )
+                                                        ],
+                                                      ),
+                                                    )
+                                                  : RoundedLoadingButton(
+                                                      onPressed: () {
+                                                        handleExitNormalUser(
+                                                            snapshot
+                                                                .data
+                                                                .docs[index]
+                                                                    ['code']
+                                                                .toString());
+                                                      },
+                                                      controller:
+                                                          partyController,
+                                                      successColor:
+                                                          const Color.fromRGBO(
+                                                              30, 215, 96, 0.9),
+                                                      width: width * 0.25,
+                                                      elevation: 0,
+                                                      borderRadius: 25,
+                                                      color:
+                                                          const Color.fromRGBO(
+                                                              30, 215, 96, 0.9),
+                                                      child: Wrap(
+                                                        children: const [
+                                                          Center(
+                                                            child: Text(
+                                                                "Remove Party",
+                                                                style: TextStyle(
+                                                                    color: Colors
+                                                                        .white,
+                                                                    fontSize:
+                                                                        14,
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .w500)),
+                                                          )
+                                                        ],
+                                                      ),
                                                     ),
-                                                  )
-                                                : RoundedLoadingButton(
-                                                    onPressed: () {
-                                                      handleExitNormalUser(
-                                                          snapshot
-                                                              .data
-                                                              .docs[index]
-                                                                  ['code']
-                                                              .toString());
-                                                    },
-                                                    controller: partyController,
-                                                    successColor:
-                                                        const Color.fromRGBO(
-                                                            30, 215, 96, 0.9),
-                                                    width: width * 0.25,
-                                                    elevation: 0,
-                                                    borderRadius: 25,
-                                                    color: const Color.fromRGBO(
+                                              SizedBox(
+                                                width: width * .08,
+                                              ),
+                                              RoundedLoadingButton(
+                                                onPressed: () async {
+                                                  handleShare(
+                                                    snapshot.data
+                                                        .docs[index]['code']
+                                                        .toString(),
+                                                  );
+                                                },
+                                                controller: shareController,
+                                                successColor:
+                                                    const Color.fromRGBO(
                                                         30, 215, 96, 0.9),
-                                                    child: Wrap(
-                                                      children: const [
-                                                        Center(
-                                                          child: Text(
-                                                              "Remove Party",
-                                                              style: TextStyle(
-                                                                  color: Colors
-                                                                      .white,
-                                                                  fontSize: 14,
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .w500)),
-                                                        )
-                                                      ],
-                                                    ),
-                                                  ),
-                                            SizedBox(
-                                              width: width * .08,
-                                            ),
-                                            RoundedLoadingButton(
-                                              onPressed: () async {
-                                                handleShare(
-                                                  snapshot
+                                                width: width * 0.25,
+                                                elevation: 0,
+                                                borderRadius: 25,
+                                                color: const Color.fromRGBO(
+                                                    30, 215, 96, 0.9),
+                                                child: Wrap(
+                                                  children: const [
+                                                    Center(
+                                                      child: Text("Share",
+                                                          style: TextStyle(
+                                                              color:
+                                                                  Colors.white,
+                                                              fontSize: 14,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w500)),
+                                                    )
+                                                  ],
+                                                ),
+                                              ),
+                                              SizedBox(
+                                                width: width * .08,
+                                              ),
+                                              RoundedLoadingButton(
+                                                onPressed: () {
+                                                  handleJoinLobby(snapshot
                                                       .data.docs[index]['code']
-                                                      .toString(),
-                                                );
-                                              },
-                                              controller: shareController,
-                                              successColor:
-                                                  const Color.fromRGBO(
-                                                      30, 215, 96, 0.9),
-                                              width: width * 0.25,
-                                              elevation: 0,
-                                              borderRadius: 25,
-                                              color: const Color.fromRGBO(
-                                                  30, 215, 96, 0.9),
-                                              child: Wrap(
-                                                children: const [
-                                                  Center(
-                                                    child: Text("Share",
-                                                        style: TextStyle(
-                                                            color: Colors.white,
-                                                            fontSize: 14,
-                                                            fontWeight:
-                                                                FontWeight
-                                                                    .w500)),
-                                                  )
-                                                ],
+                                                      .toString());
+                                                },
+                                                controller: partyController,
+                                                successColor:
+                                                    const Color.fromRGBO(
+                                                        30, 215, 96, 0.9),
+                                                width: width * 0.25,
+                                                elevation: 0,
+                                                borderRadius: 25,
+                                                color: const Color.fromRGBO(
+                                                    30, 215, 96, 0.9),
+                                                child: Wrap(
+                                                  children: const [
+                                                    Center(
+                                                      child: Text("Join Party",
+                                                          style: TextStyle(
+                                                              color:
+                                                                  Colors.white,
+                                                              fontSize: 14,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w500)),
+                                                    )
+                                                  ],
+                                                ),
                                               ),
-                                            ),
-                                            SizedBox(
-                                              width: width * .08,
-                                            ),
-                                            RoundedLoadingButton(
-                                              onPressed: () {
-                                                handleJoinLobby(snapshot
-                                                    .data.docs[index]['code']
-                                                    .toString());
-                                              },
-                                              controller: partyController,
-                                              successColor:
-                                                  const Color.fromRGBO(
-                                                      30, 215, 96, 0.9),
-                                              width: width * 0.25,
-                                              elevation: 0,
-                                              borderRadius: 25,
-                                              color: const Color.fromRGBO(
-                                                  30, 215, 96, 0.9),
-                                              child: Wrap(
-                                                children: const [
-                                                  Center(
-                                                    child: Text("Join Party",
-                                                        style: TextStyle(
-                                                            color: Colors.white,
-                                                            fontSize: 14,
-                                                            fontWeight:
-                                                                FontWeight
-                                                                    .w500)),
-                                                  )
-                                                ],
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        Row(
-                                          children: const [
-                                            Divider(height: 16),
-                                          ],
-                                        ),
-                                      ],
-                                    )
-                                  ],
-                                )
-                              ],
-                              /*
+                                            ],
+                                          ),
+                                          Row(
+                                            children: const [
+                                              Divider(height: 16),
+                                            ],
+                                          ),
+                                        ],
+                                      )
+                                    ],
+                                  )
+                                ],
+                                /*
                                   onLongPress: (() async {
                                     if (snapshot.data.docs[index]['admin'] ==
                                         uid) {
@@ -383,11 +401,11 @@ class _HomeState extends State<Home> {
                                               ));
                                     }
                                   }),*/
-                              onExpansionChanged: (bool expdandFlag) {
-                                setState(() {
-                                  expandFlag = !expandFlag;
-                                });
-                                /*Navigator.of(context).push(MaterialPageRoute(
+                                onExpansionChanged: (bool expdandFlag) {
+                                  setState(() {
+                                    expandFlag = !expandFlag;
+                                  });
+                                  /*Navigator.of(context).push(MaterialPageRoute(
                                 builder: (context) => PartyPage(
                                       code: snapshot.data.docs[index]['code']
                                           .toString(),
@@ -395,24 +413,17 @@ class _HomeState extends State<Home> {
                                           .data.docs[index]['PartyName']
                                           .toString(),
                                     )));*/
-                              },
-                            ),
-                          ));
-                    })
-                : Container(
-                    alignment: Alignment.topCenter,
-                    child: const Text(
-                      "No party yet",
-                      style: TextStyle(
-                        fontSize: 20,
-                        color: Colors.grey,
-                        fontWeight: FontWeight.normal,
-                        fontFamily: 'Roboto',
-                      ),
-                    ),
-                  );
-          },
-        ));
+                                },
+                              ),
+                            ));
+                      })
+                  : const Center(
+                      child: CircularProgressIndicator(
+                      color: Color.fromARGB(158, 61, 219, 71),
+                      backgroundColor: Color.fromARGB(128, 52, 74, 61),
+                      strokeWidth: 10,
+                    ));
+            }));
   }
 
 /*  Future handleEnterInLobby(String code) async {
@@ -569,10 +580,9 @@ class _HomeState extends State<Home> {
               selectionColor: Colors.black,
               style: TextStyle(color: Colors.black),
             ),
-            onTap: () {
+            onTap: () async {
               {
-                sp.userSignOut();
-                handleAfterLogout();
+                await sp.userSignOut();
               }
             }),
         StreamBuilder<ConnectionStatus>(
@@ -692,7 +702,7 @@ class _HomeState extends State<Home> {
 
   handleAfterLogout() {
     Future.delayed(const Duration(milliseconds: 1000)).then((value) {
-      nextScreenReplace(context, const Login());
+      Navigator.pop(context);
     });
   }
 
@@ -743,7 +753,7 @@ class _HomeState extends State<Home> {
         }
         fp.saveDataToSharedPreferences().then((value) {
           partyController.success();
-          handlePassToLobby(code: code);
+          handlePassToLobby();
         });
         //});
         //});
@@ -777,12 +787,11 @@ class _HomeState extends State<Home> {
     // });
   }
 
-  handlePassToLobby({required String code}) {
+  handlePassToLobby() {
     connectToSpotify();
     Future.delayed(const Duration(milliseconds: 200)).then((value) {
-      nextScreen(context, SpotifyTabController(code: code));
+      nextScreen(context, SpotifyTabController());
     });
-    print('1');
   }
 
   Future handleExitPartyAdmin(String code) async {

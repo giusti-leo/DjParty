@@ -35,6 +35,8 @@ class _SearchItemScreen extends State<SearchItemScreen> {
   String myToken = "";
   String input = "";
 
+  bool _insert = false;
+
   var myColor = Colors.white;
   bool isCalled = false;
   //List<bool> isSelected = [];
@@ -111,14 +113,15 @@ class _SearchItemScreen extends State<SearchItemScreen> {
                 secondary: const Color.fromARGB(228, 53, 191, 101))),
         home: Scaffold(
             resizeToAvoidBottomInset: false,
-            backgroundColor: Color.fromARGB(255, 35, 34, 34),
+            backgroundColor: const Color.fromARGB(255, 35, 34, 34),
             body: Column(
               children: [
                 TextField(
+                  readOnly: _insert,
                   decoration: const InputDecoration(
                       hintText: 'Search for a track',
                       hintStyle: TextStyle(color: Colors.grey)),
-                  textAlign: TextAlign.start,
+                  textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w800,
@@ -126,6 +129,12 @@ class _SearchItemScreen extends State<SearchItemScreen> {
                   ),
                   onChanged: (input) async =>
                       _tracks = await _updateTracks(input, myToken, sp.uid!),
+                  onTap: () => setState(() {
+                    _insert = false;
+                  }),
+                ),
+                const SizedBox(
+                  height: 10,
                 ),
                 Expanded(
                   child: ListView.builder(
@@ -134,36 +143,51 @@ class _SearchItemScreen extends State<SearchItemScreen> {
                       itemBuilder: (BuildContext context, int index) {
                         Track track = _tracks[index];
                         return GestureDetector(
-                          onTapDown: (details) => _getTapPosition(details),
-                          onLongPress: () {
+                          onTapDown: (details) {
+                            _getTapPosition(details);
+                            setState(() {
+                              selectedIndex = 100;
+                              _insert = true;
+                            });
+                          },
+                          onTap: () {
                             _showContextMenu(context, track);
                             setState(() {
                               selectedIndex = index;
+                              _insert = true;
                             });
                           },
-                          child: ListTile(
-                            contentPadding: const EdgeInsets.all(10.0),
-                            title: Text(track.name!,
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w800,
-                                  color: myColor,
-                                )),
-                            tileColor: selectedIndex == index
-                                ? Color.fromARGB(228, 53, 191, 101)
-                                : null,
-                            subtitle: Text(printArtists(track.artists!),
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w800,
-                                  color: Color.fromARGB(255, 134, 132, 132),
-                                )),
-                            leading: Image.network(
-                              track.images!,
-                              fit: BoxFit.cover,
-                              height: 60,
-                              width: 60,
-                            ),
+                          child: Column(
+                            children: [
+                              ListTile(
+                                contentPadding: const EdgeInsets.all(10.0),
+                                title: Text(track.name!,
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w800,
+                                      color: myColor,
+                                    )),
+                                tileColor: selectedIndex == index
+                                    ? const Color.fromARGB(228, 53, 191, 101)
+                                    : null,
+                                subtitle: Text(printArtists(track.artists!),
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w800,
+                                      color: Color.fromARGB(255, 134, 132, 132),
+                                    )),
+                                leading: Image.network(
+                                  track.images!,
+                                  fit: BoxFit.cover,
+                                  height: 60,
+                                  width: 60,
+                                ),
+                              ),
+                              const Divider(
+                                color: Colors.white24,
+                                height: 1,
+                              )
+                            ],
                           ),
                         );
                       }),
@@ -219,7 +243,7 @@ class _SearchItemScreen extends State<SearchItemScreen> {
   void _showContextMenu(BuildContext context, Track currentTrack) async {
     final RenderObject? overlay =
         Overlay.of(context)?.context.findRenderObject();
-    final result = await showMenu(
+    await showMenu(
         context: context,
         position: RelativeRect.fromRect(
             Rect.fromLTWH(_tapPosition.dx, _tapPosition.dy, 30, 30),
@@ -229,8 +253,13 @@ class _SearchItemScreen extends State<SearchItemScreen> {
           PopupMenuItem(
             value: 'favorites',
             child: TextButton(
-                child: Text('Add To Party Queue'),
-                onPressed: () => _handleAddSongToQueue(currentTrack)),
+                child: const Text('Add To Party Queue'),
+                onPressed: () {
+                  _handleAddSongToQueue(currentTrack);
+                  setState(() {
+                    _insert = false;
+                  });
+                }),
           ),
         ]);
   }

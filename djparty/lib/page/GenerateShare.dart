@@ -58,8 +58,6 @@ class _insertPartyName extends State<GeneratorScreen> {
 
   Future getData() async {
     final sp = context.read<SignInProvider>();
-    final ip = context.read<InternetProvider>();
-    final fr = context.read<FirebaseRequests>();
 
     sp.getDataFromSharedPreferences();
   }
@@ -127,9 +125,6 @@ class _insertPartyName extends State<GeneratorScreen> {
 
   @override
   Widget build(BuildContext context) {
-    User? currentUser = _auth.currentUser;
-    controller.clear();
-
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
@@ -137,20 +132,21 @@ class _insertPartyName extends State<GeneratorScreen> {
               primary: const Color.fromARGB(228, 53, 191, 101),
               secondary: const Color.fromARGB(228, 53, 191, 101))),
       home: Scaffold(
-          backgroundColor: Color.fromARGB(255, 35, 34, 34),
-          appBar: AppBar(
-            backgroundColor: const Color.fromARGB(228, 53, 191, 101),
-            title: const Text('Create your Party'),
-            centerTitle: true,
-          ),
-          body: SingleChildScrollView(
+        backgroundColor: Color.fromARGB(255, 35, 34, 34),
+        appBar: AppBar(
+          backgroundColor: const Color.fromARGB(228, 53, 191, 101),
+          title: const Text('Create your Party'),
+          centerTitle: true,
+        ),
+        body: SingleChildScrollView(
+          child: Center(
             child: Column(
               children: <Widget>[
                 const SizedBox(
-                  height: 20,
+                  height: 100,
                 ),
                 SizedBox(
-                  height: MediaQuery.of(context).size.height / 18,
+                  height: MediaQuery.of(context).size.height / 15,
                   width: MediaQuery.of(context).size.width / 1.2,
                   child: TextFormField(
                     controller: partyName,
@@ -174,73 +170,74 @@ class _insertPartyName extends State<GeneratorScreen> {
                 const SizedBox(
                   height: 30,
                 ),
-                SizedBox(
-                  height: MediaQuery.of(context).size.height / 18,
-                  width: MediaQuery.of(context).size.width / 2,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      side: const BorderSide(
-                        color: Color.fromARGB(184, 255, 255, 255),
-                        width: 5,
+                /*
+                  SizedBox(
+                    height: MediaQuery.of(context).size.height / 18,
+                    width: MediaQuery.of(context).size.width / 2,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        side: const BorderSide(
+                          color: Color.fromARGB(184, 255, 255, 255),
+                          width: 5,
+                        ),
+                        primary: const Color.fromRGBO(
+                            30, 215, 96, 0.9), // Background color
+                        onPrimary: Colors.white, // Text Color (Foreground color)
                       ),
-                      primary: const Color.fromRGBO(
-                          30, 215, 96, 0.9), // Background color
-                      onPrimary: Colors.white, // Text Color (Foreground color)
+                      onPressed: () {
+                        _selectDate(context);
+                        showDate = true;
+                      },
+                      child: Text(
+                        getDate(),
+                        style: const TextStyle(color: Colors.black, fontSize: 20),
+                      ),
                     ),
-                    onPressed: () {
-                      _selectDate(context);
-                      showDate = true;
-                    },
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  const Divider(
+                      color: Color.fromRGBO(30, 215, 96, 0.9), height: 64),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  const SizedBox(
+                    height: 40,
                     child: Text(
-                      getDate(),
-                      style: const TextStyle(color: Colors.black, fontSize: 20),
+                      'Optional information',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 20, color: Colors.white),
                     ),
                   ),
-                ),
-                const SizedBox(
-                  height: 20,
-                ),
-                const Divider(
-                    color: Color.fromRGBO(30, 215, 96, 0.9), height: 64),
-                const SizedBox(
-                  height: 20,
-                ),
-                const SizedBox(
-                  height: 40,
-                  child: Text(
-                    'Optional information',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 20, color: Colors.white),
+                  const SizedBox(
+                    height: 30,
                   ),
-                ),
-                const SizedBox(
-                  height: 30,
-                ),
-                SizedBox(
-                  height: MediaQuery.of(context).size.height / 18,
-                  width: MediaQuery.of(context).size.width / 2,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      side: const BorderSide(
-                        color: Color.fromARGB(184, 255, 255, 255),
-                        width: 5,
+                  SizedBox(
+                    height: MediaQuery.of(context).size.height / 18,
+                    width: MediaQuery.of(context).size.width / 2,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        side: const BorderSide(
+                          color: Color.fromARGB(184, 255, 255, 255),
+                          width: 5,
+                        ),
+                        primary: const Color.fromRGBO(
+                            30, 215, 96, 0.9), // Background color
+                        onPrimary: Colors.white, // Text Color (Foreground color)
                       ),
-                      primary: const Color.fromRGBO(
-                          30, 215, 96, 0.9), // Background color
-                      onPrimary: Colors.white, // Text Color (Foreground color)
+                      onPressed: () {
+                        _selectTime(context);
+                        showTime = true;
+                      },
+                      child: Text(getTime(selectedTime),
+                          style:
+                              const TextStyle(color: Colors.black, fontSize: 20)),
                     ),
-                    onPressed: () {
-                      _selectTime(context);
-                      showTime = true;
-                    },
-                    child: Text(getTime(selectedTime),
-                        style:
-                            const TextStyle(color: Colors.black, fontSize: 20)),
                   ),
-                ),
-                const SizedBox(
-                  height: 50,
-                ),
+                  const SizedBox(
+                    height: 50,
+                  ),*/
                 RoundedLoadingButton(
                   onPressed: () {
                     handleCreation();
@@ -263,7 +260,9 @@ class _insertPartyName extends State<GeneratorScreen> {
                 ),
               ],
             ),
-          )),
+          ),
+        ),
+      ),
     );
   }
 
@@ -284,68 +283,35 @@ class _insertPartyName extends State<GeneratorScreen> {
       return;
     }
 
-    // check if a Code already exist
+    bool found = false;
 
-    controller.text = getRandomString(5);
-    var tmp = fp.checkPartyExists(code: controller.text).then((value) {
-      if (value == true) {
-        handleCreation();
-      } else {
-        if (sp.uid != null) {
-          var members = <String>[sp.uid.toString()];
-
-          fp
-              .createParty(sp.uid.toString(), partyName.text, controller.text,
-                  selectedDate, choosenTime.toString(), members)
-              .then((value) {
-            fp.checkPartyExists(code: controller.text).then((value) {
-              if (value == true) {
-                fp.getPartyDataFromFirestore(controller.text).then((value) =>
-                    fp.saveDataToSharedPreferences().then((value) {
-                      if (fp.hasError == true) {
-                        print('maj');
-                        showInSnackBar(
-                            context, sp.errorCode.toString(), Colors.red);
-                        submitController.reset();
-                        return;
-                      } else {
-                        fp
-                            .checkPartyExists(code: controller.text)
-                            .then((value) {
-                          if (value == true) {
-                            fp
-                                .getPartyDataFromFirestore(controller.text)
-                                .then((value) => fp
-                                    .saveDataToSharedPreferences()
-                                    .then((value) => fp.createPartyForAUser(
-                                        sp.uid.toString(),
-                                        sp.uid.toString(),
-                                        partyName.text,
-                                        controller.text,
-                                        selectedDate)))
-                                .then((value) {
-                              if (fp.hasError == true) {
-                                print('mah');
-                                showInSnackBar(context, sp.errorCode.toString(),
-                                    Colors.red);
-                                submitController.reset();
-                                return;
-                              }
-                              submitController.success();
-                              displayToastMessage(
-                                  context, 'Party Created', Colors.greenAccent);
-
-                              handleAfterSubmit();
-                            });
-                          }
-                        });
-                      }
-                    }));
-              }
-            });
-          });
+    while (!found) {
+      controller.text = getRandomString(5);
+      await fp.checkPartyExists(code: controller.text).then((value) {
+        if (value == false) {
+          found = true;
         }
-      }
+      });
+    }
+
+    fp
+        .createParty(sp.uid.toString(), partyName.text, controller.text)
+        .then((value) {
+      fp.checkPartyExists(code: controller.text).then((value) {
+        fp
+            .createPartyForAUser(sp.uid.toString(), sp.uid.toString(),
+                partyName.text, controller.text)
+            .then((value) {
+          if (fp.hasError == true) {
+            showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+            submitController.reset();
+            return;
+          }
+          submitController.success();
+          displayToastMessage(context, 'Party Created', Colors.greenAccent);
+          handleAfterSubmit();
+        });
+      });
     });
   }
 
@@ -353,10 +319,6 @@ class _insertPartyName extends State<GeneratorScreen> {
     if (partyName.text.isEmpty) {
       displayToastMessage(
           context, 'The Party Name cannot be empty', Colors.red);
-      return false;
-    }
-    if (choosenDate == '') {
-      displayToastMessage(context, 'Choose a date', Colors.red);
       return false;
     }
     return true;

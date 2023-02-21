@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:djparty/page/PartySettings.dart';
 import 'package:flutter_countdown_timer/flutter_countdown_timer.dart';
 import 'package:flutter/material.dart';
 import 'package:djparty/services/SignInProvider.dart';
@@ -20,8 +21,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 class SpotifyTabController extends StatefulWidget {
   static String routeName = 'SpotifyTabController';
-  final String code;
-  const SpotifyTabController({Key? key, required this.code}) : super(key: key);
+  const SpotifyTabController({Key? key}) : super(key: key);
 
   @override
   _SpotifyTabController createState() => _SpotifyTabController();
@@ -34,43 +34,19 @@ class _SpotifyTabController extends State<SpotifyTabController>
   bool changed = false;
   bool countdown = false;
 
-  int _startParty = 0;
-  int _timer = 0;
-  int _firstResearch = 0;
+  late DateTime _startParty;
+  late DateTime _nextVotingPhase;
+
+  int _interval = 0;
   int _votingTime = 0;
-  int endCountdown = 100000;
+  bool _votingStatus = false;
+  int endCountdown = 0;
 
-  int _computeCountdown(
-      int startParty, int timer, int firstResearch, int votingTime) {
-    int tmp = Timestamp.now().seconds;
-    int endFirstBlock = (startParty + firstResearch);
-    int endVoting;
-    int endTimer;
-    bool inside = false;
+  int _computeCountdown() {
+    DateTime tmpNow = DateTime.now();
 
-    if (tmp < endFirstBlock) {
-      voting = false;
-      endCountdown = endFirstBlock;
-      inside = true;
-      print('1');
-      print('Adesso ' + tmp.toString());
-    }
-    while (!inside) {
-      endVoting = endFirstBlock + votingTime;
-      endTimer = endVoting + timer;
-
-      if (tmp >= endFirstBlock && tmp < endVoting) {
-        inside = true;
-        endCountdown = endVoting;
-        voting = true;
-      }
-      if (tmp >= endVoting && tmp < endTimer) {
-        endCountdown = endTimer;
-        voting = false;
-        inside = true;
-      }
-    }
-    return endCountdown;
+    return tmpNow.millisecondsSinceEpoch +
+        _nextVotingPhase.difference(tmpNow).inMilliseconds;
   }
 
   Future getData() async {
@@ -92,6 +68,7 @@ class _SpotifyTabController extends State<SpotifyTabController>
   Widget build(BuildContext context) {
     TabController tabController = TabController(length: 3, vsync: this);
     final fr = context.read<FirebaseRequests>();
+    final sp = context.read<SignInProvider>();
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
@@ -109,15 +86,18 @@ class _SpotifyTabController extends State<SpotifyTabController>
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           centerTitle: true,
-          actions: const [
-            Icon(
-              CD.cd,
-              color: Color.fromARGB(228, 53, 191, 101),
-            ),
-            SizedBox(
-              width: 30,
-            ),
-          ],
+          actions: (sp.uid == fr.admin)
+              ? [
+                  IconButton(
+                    onPressed: () {
+                      nextScreen(context, const PartySettings());
+                    },
+                    icon: const Icon(
+                      Icons.settings,
+                    ),
+                  )
+                ]
+              : [],
         ),
         body: LayoutBuilder(
             builder: (BuildContext context, BoxConstraints constraints) {
@@ -159,12 +139,15 @@ class _SpotifyTabController extends State<SpotifyTabController>
   }
 
   Widget _buildBottomBar(BuildContext context) {
+    final sp = context.read<SignInProvider>();
+    final fr = context.read<FirebaseRequests>();
+
     return SizedBox(
         height: 55,
         child: StreamBuilder(
             stream: FirebaseFirestore.instance
                 .collection('parties')
-                .doc(widget.code)
+                .doc(fr.partyCode)
                 .snapshots(),
             builder: (context, AsyncSnapshot snapshot) {
               if (!snapshot.hasData) {
@@ -183,16 +166,22 @@ class _SpotifyTabController extends State<SpotifyTabController>
               } else {
                 if (!(snapshot.data.get('isStarted') &&
                     !snapshot.data.get('isEnded'))) {
-                  voting = false;
-                  countdown = false;
-
                   return const SizedBox();
                 } else {
                   countdown = true;
-                  _startParty = snapshot.data!.get("startParty");
-                  _timer = snapshot.data!.get('timer');
-                  _firstResearch = snapshot.data!.get('firstResearch');
+
+                  _nextVotingPhase =
+                      (snapshot.data!.get("nextVotingPhase") as Timestamp)
+                          .toDate();
+
+                  _interval = snapshot.data!.get('timer');
                   _votingTime = snapshot.data!.get('votingTime');
+                  _votingStatus = snapshot.data!.get('votingStatus');
+
+                  endCountdown = _computeCountdown();
+
+                  endCountdown =
+                      (sp.uid == fr.admin) ? endCountdown : endCountdown + 1000;
 
                   return _bottomAppBar(context);
                 }
@@ -211,20 +200,18 @@ class _SpotifyTabController extends State<SpotifyTabController>
           const SizedBox(
             height: 10,
           ),
-          Row(mainAxisAlignment: MainAxisAlignment.start, children: [
-            Text(voting ? "Next voting in : " : "Voting ends in : ",
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                )),
+          Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+            Center(
+              child: Text(
+                  !_votingStatus ? "Next voting in :  " : "Voting ends in :  ",
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  )),
+            ),
             _countdown(context),
-            Text(endCountdown.toString(),
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                )),
           ])
         ],
       ),
@@ -232,9 +219,8 @@ class _SpotifyTabController extends State<SpotifyTabController>
   }
 
   Widget _countdown(BuildContext context) {
-    _updateCountdown();
     return CountdownTimer(
-      endTime: endCountdown * 1000,
+      endTime: endCountdown,
       widgetBuilder: (_, time) {
         if (time == null) {
           return const Text('');
@@ -320,15 +306,44 @@ class _SpotifyTabController extends State<SpotifyTabController>
               color: Color.fromARGB(228, 53, 191, 101),
             ));
       },
-      onEnd: () => build(context),
+      onEnd: () async {
+        await _handleEndCountdown();
+      },
     );
   }
 
-  _updateCountdown() {
-    int newCountdown =
-        _computeCountdown(_startParty, _timer, _firstResearch, _votingTime);
-    endCountdown = newCountdown;
-    changed = !changed;
+  Future _handleEndCountdown() async {
+    final sp = context.read<SignInProvider>();
+    final ip = context.read<InternetProvider>();
+    final fr = context.read<FirebaseRequests>();
+
+    if (sp.uid != fr.admin) {
+      return;
+    }
+
+    await ip.checkInternetConnection();
+
+    if (ip.hasInternet == false) {
+      showInSnackBar(context, "Check your Internet connection", Colors.red);
+      return;
+    }
+
+    bool tmpStatus = !_votingStatus;
+
+    DateTime _newNextVotingPhase = (_votingStatus)
+        ? _nextVotingPhase.add(Duration(minutes: _interval))
+        : _nextVotingPhase.add(Duration(minutes: _votingTime));
+
+    await fr.changeStatus(tmpStatus, _newNextVotingPhase).then((value) {
+      if (fr.hasError) {
+        showInSnackBar(context, fr.errorCode.toString(), Colors.red);
+        return;
+      }
+    });
+
+    setState(() {
+      voting = tmpStatus;
+    });
   }
 }
 
@@ -352,11 +367,11 @@ class _CirclePainter extends BoxPainter {
 
   @override
   void paint(Canvas canvas, Offset offset, ImageConfiguration cfg) {
-    late Paint _paint;
-    _paint = Paint()..color = color;
-    _paint = _paint..isAntiAlias = true;
+    late Paint paint;
+    paint = Paint()..color = color;
+    paint = paint..isAntiAlias = true;
     final Offset circleOffset =
         offset + Offset(cfg.size!.width / 2, cfg.size!.height - radius);
-    canvas.drawCircle(circleOffset, radius, _paint);
+    canvas.drawCircle(circleOffset, radius, paint);
   }
 }

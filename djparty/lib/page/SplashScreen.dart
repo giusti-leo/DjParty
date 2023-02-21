@@ -56,7 +56,7 @@ class _SplashScreenState extends State<SplashScreen> {
     return Scaffold(
       body: SafeArea(
         child: Image(
-          image: AssetImage('assets/images/logo.jpg'),
+          image: const AssetImage('assets/images/logo.jpg'),
           width: width,
           height: heigth,
         ),

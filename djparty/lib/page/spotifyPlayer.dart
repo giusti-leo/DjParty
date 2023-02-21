@@ -49,6 +49,7 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
   double votingIndex = 0;
   bool _loading = false;
   bool _connected = true;
+  late List<String> partecipant_list;
 
   final Logger _logger = Logger(
     printer: PrettyPrinter(
@@ -118,8 +119,21 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
         } else {
           if (snapshot.data!.get('isStarted') &&
               !snapshot.data!.get('isEnded')) {
-            if (fr.admin == sp.uid) {
-              Future.delayed(const Duration(milliseconds: 2000));
+            if (snapshot.data!.get('songCurrentlyPlayed') == '') {
+              return Container(
+                alignment: Alignment.topCenter,
+                child: const Center(
+                  child: Text(
+                    "The Player will be updated once the first song will be picked",
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey,
+                      fontWeight: FontWeight.normal,
+                      fontFamily: 'Roboto',
+                    ),
+                  ),
+                ),
+              );
             }
             return StreamBuilder<ConnectionStatus>(
               stream: SpotifySdk.subscribeConnectionStatus(),
@@ -130,37 +144,55 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
                   _connected = data.connected;
                 }
                 return Scaffold(
-                  backgroundColor: Color.fromARGB(255, 35, 34, 34),
+                  backgroundColor: const Color.fromARGB(255, 35, 34, 34),
                   body: _playerWidget(context),
                 );
               },
             );
           } else if (snapshot.data!.get('isEnded')) {
-            // all user can save the playlist
-
             return _handleEndParty(context);
           } else {
-            //NOT STARTED AND ENDED
-
-            // admin can start the voting page or change the timer
             if (sp.uid! == fr.admin) {
               return _adminLobby(context);
             } else {
-              return _regularUserLobby(context);
+              partecipant_list = snapshot.data!.get('partecipant_list');
+              return _regularUserLobby(context, partecipant_list.length);
             }
-
-            // the user see the message 'in the lobby there are n peoples' and 'wait the admin starts the voting pool'
           }
         }
       },
     );
   }
 
-  Widget _regularUserLobby(BuildContext context) {
+  Widget _regularUserLobby(BuildContext context, int n) {
+    String text = 'There are $n partecipants';
+
+    return Center(
+      child: Column(
+        children: [
+          Text(text,
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500)),
+          const SizedBox(
+            height: 20,
+          ),
+          const Text("Wait the admin starts the party",
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500)),
+        ],
+      ),
+    );
+  }
+
+  Widget _handleEndParty(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
 
     return Stack(children: [
-      (Positioned(
+      Positioned(
         bottom: 20,
         child: RoundedLoadingButton(
           onPressed: () {
@@ -190,44 +222,8 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
             ],
           ),
         ),
-      ))
+      )
     ]);
-  }
-
-  Widget _handleEndParty(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
-
-    return (Positioned(
-      bottom: 20,
-      child: RoundedLoadingButton(
-        onPressed: () {
-          _handleStartParty(context);
-        },
-        controller: partyController,
-        successColor: const Color.fromRGBO(30, 215, 96, 0.9),
-        width: width * 0.80,
-        elevation: 0,
-        borderRadius: 25,
-        color: const Color.fromRGBO(30, 215, 96, 0.9),
-        child: Wrap(
-          children: const [
-            Icon(
-              FontAwesomeIcons.music,
-              size: 20,
-              color: Colors.white,
-            ),
-            SizedBox(
-              width: 15,
-            ),
-            Text("Start the Party",
-                style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500)),
-          ],
-        ),
-      ),
-    ));
   }
 
   Widget _adminLobby(BuildContext context) {

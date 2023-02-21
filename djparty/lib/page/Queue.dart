@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:djparty/services/FirebaseRequests.dart';
 import 'package:djparty/services/InternetProvider.dart';
 import 'package:djparty/services/SignInProvider.dart';
+import 'package:djparty/utils/nextScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:djparty/page/PartyPlaylist.dart';
 import 'package:djparty/page/SearchItemScreen.dart';
@@ -70,17 +71,6 @@ class _Queue extends State<Queue> {
 
     fr.getDataFromSharedPreferences();
     changed = false;
-
-    fr.getMySongs(code: fr.partyCode!, user: sp.uid).then((val) {
-      List<String> songList = [];
-
-      for (var element in val) {
-        songList.add(element.toString());
-      }
-      setState(() {
-        mySongs = songList;
-      });
-    });
   }
 
   @override
@@ -89,9 +79,10 @@ class _Queue extends State<Queue> {
     getData();
   }
 
-  bool userLikeSong(String uri) {
-    if (mySongs!.isEmpty || mySongs == null) return false;
-    return mySongs!.contains(uri);
+  bool userLikeSong(Track track) {
+    final sp = context.read<SignInProvider>();
+
+    return (track.likes.contains(sp.uid));
   }
 
   @override
@@ -109,9 +100,9 @@ class _Queue extends State<Queue> {
                 .collection('parties')
                 .doc(fr.partyCode)
                 .collection('queue')
-                .orderBy(['votes', 'timestamp']).snapshots(),
+                .snapshots(),
             builder: (context, AsyncSnapshot snapshot) {
-              return snapshot.hasData
+              return snapshot.hasData && snapshot.data.docs.length > 0
                   ? Scaffold(
                       backgroundColor: const Color.fromARGB(255, 35, 34, 34),
                       body: Column(children: [
@@ -124,64 +115,92 @@ class _Queue extends State<Queue> {
                                 Track currentTrack =
                                     Track.getTrackFromFirestore(track);
                                 return (widget.voting)
-                                    ? ListTile(
-                                        contentPadding:
-                                            const EdgeInsets.all(10.0),
-                                        title: Text(currentTrack.name!,
+                                    ? Column(
+                                        children: [
+                                          ListTile(
+                                            contentPadding:
+                                                const EdgeInsets.all(10.0),
+                                            title: Text(currentTrack.name!,
+                                                style: const TextStyle(
+                                                  fontSize: 20,
+                                                  fontWeight: FontWeight.w800,
+                                                  color: Colors.white,
+                                                )),
+                                            subtitle: Text(
+                                                currentTrack.artists![0],
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w800,
+                                                  color: Color.fromARGB(
+                                                      255, 134, 132, 132),
+                                                )),
+                                            leading: Image.network(
+                                              currentTrack.images!,
+                                              fit: BoxFit.cover,
+                                              height: 60,
+                                              width: 60,
+                                            ),
+                                            trailing: Icon(
+                                                userLikeSong(currentTrack)
+                                                    ? Icons.favorite
+                                                    : Icons.favorite_border,
+                                                color:
+                                                    userLikeSong(currentTrack)
+                                                        ? const Color.fromARGB(
+                                                            228, 53, 191, 101)
+                                                        : Colors.grey),
+                                            onTap: () {
+                                              _handleLikeLogic(currentTrack);
+                                              print('1');
+                                            },
+                                          ),
+                                          Text(
+                                            'votes: ${currentTrack.likes.length}',
                                             style: const TextStyle(
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.w800,
-                                              color: Colors.white,
-                                            )),
-                                        subtitle: Text(currentTrack.artists![0],
+                                                color: Colors.white),
+                                          ),
+                                          const Divider(
+                                            color: Colors.white24,
+                                            height: 1,
+                                          )
+                                        ],
+                                      )
+                                    : Column(
+                                        children: [
+                                          ListTile(
+                                            contentPadding:
+                                                const EdgeInsets.all(10.0),
+                                            title: Text(currentTrack.name!,
+                                                style: const TextStyle(
+                                                  fontSize: 20,
+                                                  fontWeight: FontWeight.w800,
+                                                  color: Colors.white,
+                                                )),
+                                            subtitle: Text(
+                                                currentTrack.artists![0],
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w800,
+                                                  color: Color.fromARGB(
+                                                      255, 134, 132, 132),
+                                                )),
+                                            leading: Image.network(
+                                              currentTrack.images!,
+                                              fit: BoxFit.cover,
+                                              height: 60,
+                                              width: 60,
+                                            ),
+                                          ),
+                                          Text(
+                                            'votes: ${currentTrack.likes.length}',
                                             style: const TextStyle(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w800,
-                                              color: Color.fromARGB(
-                                                  255, 134, 132, 132),
-                                            )),
-                                        leading: Image.network(
-                                          currentTrack.images!,
-                                          fit: BoxFit.cover,
-                                          height: 60,
-                                          width: 60,
-                                        ),
-                                        trailing: Icon(
-                                            userLikeSong(currentTrack.uri!)
-                                                ? Icons.favorite
-                                                : Icons.favorite_border,
-                                            color:
-                                                userLikeSong(currentTrack.uri!)
-                                                    ? const Color.fromARGB(
-                                                        228, 53, 191, 101)
-                                                    : Colors.grey),
-                                        onTap: () {
-                                          setState(() {
-                                            _likeButtonLogic(currentTrack);
-                                          });
-                                        })
-                                    : ListTile(
-                                        contentPadding:
-                                            const EdgeInsets.all(10.0),
-                                        title: Text(currentTrack.name!,
-                                            style: const TextStyle(
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.w800,
-                                              color: Colors.white,
-                                            )),
-                                        subtitle: Text(currentTrack.artists![0],
-                                            style: const TextStyle(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w800,
-                                              color: Color.fromARGB(
-                                                  255, 134, 132, 132),
-                                            )),
-                                        leading: Image.network(
-                                          currentTrack.images!,
-                                          fit: BoxFit.cover,
-                                          height: 60,
-                                          width: 60,
-                                        ),
+                                                color: Colors.white),
+                                          ),
+                                          const Divider(
+                                            color: Colors.white24,
+                                            height: 1,
+                                          )
+                                        ],
                                       );
                               }),
                         )
@@ -217,20 +236,61 @@ class _Queue extends State<Queue> {
     return authenticationToken;
   }
 
-  void _likeButtonLogic(Track currentTrack) {
-    if (!changed) changed = true;
-    if (!userLikeSong(currentTrack.uri!)) {
-      newLikedSongs!.add(currentTrack.uri!);
-      if (newDeletedSongs!.contains(currentTrack.uri)) {
-        newDeletedSongs!.remove(currentTrack.uri);
-      }
-      currentTrack.vote = currentTrack.vote! - 1;
-    } else {
-      newDeletedSongs!.add(currentTrack.uri!);
-      if (newLikedSongs!.contains(currentTrack.uri)) {
-        newLikedSongs!.remove(currentTrack.uri);
-      }
-      currentTrack.vote = currentTrack.vote! + 1;
+  Future _handleLikeLogic(Track track) async {
+    final sp = context.read<SignInProvider>();
+    final fr = context.read<FirebaseRequests>();
+
+    final ip = context.read<InternetProvider>();
+
+    await ip.checkInternetConnection();
+
+    if (ip.hasInternet == false) {
+      showInSnackBar(context, "Check your Internet connection", Colors.red);
+      return;
     }
+
+    if (!userLikeSong(track)) {
+      _handleLikeSong(track);
+    } else {
+      _handleDisLikeSong(track);
+    }
+  }
+
+  void _handleLikeSong(Track track) {
+    final fr = context.read<FirebaseRequests>();
+    final sp = context.read<SignInProvider>();
+
+    List<String> newLikes = track.likes;
+    newLikes.add(sp.uid!);
+
+    setState(() {
+      track.likes = newLikes;
+    });
+
+    fr.userLikesSong(track.uri!, sp.uid!).then((value) {
+      if (fr.hasError) {
+        showInSnackBar(context, fr.errorCode.toString(), Colors.red);
+        return;
+      }
+    });
+  }
+
+  void _handleDisLikeSong(Track track) {
+    final fr = context.read<FirebaseRequests>();
+    final sp = context.read<SignInProvider>();
+
+    List<String> newLikes = track.likes;
+    newLikes.remove(sp.uid!);
+
+    setState(() {
+      track.likes = newLikes;
+    });
+
+    fr.userDoesNotLikeSong(track.uri!, sp.uid!).then((value) {
+      if (fr.hasError) {
+        showInSnackBar(context, fr.errorCode.toString(), Colors.red);
+        return;
+      }
+    });
   }
 }

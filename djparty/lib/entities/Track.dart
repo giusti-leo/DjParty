@@ -7,11 +7,12 @@ class Track {
   final String? name;
   final String? admin;
   final Timestamp? timestamp;
-  int? vote;
   final int? duration;
   final bool? inQueue;
+  List<String> likes;
 
   Track(
+      List<String> this.likes,
       String this.uri,
       List<String> this.artists,
       String this.images,
@@ -19,17 +20,24 @@ class Track {
       String this.admin,
       int this.duration,
       Timestamp this.timestamp,
-      int this.vote,
       bool this.inQueue);
 
   factory Track.getTrackFromFirestore(dynamic track) {
     List<dynamic> artists = track['artists'].toList();
     List<String> currentArtistList = [];
 
+    List<dynamic> likes = track['votes'].toList();
+    List<String> currentLikes = [];
+
+    for (var element in likes) {
+      currentLikes.add(element.toString());
+    }
+
     for (var element in artists) {
       currentArtistList.add(element.toString());
     }
     return Track(
+        currentLikes,
         track["uri"],
         currentArtistList,
         track["image"],
@@ -37,7 +45,6 @@ class Track {
         track["admin"],
         track["duration_ms"],
         track["timestamp"],
-        track["votes"],
         track["inQueue"]);
   }
 
@@ -55,7 +62,7 @@ class Track {
       currentImages.add(element['url']);
     }
 
-    return Track(track["uri"], currentArtistList, currentImages[0],
-        track["name"], user, track["duration_ms"], Timestamp.now(), 0, false);
+    return Track([], track["uri"], currentArtistList, currentImages[0],
+        track["name"], user, track["duration_ms"], Timestamp.now(), false);
   }
 }
