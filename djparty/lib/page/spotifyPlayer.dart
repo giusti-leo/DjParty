@@ -1,3 +1,5 @@
+//import 'dart:html';
+
 import 'package:djparty/services/FirebaseRequests.dart';
 import 'package:djparty/services/InternetProvider.dart';
 import 'package:djparty/utils/nextScreen.dart';
@@ -11,6 +13,7 @@ import 'package:spotify_sdk/models/connection_status.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:djparty/services/SignInProvider.dart';
 import 'package:provider/provider.dart';
+import 'dart:async';
 import 'package:spotify_sdk/models/image_uri.dart';
 import 'package:spotify_sdk/models/player_state.dart';
 import 'package:spotify_sdk/models/player_context.dart';
@@ -29,6 +32,7 @@ class SpotifyPlayer extends StatefulWidget {
 }
 
 class _SpotifyPlayerState extends State<SpotifyPlayer> {
+  bool nextSong = false;
   final RoundedLoadingButtonController partyController =
       RoundedLoadingButtonController();
 
@@ -39,11 +43,14 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
     fr.getDataFromSharedPreferences();
   }
 
+  Timer? timer;
   @override
   void initState() {
     super.initState();
     getData();
   }
+
+  String firstTrackUri = "";
 
   dynamic isPaused = true;
   double votingIndex = 0;
@@ -120,6 +127,9 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
           if (snapshot.data!.get('isStarted') &&
               !snapshot.data!.get('isEnded')) {
             if (snapshot.data!.get('songCurrentlyPlayed') == '') {
+              if (snapshot.data!.get('votingStatus') == false) {
+                _addfirstTrack();
+              }
               return Container(
                 alignment: Alignment.topCenter,
                 child: const Center(
@@ -262,11 +272,28 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
     ));
   }
 
+  Future _addfirstTrack() async {
+    final fr = context.read<FirebaseRequests>();
+    var db = FirebaseFirestore.instance.collection('parties').doc(fr.partyCode);
+    var queue = db.collection('queue').orderBy("timestamp");
+    await queue.get().then(((snapshot) {
+      var SnapDoc = snapshot.docs[0];
+      firstTrackUri = SnapDoc["uri"];
+      db.update({"songCurrentlyPlayed": firstTrackUri});
+      play();
+    }));
+  }
+
   Future _handleStartParty(BuildContext context) async {
     final sp = context.read<SignInProvider>();
     final ip = context.read<InternetProvider>();
     final fr = context.read<FirebaseRequests>();
     await ip.checkInternetConnection();
+    var db = FirebaseFirestore.instance
+        .collection('parties')
+        .doc(fr.partyCode)
+        .collection('queue')
+        .orderBy("Timestamp");
 
     if (ip.hasInternet == false) {
       showInSnackBar(context, "Check your Internet connection", Colors.red);
@@ -304,9 +331,8 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
         var track = snapshot.data?.track;
         currentTrackImageUri = track?.imageUri;
         var playerState = snapshot.data;
-        var playerPosition = double.parse('${playerState?.playbackPosition}');
-        var trackDuration = double.parse('${track?.duration}');
-        double _value = 10.0;
+        var trackDuration = track!.duration;
+        var playerPosition = playerState!.playbackPosition;
 
         if (playerState == null || track == null) {
           return Center(
@@ -457,7 +483,7 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
 
   Future<void> play() async {
     try {
-      await SpotifySdk.play(spotifyUri: 'spotify:track:58kNJana4w5BIjlZE2wq5m');
+      await SpotifySdk.play(spotifyUri: firstTrackUri);
     } on PlatformException catch (e) {
       setStatus(e.code, message: e.message);
     } on MissingPluginException {
