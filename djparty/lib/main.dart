@@ -2,6 +2,7 @@ import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:djparty/page/EditProfile.dart';
 import 'package:djparty/page/GenerateShare.dart';
 import 'package:djparty/page/Home.dart';
+import 'package:djparty/page/HomePage.dart';
 import 'package:djparty/page/Login.dart';
 import 'package:djparty/page/ResetPassword.dart';
 import 'package:djparty/page/SignIn.dart';
@@ -57,10 +58,8 @@ class Main extends StatelessWidget {
         debugShowCheckedModeBanner: true,
         routes: {
           SignIn.routeName: (context) => const SignIn(),
-          Home.routeName: (context) => const Home(),
-          GeneratorScreen.routeName: (context) => GeneratorScreen(),
+          HomePage.routeName: (context) => const HomePage(),
           ResetPassword.routeName: ((context) => const ResetPassword()),
-          UserProfile.routeName: (context) => UserProfile(),
           EditProfile.routeName: (context) => EditProfile(),
           PartyPlaylist.routeName: ((context) => const PartyPlaylist())
         },

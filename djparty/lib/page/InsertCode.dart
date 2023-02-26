@@ -2,18 +2,23 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:djparty/page/Home.dart';
+import 'package:djparty/page/HomePage.dart';
+import 'package:djparty/page/UserProfile.dart';
 import 'package:djparty/services/FirebaseRequests.dart';
 import 'package:djparty/services/InternetProvider.dart';
 import 'package:djparty/services/SignInProvider.dart';
 import 'package:djparty/utils/nextScreen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_zoom_drawer/config.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 import '../services/FirebaseAuthMethods.dart';
 
 class InsertCode extends StatefulWidget {
-  const InsertCode({super.key});
+  InsertCode({
+    super.key,
+  });
 
   @override
   State<InsertCode> createState() => _InsertCodeState();
@@ -22,9 +27,8 @@ class InsertCode extends StatefulWidget {
 class _InsertCodeState extends State<InsertCode> {
   final TextEditingController textController = TextEditingController();
   bool err = false;
-  String code = 'null';
-
   String uid = FirebaseAuth.instance.currentUser!.uid;
+
   @override
   void dispose() {
     textController.dispose();
@@ -33,9 +37,6 @@ class _InsertCodeState extends State<InsertCode> {
 
   Future getData() async {
     final sp = context.read<SignInProvider>();
-    final ip = context.read<InternetProvider>();
-    final fr = context.read<FirebaseRequests>();
-
     sp.getDataFromSharedPreferences();
   }
 
@@ -47,70 +48,50 @@ class _InsertCodeState extends State<InsertCode> {
 
   @override
   Widget build(BuildContext context) {
-    final sp = context.read<SignInProvider>();
-
-    return Scaffold(
-      backgroundColor: const Color.fromARGB(128, 53, 74, 62),
+    return SafeArea(
+        child: Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color.fromARGB(158, 61, 219, 71),
-        title: const Text(
-          'Join a Party',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
         leading: GestureDetector(
           child: const Icon(
             Icons.arrow_back_ios_new,
             color: Colors.white,
           ),
           onTap: () {
-            nextScreenReplace(context, const Home());
+            Navigator.pop(context);
           },
         ),
+        backgroundColor: const Color.fromARGB(255, 35, 34, 34),
+        title: const Text(
+          'Join Party',
+          style: TextStyle(
+              color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
       ),
-      body: Stack(
-        alignment: Alignment.center,
-        children: <Widget>[
-          Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-            const SizedBox(
-              height: 20,
-            ),
-            const Text(
-              'Enter a Party Code',
-              style: TextStyle(
-                  fontSize: 25,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white),
-            ),
-            const SizedBox(
-              height: 20,
-            ),
-            buildTextField(context),
-            const SizedBox(
-              height: 60,
-            ),
-            const Divider(color: Color.fromRGBO(30, 215, 96, 0.9)),
-            const SizedBox(
-              height: 60,
-            ),
-            const Text(
-              'Scan a qr',
-              style: TextStyle(
-                  fontSize: 25,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white),
-            ),
-            const SizedBox(
-              height: 20,
-            ),
-            qrButton(context),
-            const SizedBox(
-              height: 20,
-            ),
-          ])
-        ],
-      ),
-    );
+      backgroundColor: const Color.fromARGB(255, 35, 34, 34),
+      body: SingleChildScrollView(
+          child: Center(
+        child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const SizedBox(
+                height: 20,
+              ),
+              const Text(
+                'Enter a Party Code',
+                style: TextStyle(
+                    fontSize: 25,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white),
+              ),
+              const SizedBox(
+                height: 20,
+              ),
+              buildTextField(context),
+            ]),
+      )),
+    ));
   }
 
   Widget buildTextField(BuildContext context) => SizedBox(
@@ -140,20 +121,6 @@ class _InsertCodeState extends State<InsertCode> {
         ),
       ));
 
-  Widget qrButton(BuildContext context) {
-    return SizedBox(
-      width: MediaQuery.of(context).size.width * 0.4,
-      height: MediaQuery.of(context).size.height / 18,
-      child: IconButton(
-        color: const Color.fromARGB(158, 61, 219, 71),
-        icon: const Icon(Icons.qr_code_sharp),
-        onPressed: () {
-          nextScreen(context, const ScannerScreen());
-        },
-      ),
-    );
-  }
-
   Future handleInsert() async {
     final sp = context.read<SignInProvider>();
     final ip = context.read<InternetProvider>();
@@ -180,7 +147,7 @@ class _InsertCodeState extends State<InsertCode> {
         return;
       }
 
-      await sp.getUserDataFromFirestore(sp.uid).then((value) {
+      await sp.getUserDataFromFirestore(sp.uid!).then((value) {
         if (sp.hasError == true) {
           showInSnackBar(context, sp.errorCode.toString(), Colors.red);
           return;
@@ -206,22 +173,19 @@ class _InsertCodeState extends State<InsertCode> {
                               Colors.green);
                           return;
                         }
-                        fp.userJoinParty(sp.uid!).then((value) {
+
+                        fp
+                            .userJoinParty(sp.uid!, textController.text,
+                                sp.name!, sp.imageUrl!, sp.image!)
+                            .then((value) {
                           if (fp.hasError) {
                             showInSnackBar(
                                 context, sp.errorCode.toString(), Colors.red);
                             return;
-                          } else {
-                            fp.addUserToParty(sp.uid!).then((value) {
-                              if (fp.hasError) {
-                                showInSnackBar(context, sp.errorCode.toString(),
-                                    Colors.red);
-                                return;
-                              } else {
-                                handleAfterAdd();
-                              }
-                            });
                           }
+                          displayToastMessage(
+                              context, 'You join the party', Colors.green);
+                          return;
                         });
                       })));
             }
@@ -229,10 +193,6 @@ class _InsertCodeState extends State<InsertCode> {
         });
       });
     });
-  }
-
-  handleAfterAdd() {
-    nextScreenReplace(context, const Home());
   }
 
   bool validityCode() {
@@ -308,7 +268,8 @@ class _ScannerScreenState extends State<ScannerScreen> {
         displayToastMessage(context, error, Colors.red);
       }
       setState(() {
-        controller!.resumeCamera();
+        controller!.pauseCamera();
+        handleStepBack();
       });
       return;
     }
@@ -323,7 +284,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
         return;
       }
 
-      await sp.getUserDataFromFirestore(sp.uid).then((value) {
+      await sp.getUserDataFromFirestore(sp.uid!).then((value) {
         if (sp.hasError == true) {
           showInSnackBar(context, sp.errorCode.toString(), Colors.red);
           return;
@@ -334,53 +295,42 @@ class _ScannerScreenState extends State<ScannerScreen> {
               .then((value) {
             if (fp.hasError == true) {
               showInSnackBar(context, sp.errorCode.toString(), Colors.red);
-              handleAfterError();
-
+              controller!.pauseCamera();
+              handleStepBack();
               return;
             }
             if (value == false) {
               showInSnackBar(context,
                   'This code does not correspond to any party', Colors.red);
-              handleAfterError();
+              controller!.pauseCamera();
+              handleStepBack();
 
               return;
             }
-
             fp.getPartyDataFromFirestore(result!.code.toString()).then(
-                (value) => fp.saveDataToSharedPreferences().then((value) =>
-                    fp.isUserInsideParty(sp.uid!).then((value) {
-                      if (value == true) {
-                        displayToastMessage(context,
-                            'You are already part of the party', Colors.green);
-                        handleAfterError();
-                        print('Here');
-
-                        return;
-                      }
-                      fp.userJoinParty(sp.uid!).then((value) {
-                        if (fp.hasError) {
-                          showInSnackBar(
-                              context, sp.errorCode.toString(), Colors.red);
-                          handleAfterError();
-
-                          return;
-                        } else {
-                          fp.addUserToParty(sp.uid!).then((value) {
+                (value) => fp.saveDataToSharedPreferences().then(
+                    (value) => fp.isUserInsideParty(sp.uid!).then((value) {
+                          if (value == true) {
+                            displayToastMessage(
+                                context,
+                                'You are already part of the party',
+                                Colors.green);
+                            return;
+                          }
+                          fp
+                              .userJoinParty(sp.uid!, result!.code.toString(),
+                                  sp.name!, sp.imageUrl!, sp.image!)
+                              .then((value) {
                             if (fp.hasError) {
                               showInSnackBar(
                                   context, sp.errorCode.toString(), Colors.red);
-                              handleAfterError();
-
                               return;
-                            } else {
-                              displayToastMessage(
-                                  context, 'Party Joined', Colors.green);
-                              handleAfterAdd();
                             }
+                            displayToastMessage(
+                                context, 'You join the party', Colors.green);
+                            return;
                           });
-                        }
-                      });
-                    })));
+                        })));
           });
         });
       });
@@ -389,19 +339,19 @@ class _ScannerScreenState extends State<ScannerScreen> {
 
   handleAfterError() {
     Future.delayed(const Duration(milliseconds: 500)).then((value) {
-      nextScreenReplace(context, const InsertCode());
+      Navigator.pop(context);
     });
   }
 
   handleStepBack() {
     Future.delayed(const Duration(milliseconds: 500)).then((value) {
-      nextScreenReplace(context, const InsertCode());
+      Navigator.pop(context);
     });
   }
 
   handleAfterAdd() {
     Future.delayed(const Duration(milliseconds: 500)).then((value) {
-      nextScreenReplace(context, const Home());
+      nextScreenReplace(context, const HomePage());
     });
   }
 
@@ -410,13 +360,13 @@ class _ScannerScreenState extends State<ScannerScreen> {
     double width = MediaQuery.of(context).size.width;
     double heigth = MediaQuery.of(context).size.height;
     return Scaffold(
-      backgroundColor: const Color.fromRGBO(25, 20, 20, 0.4),
+      backgroundColor: const Color.fromARGB(255, 35, 34, 34),
       appBar: AppBar(
-        backgroundColor: const Color.fromRGBO(30, 215, 96, 0.9),
+        backgroundColor: const Color.fromARGB(255, 35, 34, 34),
         centerTitle: true,
         title: const Text(
           'Qr Scanner',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
         leading: GestureDetector(
           child: const Icon(
@@ -429,41 +379,41 @@ class _ScannerScreenState extends State<ScannerScreen> {
           },
         ),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Container(
-              height: heigth / 2,
-              width: width * 0.8,
-              child: QRView(
-                key: _gLobalkey,
-                onQRViewCreated: qr,
-                overlay: QrScannerOverlayShape(
-                    borderColor: const Color.fromRGBO(30, 215, 96, 0.9),
-                    borderRadius: 10,
-                    borderLength: 20,
-                    borderWidth: 10),
-              ),
+      body: Column(
+        children: <Widget>[
+          const SizedBox(
+            height: 20,
+          ),
+          SizedBox(
+            height: heigth * .6,
+            width: width,
+            child: QRView(
+              key: _gLobalkey,
+              onQRViewCreated: qr,
+              overlay: QrScannerOverlayShape(
+                  borderColor: const Color.fromRGBO(30, 215, 96, 0.9),
+                  borderRadius: 10,
+                  borderLength: 20,
+                  borderWidth: 10),
             ),
-            const SizedBox(height: 20),
-            Center(
-              child: (result != null)
-                  ? Text(
-                      '${result!.code}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Text(
-                      'Scan a code',
-                      style: TextStyle(
-                        color: Colors.white,
-                      ),
+          ),
+          const SizedBox(height: 20),
+          Center(
+            child: (result != null)
+                ? Text(
+                    '${result!.code}',
+                    style: const TextStyle(
+                      color: Colors.white,
                     ),
-            )
-          ],
-        ),
+                  )
+                : const Text(
+                    'Scan a code',
+                    style: TextStyle(
+                      color: Colors.white,
+                    ),
+                  ),
+          )
+        ],
       ),
     );
   }

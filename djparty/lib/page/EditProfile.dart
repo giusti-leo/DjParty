@@ -63,7 +63,7 @@ class _EditProfileState extends State<EditProfile> {
     final ip = context.read<InternetProvider>();
     final fr = context.read<FirebaseRequests>();
 
-    await sp.getUserDataFromFirestore(sp.uid).then((value) {
+    await sp.getUserDataFromFirestore(sp.uid!).then((value) {
       if (sp.hasError == true) {
         showInSnackBar(context, sp.errorCode.toString(), Colors.red);
         return;
@@ -421,7 +421,7 @@ class _EditProfileState extends State<EditProfile> {
         return;
       }
       // user exists
-      await sp.getUserDataFromFirestore(sp.uid).then((value) {
+      await sp.getUserDataFromFirestore(sp.uid!).then((value) {
         if (sp.hasError == true) {
           showInSnackBar(context, sp.errorCode.toString(), Colors.red);
           updateController.reset();
@@ -438,7 +438,7 @@ class _EditProfileState extends State<EditProfile> {
                 updateController.reset();
                 return;
               }
-              await sp.getUserDataFromFirestore(sp.uid).then((value) {
+              await sp.getUserDataFromFirestore(sp.uid!).then((value) {
                 if (sp.hasError == true) {
                   showInSnackBar(context, sp.errorCode.toString(), Colors.red);
                   updateController.reset();
@@ -454,15 +454,17 @@ class _EditProfileState extends State<EditProfile> {
             });
           } else if (_username.text.isEmpty) {
             sp
-                .update(sp.name!, _description.text, currentColorImage.value,
-                    currentColorText.value)
+                .update(
+              sp.name!,
+              _description.text,
+            )
                 .then((value) async {
               if (sp.hasError == true) {
                 showInSnackBar(context, sp.errorCode.toString(), Colors.red);
                 updateController.reset();
                 return;
               }
-              await sp.getUserDataFromFirestore(sp.uid).then((value) {
+              await sp.getUserDataFromFirestore(sp.uid!).then((value) {
                 if (sp.hasError == true) {
                   showInSnackBar(context, sp.errorCode.toString(), Colors.red);
                   updateController.reset();
@@ -484,7 +486,7 @@ class _EditProfileState extends State<EditProfile> {
 
   handleSave() {
     Future.delayed(const Duration(milliseconds: 500)).then((value) {
-      nextScreenReplace(context, UserProfile());
+      Navigator.pop(context);
     });
   }
 

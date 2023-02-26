@@ -341,8 +341,6 @@ class _SearchItemScreen extends State<SearchItemScreen> {
     );
   }*/
 
-  Future<void> firestoreUpload(String uri, String) async {}
-
   Future<void> checkDiffMs() async {
     var response = await http.get(
       Uri.parse(checkEndpoint),

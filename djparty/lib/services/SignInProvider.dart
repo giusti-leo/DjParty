@@ -257,14 +257,13 @@ class SignInProvider extends ChangeNotifier {
   }
 
   Future<void> update(
-      String username, String description, int image, int text) async {
+    String username,
+    String description,
+  ) async {
     try {
       await FirebaseFirestore.instance.collection("users").doc(uid).update({
         'username': username,
-        'image': image,
         'description': description,
-        'initColor': text,
-        'init': username[0],
       });
     } on FirebaseException catch (e) {
       switch (e.code) {
@@ -281,7 +280,6 @@ class SignInProvider extends ChangeNotifier {
       await FirebaseFirestore.instance.collection("users").doc(uid).update({
         'username': username,
         'description': description,
-        'init': username[0],
       });
     } on FirebaseException catch (e) {
       switch (e.code) {
@@ -349,7 +347,7 @@ class SignInProvider extends ChangeNotifier {
   }
 
   // ENTRY FOR CLOUDFIRESTORE
-  Future getUserDataFromFirestore(uid) async {
+  Future getUserDataFromFirestore(String uid) async {
     await FirebaseFirestore.instance
         .collection("users")
         .doc(uid)
@@ -385,15 +383,15 @@ class SignInProvider extends ChangeNotifier {
     final DocumentReference r =
         FirebaseFirestore.instance.collection("users").doc(uid);
     await r.set({
-      "username": _name,
       "email": _email,
       "uid": _uid,
+      "username": _name,
       "image_url": _imageUrl,
-      "provider": _provider,
+      'init': _init,
       "description": '',
       'image': new Color(0x00000000).value,
-      'init': _init,
-      'initColor': new Color(0xFFFFFFFF).value
+      'initColor': new Color(0xFFFFFFFF).value,
+      "provider": _provider,
     });
     notifyListeners();
   }

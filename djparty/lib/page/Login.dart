@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:djparty/page/Home.dart';
+import 'package:djparty/page/HomePage.dart';
 import 'package:djparty/page/SignIn.dart';
 import 'package:djparty/services/FirebaseAuthMethods.dart';
 import 'package:djparty/services/InternetProvider.dart';
@@ -372,12 +373,13 @@ class _LoginState extends State<Login> {
       sp.checkUserExists().then((value) async {
         if (value == true) {
           // user exists
-          await sp.getUserDataFromFirestore(sp.uid).then((value) => sp
-              .saveDataToSharedPreferences()
-              .then((value) => sp.setSignIn().then((value) {
-                    facebookController.success();
-                    handleAfterSignIn();
-                  })));
+          await sp.getUserDataFromFirestore((sp.uid.toString())).then((value) =>
+              sp
+                  .saveDataToSharedPreferences()
+                  .then((value) => sp.setSignIn().then((value) {
+                        facebookController.success();
+                        handleAfterSignIn();
+                      })));
         } else {
           // user does not exist
           sp.saveDataToFirestore().then((value) => sp
@@ -416,12 +418,13 @@ class _LoginState extends State<Login> {
         sp.checkUserExists().then((value) async {
           if (value == true) {
             // user exists
-            await sp.getUserDataFromFirestore(sp.uid).then((value) => sp
-                .saveDataToSharedPreferences()
-                .then((value) => sp.setSignIn().then((value) {
-                      googleController.success();
-                      handleAfterSignIn();
-                    })));
+            await sp.getUserDataFromFirestore(sp.uid.toString()).then((value) =>
+                sp
+                    .saveDataToSharedPreferences()
+                    .then((value) => sp.setSignIn().then((value) {
+                          googleController.success();
+                          handleAfterSignIn();
+                        })));
           } else {
             // user does not exist
             sp.saveDataToFirestore().then((value) => sp
@@ -438,7 +441,7 @@ class _LoginState extends State<Login> {
 
   handleAfterSignIn() {
     Future.delayed(const Duration(milliseconds: 1000)).then((value) {
-      nextScreenReplace(context, const Home());
+      nextScreenReplace(context, const HomePage());
     });
   }
 
@@ -478,7 +481,7 @@ class _LoginState extends State<Login> {
         return;
       } else {
         sp.saveDataToFirestore().then((value) {
-          sp.getUserDataFromFirestore(sp.uid).then((value) => sp
+          sp.getUserDataFromFirestore(sp.uid.toString()).then((value) => sp
               .saveDataToSharedPreferences()
               .then((value) => sp.sendEmailVerification(context).then((value) {
                     if (sp.hasError == true) {

@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'package:djparty/page/HomePage.dart';
 import 'package:djparty/page/PartySettings.dart';
+import 'package:djparty/page/RankingPage.dart';
 import 'package:flutter_countdown_timer/flutter_countdown_timer.dart';
 import 'package:flutter/material.dart';
 import 'package:djparty/services/SignInProvider.dart';
@@ -34,7 +36,6 @@ class _SpotifyTabController extends State<SpotifyTabController>
   bool changed = false;
   bool countdown = false;
 
-  late DateTime _startParty;
   late DateTime _nextVotingPhase;
 
   int _interval = 0;
@@ -44,7 +45,6 @@ class _SpotifyTabController extends State<SpotifyTabController>
 
   int _computeCountdown() {
     DateTime tmpNow = DateTime.now();
-
     return tmpNow.millisecondsSinceEpoch +
         _nextVotingPhase.difference(tmpNow).inMilliseconds;
   }
@@ -52,8 +52,19 @@ class _SpotifyTabController extends State<SpotifyTabController>
   Future getData() async {
     final sp = context.read<SignInProvider>();
     final fr = context.read<FirebaseRequests>();
+
     sp.getDataFromSharedPreferences();
     fr.getDataFromSharedPreferences();
+
+    await FirebaseFirestore.instance
+        .collection('parties')
+        .doc(fr.partyCode)
+        .get()
+        .then((value) {
+      setState(() {
+        voting = value.get('votingStatus');
+      });
+    });
   }
 
   @override
@@ -66,16 +77,19 @@ class _SpotifyTabController extends State<SpotifyTabController>
 
   @override
   Widget build(BuildContext context) {
-    TabController tabController = TabController(length: 3, vsync: this);
+    TabController tabController = TabController(length: 4, vsync: this);
     final fr = context.read<FirebaseRequests>();
     final sp = context.read<SignInProvider>();
 
+    final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      navigatorKey: navigatorKey,
       theme: ThemeData(
           colorScheme: ColorScheme.fromSwatch().copyWith(
               primary: const Color.fromARGB(228, 53, 191, 101),
-              secondary: const Color.fromARGB(228, 53, 191, 101))),
+              secondary: const Color.fromARGB(255, 35, 34, 34))),
       home: Scaffold(
         backgroundColor: const Color.fromARGB(255, 35, 34, 34),
         appBar: AppBar(
@@ -83,9 +97,20 @@ class _SpotifyTabController extends State<SpotifyTabController>
           backgroundColor: const Color.fromARGB(255, 35, 34, 34),
           title: Text(
             fr.partyName!,
-            style: const TextStyle(fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
           ),
           centerTitle: true,
+          leading: GestureDetector(
+            child: const Icon(
+              Icons.arrow_back_ios_new,
+              color: Colors.white,
+            ),
+            onTap: () {
+              _handleStepBack();
+            },
+          ),
           actions: (sp.uid == fr.admin)
               ? [
                   IconButton(
@@ -110,11 +135,13 @@ class _SpotifyTabController extends State<SpotifyTabController>
                   labelPadding: const EdgeInsets.only(left: 20, right: 20),
                   labelColor: Colors.white,
                   unselectedLabelColor: Colors.grey,
-                  indicator: CircleTabIndicator(color: Colors.white, radius: 4),
+                  indicator: CircleTabIndicator(
+                      color: Color.fromRGBO(30, 215, 96, 0.9), radius: 4),
                   tabs: const [
                     Tab(text: "Player"),
-                    Tab(text: "Queue"),
                     Tab(text: "Search"),
+                    Tab(text: "Queue"),
+                    Tab(text: "Ranking"),
                   ]),
             ),
             SizedBox(
@@ -124,10 +151,11 @@ class _SpotifyTabController extends State<SpotifyTabController>
                 controller: tabController,
                 children: [
                   const SpotifyPlayer(),
+                  const SearchItemScreen(),
                   Queue(
                     voting: voting,
                   ),
-                  const SearchItemScreen(),
+                  const RankingPage(),
                 ],
               ),
             ),
@@ -182,7 +210,6 @@ class _SpotifyTabController extends State<SpotifyTabController>
 
                   endCountdown =
                       (sp.uid == fr.admin) ? endCountdown : endCountdown + 1000;
-
                   return _bottomAppBar(context);
                 }
               }
@@ -232,14 +259,14 @@ class _SpotifyTabController extends State<SpotifyTabController>
                   style: const TextStyle(
                     fontSize: 25,
                     fontWeight: FontWeight.w700,
-                    color: Color.fromARGB(228, 53, 191, 101),
+                    color: Color.fromRGBO(30, 215, 96, 0.9),
                   ));
             }
             return Text("00:0${time.min}:${time.sec}",
                 style: const TextStyle(
                   fontSize: 25,
                   fontWeight: FontWeight.w700,
-                  color: Color.fromARGB(228, 53, 191, 101),
+                  color: Color.fromRGBO(30, 215, 96, 0.9),
                 ));
           }
 
@@ -249,14 +276,14 @@ class _SpotifyTabController extends State<SpotifyTabController>
                   style: const TextStyle(
                     fontSize: 25,
                     fontWeight: FontWeight.w700,
-                    color: Color.fromARGB(228, 53, 191, 101),
+                    color: Color.fromRGBO(30, 215, 96, 0.9),
                   ));
             }
             return Text("00:00:${time.sec}",
                 style: const TextStyle(
                   fontSize: 25,
                   fontWeight: FontWeight.w700,
-                  color: Color.fromARGB(228, 53, 191, 101),
+                  color: Color.fromRGBO(30, 215, 96, 0.9),
                 ));
           }
           if (time.sec! / 10 < 1) {
@@ -264,14 +291,14 @@ class _SpotifyTabController extends State<SpotifyTabController>
                 style: const TextStyle(
                   fontSize: 25,
                   fontWeight: FontWeight.w700,
-                  color: Color.fromARGB(228, 53, 191, 101),
+                  color: Color.fromRGBO(30, 215, 96, 0.9),
                 ));
           }
           return Text("00:${time.min}:${time.sec}",
               style: const TextStyle(
                 fontSize: 25,
                 fontWeight: FontWeight.w700,
-                color: Color.fromARGB(228, 53, 191, 101),
+                color: Color.fromRGBO(30, 215, 96, 0.9),
               ));
         }
         if (time.hours! / 10 < 1) {
@@ -281,21 +308,21 @@ class _SpotifyTabController extends State<SpotifyTabController>
                   style: const TextStyle(
                     fontSize: 25,
                     fontWeight: FontWeight.w700,
-                    color: Color.fromARGB(228, 53, 191, 101),
+                    color: Color.fromRGBO(30, 215, 96, 0.9),
                   ));
             }
             return Text("0${time.hours}:0${time.min}:${time.sec}",
                 style: const TextStyle(
                   fontSize: 25,
                   fontWeight: FontWeight.w700,
-                  color: Color.fromARGB(228, 53, 191, 101),
+                  color: Color.fromRGBO(30, 215, 96, 0.9),
                 ));
           }
           return Text("0${time.hours}:${time.min}:${time.sec}",
               style: const TextStyle(
                 fontSize: 25,
                 fontWeight: FontWeight.w700,
-                color: Color.fromARGB(228, 53, 191, 101),
+                color: Color.fromRGBO(30, 215, 96, 0.9),
               ));
         }
 
@@ -303,7 +330,7 @@ class _SpotifyTabController extends State<SpotifyTabController>
             style: const TextStyle(
               fontSize: 25,
               fontWeight: FontWeight.w700,
-              color: Color.fromARGB(228, 53, 191, 101),
+              color: Color.fromRGBO(30, 215, 96, 0.9),
             ));
       },
       onEnd: () async {
@@ -341,8 +368,12 @@ class _SpotifyTabController extends State<SpotifyTabController>
       }
     });
 
-    setState(() {
-      voting = tmpStatus;
+    voting = tmpStatus;
+  }
+
+  _handleStepBack() {
+    Future.delayed(const Duration(milliseconds: 200)).then((value) {
+      nextScreenReplace(context, const HomePage());
     });
   }
 }

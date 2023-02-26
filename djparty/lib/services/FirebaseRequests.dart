@@ -136,7 +136,8 @@ class FirebaseRequests extends ChangeNotifier {
           return [];
       }
     }
-  }*/
+  }
+  */
 
   getSongs({required String code}) async {
     Stream<QuerySnapshot<Map<String, dynamic>>> res;
@@ -162,12 +163,12 @@ class FirebaseRequests extends ChangeNotifier {
     return userCollection.doc(code).snapshots();
   }
 
-  Future<void> exit(String user) async {
+  Future<void> exit(String user, String partyCode) async {
     try {
       await userCollection
           .doc(user)
           .collection('party')
-          .doc(partyCode!)
+          .doc(partyCode)
           .delete()
           .then((_) => print('Party Deleted from User Party'));
     } on FirebaseException catch (e) {
@@ -180,12 +181,13 @@ class FirebaseRequests extends ChangeNotifier {
     }
   }
 
-  Future<void> remove(String? user) async {
+  Future<void> remove(String user) async {
     try {
+      List<dynamic> users = [user];
       await partyCollection
           .doc(_partyCode)
           .update({
-            'partecipant_list': FieldValue.arrayRemove([user]),
+            'partecipant_list': FieldValue.arrayRemove([users]),
           })
           .then((_) => print('Party Deleted'))
           .catchError((error) => print('Failed: $error'));
@@ -257,6 +259,28 @@ class FirebaseRequests extends ChangeNotifier {
     }
   }
 
+  Future<void> addUserToRanking(
+      String uid, String name, String imageUrl, int image, String party) async {
+    try {
+      await partyCollection.doc(party).collection('members').doc(uid).set({
+        "uid": uid,
+        "username": name,
+        "image_url": imageUrl,
+        'init': name[0],
+        'image': image,
+        'initColor': const Color(0xFFFFFFFF).value,
+        "points": 0,
+      });
+    } on FirebaseException catch (e) {
+      switch (e.code) {
+        default:
+          _errorCode = e.toString();
+          _hasError = true;
+          notifyListeners();
+      }
+    }
+  }
+
   Future getDataFromSharedPreferences() async {
     final SharedPreferences s = await SharedPreferences.getInstance();
     _partyName = s.getString('partyName');
@@ -276,6 +300,22 @@ class FirebaseRequests extends ChangeNotifier {
     await s.setBool('isEnded', _isEnded!);
     await s.setString('partyName', _partyName!);
     notifyListeners();
+  }
+
+  Future addParty(String uid, String partyName, String partyCode, int image,
+      String username, String imageUrl) async {
+    try {
+      await createParty(uid, partyName, partyCode);
+      await createPartyForAUser(uid, uid, partyName, partyCode);
+      await addUserToRanking(uid, username, imageUrl, image, partyCode);
+    } on FirebaseException catch (e) {
+      switch (e.code) {
+        default:
+          _errorCode = e.toString();
+          _hasError = true;
+          notifyListeners();
+      }
+    }
   }
 
   Future createParty(
@@ -348,45 +388,22 @@ class FirebaseRequests extends ChangeNotifier {
     return isStarted;
   }
 
-  Future<void> delete(String code) async {
+  Future<List<String>> getPartecipants(String partyCode) async {
+    List<String> list = [];
     try {
-      List<dynamic> list = [];
-
-      if (isStarted! && isEnded!) {
-        exit(uid!);
-        notifyListeners();
-        return;
-      }
-
-      var snap = await partyCollection.doc(partyCode!).get();
-
-      if (!isStarted!) {
-        list = snap.get('partecipant_list');
-        if (list.isNotEmpty) {
-          list.forEach((elem) async {
-            await checkUserExists(elem).then(
-              (value) {
-                if (value == true) {
-                  exit(elem.toString());
-                  notifyListeners();
-                }
-              },
-            );
-          });
+      await partyCollection.doc(partyCode).get().then((value) {
+        for (var element in List.from(value.get('partecipant_list'))) {
+          String data = (element.toString());
+          list.add(data);
         }
-
-        deleteParty();
-      } else {
-        _errorCode = 'Please, stop the party first!';
-        _hasError = true;
-        notifyListeners();
-      }
+      });
+      return list;
     } on FirebaseException catch (e) {
       switch (e.code) {
         default:
           _errorCode = e.toString();
           _hasError = true;
-          notifyListeners();
+          return list;
       }
     }
   }
@@ -437,7 +454,31 @@ class FirebaseRequests extends ChangeNotifier {
     }
   }
 
-  Future<void> userJoinParty(String uid) async {
+  Future<bool> userIsInTheParty(String uid) async {
+    List<dynamic> members = [];
+    List<String> currentMembers = [];
+
+    try {
+      await partyCollection.doc(partyCode).get().then((value) {
+        members = value.get('partecipant_list');
+      });
+
+      for (var element in members) {
+        currentMembers.add(element.toString());
+      }
+      return currentMembers.contains(uid);
+    } on FirebaseException catch (e) {
+      switch (e.code) {
+        default:
+          _errorCode = e.toString();
+          _hasError = true;
+          notifyListeners();
+          return false;
+      }
+    }
+  }
+
+  Future<void> addPartyInfoToUser(String uid) async {
     try {
       await userCollection.doc(uid).collection('party').doc(partyCode).set({
         'PartyName': partyName.toString(),
@@ -445,6 +486,35 @@ class FirebaseRequests extends ChangeNotifier {
         'code': partyCode,
         'admin': admin
       });
+    } on FirebaseException catch (e) {
+      switch (e.code) {
+        default:
+          _errorCode = e.toString();
+          _hasError = true;
+          notifyListeners();
+      }
+    }
+  }
+
+  Future<void> userJoinParty(String user, String party, String name,
+      String imageUrl, int image) async {
+    try {
+      await addPartyInfoToUser(user);
+      await addUserToParty(user);
+      await addUserToRanking(user, name, imageUrl, image, party);
+    } on FirebaseException catch (e) {
+      switch (e.code) {
+        default:
+          _errorCode = e.toString();
+          _hasError = true;
+          notifyListeners();
+      }
+    }
+  }
+
+  Future<void> userExitFromParty(String user, String party) async {
+    try {
+      await userCollection.doc(user).collection('party').doc(party).delete();
     } on FirebaseException catch (e) {
       switch (e.code) {
         default:

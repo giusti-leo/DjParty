@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:djparty/page/Home.dart';
+import 'package:djparty/page/HomePage.dart';
 import 'package:djparty/page/Login.dart';
 import 'package:djparty/services/SignInProvider.dart';
 import 'package:djparty/utils/nextScreen.dart';
@@ -25,7 +26,7 @@ class _SplashScreenState extends State<SplashScreen> {
     Timer(const Duration(seconds: 2), () {
       sp.isSignedIn == false
           ? nextScreenReplace(context, const Login())
-          : nextScreenReplace(context, const Home());
+          : nextScreenReplace(context, const HomePage());
     });
   }
 

@@ -4,13 +4,16 @@ import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:djparty/page/Home.dart';
+import 'package:djparty/page/HomePage.dart';
 import 'package:djparty/page/SignIn.dart';
+import 'package:djparty/page/UserProfile.dart';
 import 'package:djparty/services/FirebaseRequests.dart';
 import 'package:djparty/services/InternetProvider.dart';
 import 'package:djparty/services/SignInProvider.dart';
 import 'package:djparty/utils/nextScreen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_zoom_drawer/config.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:path_provider/path_provider.dart';
@@ -20,135 +23,71 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 
 import '../services/FirebaseAuthMethods.dart';
-import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 import 'package:intl/intl.dart';
 import 'package:numberpicker/numberpicker.dart';
 
-final TextEditingController partyName = TextEditingController();
-FirebaseAuth _auth = FirebaseAuth.instance;
-
 class GeneratorScreen extends StatefulWidget {
   static String routeName = 'qrGeneration';
+
+  GeneratorScreen({
+    super.key,
+  });
 
   @override
   State<GeneratorScreen> createState() => _insertPartyName();
 }
 
 class _insertPartyName extends State<GeneratorScreen> {
-  TextEditingController controller = TextEditingController();
+  final TextEditingController controller = TextEditingController();
+
+  final TextEditingController partyName = TextEditingController();
 
   final _chars =
       'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890';
-  Random _rnd = Random();
+  final Random _rnd = Random();
   String getRandomString(int length) => String.fromCharCodes(Iterable.generate(
       length, (_) => _chars.codeUnitAt(_rnd.nextInt(_chars.length))));
-
-  DateTime selectedDate = DateTime.now();
-  TimeOfDay selectedTime = TimeOfDay.now();
-  DateTime dateTime = DateTime.now();
-
-  String choosenDate = '';
-  DateFormat choosenTime = new DateFormat();
-  bool showDate = false;
-  bool showTime = false;
-  bool showDateTime = false;
 
   final RoundedLoadingButtonController submitController =
       RoundedLoadingButtonController();
 
-  Future getData() async {
-    final sp = context.read<SignInProvider>();
-
-    sp.getDataFromSharedPreferences();
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    selectedDate = DateTime.now();
-    selectedTime = TimeOfDay.now();
-    dateTime = DateTime.now();
-    getData();
-  }
-
-  Future<DateTime> _selectDate(BuildContext context) async {
-    final selected = await showDatePicker(
-      context: context,
-      initialDate: selectedDate,
-      firstDate: DateTime(2023),
-      lastDate: DateTime(2100),
-    );
-    if (selected != null && selected != selectedDate) {
-      setState(() {
-        selectedDate = selected;
-      });
-    }
-    return selectedDate;
-  }
-
-// Select for Time
-  Future<TimeOfDay> _selectTime(BuildContext context) async {
-    final selected = await showTimePicker(
-      context: context,
-      initialTime: selectedTime,
-    );
-    if (selected != null && selected != selectedTime) {
-      setState(() {
-        selectedTime = selected;
-      });
-    }
-    return selectedTime;
-  }
-
-  String getDate() {
-    if (!showDate) {
-      return 'Select date';
-    } else {
-      final val = DateFormat('MMM d, yyyy').format(selectedDate);
-      choosenDate = val;
-      return val;
-    }
-  }
-
-  String getTime(TimeOfDay tod) {
-    if (!showTime) {
-      return 'Select time';
-    } else {
-      final now = DateTime.now();
-
-      final dt = DateTime(now.year, now.month, now.day, tod.hour, tod.minute);
-      final format = DateFormat.jm();
-      choosenTime = format;
-      return format.format(dt);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-          colorScheme: ColorScheme.fromSwatch().copyWith(
-              primary: const Color.fromARGB(228, 53, 191, 101),
-              secondary: const Color.fromARGB(228, 53, 191, 101))),
-      home: Scaffold(
-        backgroundColor: Color.fromARGB(255, 35, 34, 34),
+    return SafeArea(
+      child: Scaffold(
         appBar: AppBar(
-          backgroundColor: const Color.fromARGB(228, 53, 191, 101),
-          title: const Text('Create your Party'),
+          leading: GestureDetector(
+            child: const Icon(
+              Icons.arrow_back_ios_new,
+              color: Colors.white,
+            ),
+            onTap: () {
+              Navigator.pop(context);
+            },
+          ),
+          backgroundColor: const Color.fromARGB(255, 35, 34, 34),
+          title: const Text(
+            'Create Party',
+            style: TextStyle(
+                color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+          ),
           centerTitle: true,
         ),
+        backgroundColor: const Color.fromARGB(255, 35, 34, 34),
         body: SingleChildScrollView(
           child: Center(
             child: Column(
               children: <Widget>[
                 const SizedBox(
-                  height: 100,
+                  height: 20,
                 ),
                 SizedBox(
                   height: MediaQuery.of(context).size.height / 15,
                   width: MediaQuery.of(context).size.width / 1.2,
                   child: TextFormField(
+                    toolbarOptions: const ToolbarOptions(
+                        copy: true, paste: true, selectAll: true, cut: true),
+                    cursorColor: Color.fromRGBO(30, 215, 96, 0.9),
                     controller: partyName,
                     style: const TextStyle(
                       color: Colors.white,
@@ -156,8 +95,12 @@ class _insertPartyName extends State<GeneratorScreen> {
                       fontSize: 20,
                     ),
                     decoration: InputDecoration(
-                      hintText: 'Enter your Party Name',
+                      hintText: 'Party Name',
                       hintStyle: const TextStyle(color: Colors.grey),
+                      focusedBorder: const UnderlineInputBorder(
+                        borderSide:
+                            BorderSide(color: Color.fromRGBO(30, 215, 96, 0.9)),
+                      ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(18),
                         borderSide: const BorderSide(
@@ -266,6 +209,17 @@ class _insertPartyName extends State<GeneratorScreen> {
     );
   }
 
+  @override
+  void initState() {
+    super.initState();
+    getData();
+  }
+
+  Future getData() async {
+    final sp = context.read<SignInProvider>();
+    sp.getDataFromSharedPreferences();
+  }
+
   Future<void> handleCreation() async {
     final sp = context.read<SignInProvider>();
     final ip = context.read<InternetProvider>();
@@ -294,22 +248,35 @@ class _insertPartyName extends State<GeneratorScreen> {
       });
     }
 
-    fp
-        .createParty(sp.uid.toString(), partyName.text, controller.text)
-        .then((value) {
-      fp.checkPartyExists(code: controller.text).then((value) {
-        fp
-            .createPartyForAUser(sp.uid.toString(), sp.uid.toString(),
-                partyName.text, controller.text)
-            .then((value) {
-          if (fp.hasError == true) {
-            showInSnackBar(context, sp.errorCode.toString(), Colors.red);
-            submitController.reset();
-            return;
-          }
-          submitController.success();
-          displayToastMessage(context, 'Party Created', Colors.greenAccent);
-          handleAfterSubmit();
+    await sp.checkUserExists().then((value) async {
+      if (sp.hasError == true) {
+        showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+        return;
+      }
+      if (value == false) {
+        showInSnackBar(context, 'The user data does not exists', Colors.red);
+        return;
+      }
+
+      await sp.getUserDataFromFirestore(sp.uid!).then((value) {
+        if (sp.hasError == true) {
+          showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+          return;
+        }
+        sp.saveDataToSharedPreferences().then((value) async {
+          fp
+              .addParty(sp.uid!, partyName.text, controller.text, sp.image!,
+                  sp.name!, sp.imageUrl!)
+              .then((value) {
+            if (fp.hasError == true) {
+              showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+              submitController.reset();
+              return;
+            }
+            submitController.success();
+            displayToastMessage(context, 'Party Created', Colors.greenAccent);
+            handleAfterSubmit();
+          });
         });
       });
     });
@@ -326,7 +293,7 @@ class _insertPartyName extends State<GeneratorScreen> {
 
   handleAfterSubmit() {
     Future.delayed(const Duration(milliseconds: 1000)).then((value) {
-      nextScreenReplace(context, const Home());
+      nextScreenReplace(context, const HomePage());
     });
   }
 

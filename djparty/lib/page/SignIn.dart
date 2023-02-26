@@ -1,4 +1,5 @@
 import 'package:djparty/page/Home.dart';
+import 'package:djparty/page/HomePage.dart';
 import 'package:djparty/page/Login.dart';
 import 'package:djparty/page/ResetPassword.dart';
 import 'package:djparty/services/FirebaseAuthMethods.dart';
@@ -261,7 +262,7 @@ class _SignInState extends State<SignIn> {
 
   handleAfterSignIn() {
     Future.delayed(const Duration(milliseconds: 1000)).then((value) {
-      nextScreenReplace(context, const Home());
+      nextScreenReplace(context, const HomePage());
     });
   }
 
@@ -308,7 +309,7 @@ class _SignInState extends State<SignIn> {
         return;
       } else {
         // checking whether user exists or not
-        sp.getUserDataFromFirestore(sp.uid).then((value) => sp
+        sp.getUserDataFromFirestore(sp.uid!).then((value) => sp
             .saveDataToSharedPreferences()
             .then((value) => sp.setSignIn().then((value) {
                   signinController.success();
