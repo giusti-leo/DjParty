@@ -166,142 +166,169 @@ class _HomeState extends State<Home> {
                                         ),
                                       ),
                                     ),*/
+
                                       Row(
                                         mainAxisAlignment:
                                             MainAxisAlignment.center,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
                                         children: [
+                                          SizedBox(
+                                            width: width * 0.08,
+                                          ),
                                           (snapshot.data.docs[index]['admin']
                                                       .toString() ==
                                                   sp.uid)
-                                              ? AnimatedButton(
-                                                  text: 'Delete',
-                                                  pressEvent: () {
-                                                    AwesomeDialog(
-                                                        context: context,
-                                                        dialogType:
-                                                            DialogType.question,
-                                                        animType:
-                                                            AnimType.topSlide,
-                                                        showCloseIcon: true,
-                                                        title: "Warning",
-                                                        desc:
-                                                            "Are you sure to delete the party?",
-                                                        btnOk:
-                                                            RoundedLoadingButton(
-                                                          controller:
-                                                              exitController,
-                                                          successColor:
-                                                              const Color
-                                                                      .fromRGBO(
-                                                                  30,
-                                                                  215,
-                                                                  96,
-                                                                  0.9),
-                                                          width: width * 0.35,
-                                                          height: 37,
-                                                          elevation: 0,
-                                                          borderRadius: 25,
-                                                          color: const Color
-                                                                  .fromRGBO(
-                                                              30, 215, 96, 0.9),
-                                                          onPressed: () {
-                                                            handleExitPartyAdmin(
-                                                                snapshot
-                                                                    .data
-                                                                    .docs[index]
-                                                                        ['code']
-                                                                    .toString());
-                                                          },
-                                                          child: Wrap(
-                                                            children: const [
-                                                              Center(
-                                                                child: Text(
-                                                                    "Delete",
-                                                                    style: TextStyle(
-                                                                        color: Colors
-                                                                            .white,
-                                                                        fontSize:
-                                                                            14,
-                                                                        fontWeight:
-                                                                            FontWeight.w500)),
-                                                              )
-                                                            ],
+                                              ? Expanded(
+                                                  child: AnimatedButton(
+                                                    text: 'Delete',
+                                                    pressEvent: () {
+                                                      AwesomeDialog(
+                                                          context: context,
+                                                          dialogType: DialogType
+                                                              .question,
+                                                          animType:
+                                                              AnimType.topSlide,
+                                                          showCloseIcon: true,
+                                                          title: "Warning",
+                                                          desc:
+                                                              "Are you sure to delete the party?",
+                                                          btnOk:
+                                                              RoundedLoadingButton(
+                                                            controller:
+                                                                exitController,
+                                                            successColor:
+                                                                const Color
+                                                                        .fromRGBO(
+                                                                    30,
+                                                                    215,
+                                                                    96,
+                                                                    0.9),
+                                                            width: width * 0.25,
+                                                            height: 37,
+                                                            elevation: 0,
+                                                            borderRadius: 25,
+                                                            color: const Color
+                                                                    .fromRGBO(
+                                                                30,
+                                                                215,
+                                                                96,
+                                                                0.9),
+                                                            onPressed: () {
+                                                              handleExitPartyAdmin(
+                                                                  snapshot
+                                                                      .data
+                                                                      .docs[
+                                                                          index]
+                                                                          [
+                                                                          'code']
+                                                                      .toString());
+                                                            },
+                                                            child: Wrap(
+                                                              children: const [
+                                                                Center(
+                                                                  child: Text(
+                                                                      "Delete",
+                                                                      style: TextStyle(
+                                                                          color: Colors
+                                                                              .white,
+                                                                          fontSize:
+                                                                              14,
+                                                                          fontWeight:
+                                                                              FontWeight.w500)),
+                                                                )
+                                                              ],
+                                                            ),
                                                           ),
-                                                        ),
-                                                        dismissOnTouchOutside:
-                                                            true,
-                                                        btnCancelOnPress: () => Navigator.push(
-                                                            context,
-                                                            new MaterialPageRoute(
-                                                                builder: (context) => Home(
-                                                                    drawerController:
-                                                                        widget
-                                                                            .drawerController)))).show();
-                                                  },
-                                                  width: width * 0.25,
-                                                  borderRadius:
-                                                      BorderRadius.circular(25),
-                                                  color: const Color.fromRGBO(
-                                                      30, 215, 96, 0.9),
+                                                          dismissOnTouchOutside:
+                                                              true,
+                                                          btnCancelOnPress: () => Navigator.push(
+                                                              context,
+                                                              MaterialPageRoute(
+                                                                  builder: (context) => Home(
+                                                                      drawerController:
+                                                                          widget
+                                                                              .drawerController)))).show();
+                                                    },
+                                                    width: width * 0.25,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            25),
+                                                    color: const Color.fromRGBO(
+                                                        30, 215, 96, 0.9),
+                                                  ),
                                                 )
-                                              : AnimatedButton(
-                                                  text: 'Exit',
-                                                  pressEvent: () {
-                                                    AwesomeDialog(
-                                                        context: context,
-                                                        dialogType:
-                                                            DialogType.question,
-                                                        animType:
-                                                            AnimType.topSlide,
-                                                        showCloseIcon: true,
-                                                        title: "Warning",
-                                                        desc:
-                                                            "Are you sure to exit the party?",
-                                                        btnOk:
-                                                            RoundedLoadingButton(
-                                                          controller:
-                                                              exitController,
-                                                          successColor:
-                                                              const Color
+                                              : Expanded(
+                                                  child: AnimatedButton(
+                                                      text: 'Exit',
+                                                      pressEvent: () {
+                                                        AwesomeDialog(
+                                                            context: context,
+                                                            dialogType:
+                                                                DialogType
+                                                                    .question,
+                                                            animType: AnimType
+                                                                .topSlide,
+                                                            showCloseIcon: true,
+                                                            title: "Warning",
+                                                            desc:
+                                                                "Are you sure to exit the party?",
+                                                            btnOk:
+                                                                RoundedLoadingButton(
+                                                              controller:
+                                                                  exitController,
+                                                              successColor:
+                                                                  const Color
+                                                                          .fromRGBO(
+                                                                      30,
+                                                                      215,
+                                                                      96,
+                                                                      0.9),
+                                                              width:
+                                                                  width * 0.25,
+                                                              height: 37,
+                                                              elevation: 0,
+                                                              borderRadius: 25,
+                                                              color: const Color
                                                                       .fromRGBO(
                                                                   30,
                                                                   215,
                                                                   96,
                                                                   0.9),
-                                                          width: width * 0.35,
-                                                          height: 37,
-                                                          elevation: 0,
-                                                          borderRadius: 25,
-                                                          color: const Color
-                                                                  .fromRGBO(
-                                                              30, 215, 96, 0.9),
-                                                          onPressed: () {
-                                                            handleExitNormalUser(
-                                                                snapshot
+                                                              onPressed: () {
+                                                                handleExitNormalUser(snapshot
                                                                     .data
                                                                     .docs[index]
                                                                         ['code']
                                                                     .toString());
-                                                          },
-                                                          child: Wrap(
-                                                            children: const [
-                                                              Center(
-                                                                child: Text(
-                                                                    "Exit",
-                                                                    style: TextStyle(
-                                                                        color: Colors
-                                                                            .white,
-                                                                        fontSize:
-                                                                            14,
-                                                                        fontWeight:
-                                                                            FontWeight.w500)),
-                                                              )
-                                                            ],
-                                                          ),
-                                                        ),
-                                                        btnCancelOnPress:
-                                                            () {});
-                                                  }),
+                                                              },
+                                                              child: Wrap(
+                                                                children: const [
+                                                                  Center(
+                                                                    child: Text(
+                                                                        "Exit",
+                                                                        style: TextStyle(
+                                                                            color: Colors
+                                                                                .white,
+                                                                            fontSize:
+                                                                                14,
+                                                                            fontWeight:
+                                                                                FontWeight.w500)),
+                                                                  )
+                                                                ],
+                                                              ),
+                                                            ),
+                                                            btnCancelOnPress:
+                                                                () {
+                                                              Navigator.push(
+                                                                  context,
+                                                                  MaterialPageRoute(
+                                                                      builder: (context) => Home(
+                                                                          drawerController:
+                                                                              widget.drawerController)));
+                                                            });
+                                                      }),
+                                                ),
                                           SizedBox(
                                             width: width * .08,
                                           ),
@@ -363,6 +390,9 @@ class _HomeState extends State<Home> {
                                                 )
                                               ],
                                             ),
+                                          ),
+                                          SizedBox(
+                                            width: width * 0.08,
                                           ),
                                         ],
                                       ),
@@ -821,26 +851,19 @@ class _HomeState extends State<Home> {
               }
               fp.saveDataToSharedPreferences().then((value) {
                 if (fp.getIsEnded()) {
-                  fp.remove(sp.uid!).then((value) {
+                  fp.adminExitParty(sp.uid!, code).then((value) {
                     if (sp.hasError == true) {
                       showInSnackBar(
                           context, sp.errorCode.toString(), Colors.red);
                       exitController.reset();
                       return;
                     }
-                    fp.exit(sp.uid!, code).then((value) {
-                      if (sp.hasError == true) {
-                        showInSnackBar(
-                            context, sp.errorCode.toString(), Colors.red);
-                        exitController.reset();
-                        return;
-                      }
-                      exitController.success();
-                      Future.delayed(const Duration(milliseconds: 500));
-                      displayToastMessage(context,
-                          'You are no longer part of the party', Colors.green);
-                      return;
-                    });
+
+                    exitController.success();
+                    Future.delayed(const Duration(milliseconds: 500));
+                    displayToastMessage(context,
+                        'You are no longer part of the party', Colors.green);
+                    return;
                   });
                 }
                 if (fp.getIsStarted()) {
@@ -849,11 +872,10 @@ class _HomeState extends State<Home> {
                       'Please, stop the party before deleting', Colors.red);
                   return;
                 } else {
-                  fp.getPartecipants(code).then((value) {
+                  fp.getPartecipants(code).then((value) async {
                     print(value);
                     value.forEach((element) async {
                       String elem = element.toString();
-                      print(elem);
                       await fp.checkUserExists(elem).then((value) {
                         if (fp.hasError == true) {
                           showInSnackBar(
@@ -861,7 +883,7 @@ class _HomeState extends State<Home> {
                           exitController.reset();
                         }
                         if (value == true) {
-                          fp.exit(elem, code).then((value) {
+                          fp.userExitFromParty(elem, code).then((value) {
                             if (fp.hasError == true) {
                               showInSnackBar(
                                   context, sp.errorCode.toString(), Colors.red);
@@ -881,6 +903,14 @@ class _HomeState extends State<Home> {
                           });
                         }
                       });
+                    });
+                    await fp.deleteParty(code).then((value) {
+                      if (fp.hasError == true) {
+                        showInSnackBar(
+                            context, sp.errorCode.toString(), Colors.red);
+                        exitController.reset();
+                        return;
+                      }
                     });
                   });
                 }
@@ -929,22 +959,17 @@ class _HomeState extends State<Home> {
                 exitController.reset();
                 return;
               }
-              await fp.remove(sp.uid!).then((value) async {
-                await fp
-                    .userExitFromParty(sp.uid.toString(), code)
-                    .then((value) {
-                  if (fp.hasError) {
-                    showInSnackBar(
-                        context, sp.errorCode.toString(), Colors.red);
-                    exitController.reset();
-                    return;
-                  }
-                  exitController.success();
-                  Future.delayed(const Duration(milliseconds: 500));
-                  displayToastMessage(
-                      context, 'You left the party', Colors.green);
+              await fp.userExitParty(sp.uid.toString(), code).then((value) {
+                if (fp.hasError) {
+                  showInSnackBar(context, sp.errorCode.toString(), Colors.red);
                   exitController.reset();
-                });
+                  return;
+                }
+                exitController.success();
+                Future.delayed(const Duration(milliseconds: 500));
+                displayToastMessage(
+                    context, 'You left the party', Colors.green);
+                exitController.reset();
               });
             });
           });
