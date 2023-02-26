@@ -66,9 +66,7 @@ class _Queue extends State<Queue> {
   Future getData() async {
     final sp = context.read<SignInProvider>();
     final fr = context.read<FirebaseRequests>();
-
     sp.getDataFromSharedPreferences();
-
     fr.getDataFromSharedPreferences();
     changed = false;
   }
@@ -81,7 +79,6 @@ class _Queue extends State<Queue> {
 
   bool userLikeSong(Track track) {
     final sp = context.read<SignInProvider>();
-
     return (track.likes.contains(sp.uid));
   }
 
@@ -146,12 +143,11 @@ class _Queue extends State<Queue> {
                                                     : Icons.favorite_border,
                                                 color:
                                                     userLikeSong(currentTrack)
-                                                        ? const Color.fromARGB(
-                                                            228, 53, 191, 101)
-                                                        : Colors.grey),
+                                                        ? const Color.fromRGBO(
+                                                            30, 215, 96, 0.9)
+                                                        : Colors.white),
                                             onTap: () {
                                               _handleLikeLogic(currentTrack);
-                                              print('1');
                                             },
                                           ),
                                           Text(
@@ -206,13 +202,12 @@ class _Queue extends State<Queue> {
                         )
                       ]))
                   : Container(
-                      alignment: Alignment.topCenter,
+                      alignment: Alignment.center,
                       child: const Text(
                         "Add song to the queue",
                         style: TextStyle(
                           fontSize: 20,
                           color: Colors.grey,
-                          fontWeight: FontWeight.normal,
                           fontFamily: 'Roboto',
                         ),
                       ),
