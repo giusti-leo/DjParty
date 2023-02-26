@@ -173,135 +173,149 @@ class _HomeState extends State<Home> {
                                           (snapshot.data.docs[index]['admin']
                                                       .toString() ==
                                                   sp.uid)
-                                              ? AnimatedButton(
-                                                  text: 'Delete',
-                                                  pressEvent: () {
-                                                    AwesomeDialog(
-                                                        context: context,
-                                                        dialogType:
-                                                            DialogType.question,
-                                                        animType:
-                                                            AnimType.topSlide,
-                                                        showCloseIcon: true,
-                                                        title: "Warning",
-                                                        desc:
-                                                            "Are you sure to delete the party?",
-                                                        btnOk:
-                                                            RoundedLoadingButton(
-                                                          controller:
-                                                              exitController,
-                                                          successColor:
-                                                              const Color
-                                                                      .fromRGBO(
-                                                                  30,
-                                                                  215,
-                                                                  96,
-                                                                  0.9),
-                                                          width: width * 0.35,
-                                                          height: 37,
-                                                          elevation: 0,
-                                                          borderRadius: 25,
-                                                          color: const Color
-                                                                  .fromRGBO(
-                                                              30, 215, 96, 0.9),
-                                                          onPressed: () {
-                                                            handleExitPartyAdmin(
-                                                                snapshot
-                                                                    .data
-                                                                    .docs[index]
-                                                                        ['code']
-                                                                    .toString());
-                                                          },
-                                                          child: Wrap(
-                                                            children: const [
-                                                              Center(
-                                                                child: Text(
-                                                                    "Delete",
-                                                                    style: TextStyle(
-                                                                        color: Colors
-                                                                            .white,
-                                                                        fontSize:
-                                                                            14,
-                                                                        fontWeight:
-                                                                            FontWeight.w500)),
-                                                              )
-                                                            ],
+                                              ? Expanded(
+                                                  child: AnimatedButton(
+                                                    text: 'Delete',
+                                                    pressEvent: () {
+                                                      AwesomeDialog(
+                                                          context: context,
+                                                          dialogType: DialogType
+                                                              .question,
+                                                          animType:
+                                                              AnimType.topSlide,
+                                                          showCloseIcon: true,
+                                                          title: "Warning",
+                                                          desc:
+                                                              "Are you sure to delete the party?",
+                                                          btnOk:
+                                                              RoundedLoadingButton(
+                                                            controller:
+                                                                exitController,
+                                                            successColor:
+                                                                const Color
+                                                                        .fromRGBO(
+                                                                    30,
+                                                                    215,
+                                                                    96,
+                                                                    0.9),
+                                                            width: width * 0.25,
+                                                            height: 37,
+                                                            elevation: 0,
+                                                            borderRadius: 25,
+                                                            color: const Color
+                                                                    .fromRGBO(
+                                                                30,
+                                                                215,
+                                                                96,
+                                                                0.9),
+                                                            onPressed: () {
+                                                              handleExitPartyAdmin(
+                                                                  snapshot
+                                                                      .data
+                                                                      .docs[
+                                                                          index]
+                                                                          [
+                                                                          'code']
+                                                                      .toString());
+                                                            },
+                                                            child: Wrap(
+                                                              children: const [
+                                                                Center(
+                                                                  child: Text(
+                                                                      "Delete",
+                                                                      style: TextStyle(
+                                                                          color: Colors
+                                                                              .white,
+                                                                          fontSize:
+                                                                              14,
+                                                                          fontWeight:
+                                                                              FontWeight.w500)),
+                                                                )
+                                                              ],
+                                                            ),
                                                           ),
-                                                        ),
-                                                        dismissOnTouchOutside:
-                                                            true,
-                                                        btnCancelOnPress: () => Navigator.push(
-                                                            context,
-                                                            new MaterialPageRoute(
-                                                                builder: (context) => Home(
-                                                                    drawerController:
-                                                                        widget
-                                                                            .drawerController)))).show();
-                                                  },
-                                                  width: width * 0.25,
-                                                  borderRadius:
-                                                      BorderRadius.circular(25),
-                                                  color: const Color.fromRGBO(
-                                                      30, 215, 96, 0.9),
+                                                          dismissOnTouchOutside:
+                                                              true,
+                                                          btnCancelOnPress: () => Navigator.push(
+                                                              context,
+                                                              new MaterialPageRoute(
+                                                                  builder: (context) => Home(
+                                                                      drawerController:
+                                                                          widget
+                                                                              .drawerController)))).show();
+                                                    },
+                                                    width: width * 0.25,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            25),
+                                                    color: const Color.fromRGBO(
+                                                        30, 215, 96, 0.9),
+                                                  ),
                                                 )
-                                              : AnimatedButton(
-                                                  text: 'Exit',
-                                                  pressEvent: () {
-                                                    AwesomeDialog(
-                                                        context: context,
-                                                        dialogType:
-                                                            DialogType.question,
-                                                        animType:
-                                                            AnimType.topSlide,
-                                                        showCloseIcon: true,
-                                                        title: "Warning",
-                                                        desc:
-                                                            "Are you sure to exit the party?",
-                                                        btnOk:
-                                                            RoundedLoadingButton(
-                                                          controller:
-                                                              exitController,
-                                                          successColor:
-                                                              const Color
+                                              : Expanded(
+                                                  child: AnimatedButton(
+                                                      text: 'Exit',
+                                                      pressEvent: () {
+                                                        AwesomeDialog(
+                                                            context: context,
+                                                            dialogType:
+                                                                DialogType
+                                                                    .question,
+                                                            animType: AnimType
+                                                                .topSlide,
+                                                            showCloseIcon: true,
+                                                            title: "Warning",
+                                                            desc:
+                                                                "Are you sure to exit the party?",
+                                                            btnOk:
+                                                                RoundedLoadingButton(
+                                                              controller:
+                                                                  exitController,
+                                                              successColor:
+                                                                  const Color
+                                                                          .fromRGBO(
+                                                                      30,
+                                                                      215,
+                                                                      96,
+                                                                      0.9),
+                                                              width:
+                                                                  width * 0.25,
+                                                              height: 37,
+                                                              elevation: 0,
+                                                              borderRadius: 25,
+                                                              color: const Color
                                                                       .fromRGBO(
                                                                   30,
                                                                   215,
                                                                   96,
                                                                   0.9),
-                                                          width: width * 0.35,
-                                                          height: 37,
-                                                          elevation: 0,
-                                                          borderRadius: 25,
-                                                          color: const Color
-                                                                  .fromRGBO(
-                                                              30, 215, 96, 0.9),
-                                                          onPressed: () {
-                                                            handleExitNormalUser(
-                                                                snapshot
+                                                              onPressed: () {
+                                                                handleExitNormalUser(snapshot
                                                                     .data
                                                                     .docs[index]
                                                                         ['code']
                                                                     .toString());
-                                                          },
-                                                          child: Wrap(
-                                                            children: const [
-                                                              Center(
-                                                                child: Text(
-                                                                    "Exit",
-                                                                    style: TextStyle(
-                                                                        color: Colors
-                                                                            .white,
-                                                                        fontSize:
-                                                                            14,
-                                                                        fontWeight:
-                                                                            FontWeight.w500)),
-                                                              )
-                                                            ],
-                                                          ),
-                                                        ),
-                                                        btnCancelOnPress:
-                                                            () {});
-                                                  }),
+                                                              },
+                                                              child: Wrap(
+                                                                children: const [
+                                                                  Center(
+                                                                    child: Text(
+                                                                        "Exit",
+                                                                        style: TextStyle(
+                                                                            color: Colors
+                                                                                .white,
+                                                                            fontSize:
+                                                                                14,
+                                                                            fontWeight:
+                                                                                FontWeight.w500)),
+                                                                  )
+                                                                ],
+                                                              ),
+                                                            ),
+                                                            btnCancelOnPress:
+                                                                () {});
+                                                      }),
+                                                ),
                                           SizedBox(
                                             width: width * .08,
                                           ),

@@ -19,6 +19,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:djparty/services/FirebaseRequests.dart';
 import 'package:djparty/services/InternetProvider.dart';
+import 'package:djparty/services/SpotifyRequests.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class SpotifyTabController extends StatefulWidget {
@@ -52,9 +53,14 @@ class _SpotifyTabController extends State<SpotifyTabController>
   Future getData() async {
     final sp = context.read<SignInProvider>();
     final fr = context.read<FirebaseRequests>();
+    final sr = context.read<SpotifyRequests>();
 
     sp.getDataFromSharedPreferences();
     fr.getDataFromSharedPreferences();
+
+    if (sp.uid == fr.admin) {
+      sr.connectToSpotify();
+    }
 
     await FirebaseFirestore.instance
         .collection('parties')

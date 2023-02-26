@@ -97,6 +97,7 @@ class _Queue extends State<Queue> {
                 .collection('parties')
                 .doc(fr.partyCode)
                 .collection('queue')
+                .orderBy('timestamp')
                 .snapshots(),
             builder: (context, AsyncSnapshot snapshot) {
               return snapshot.hasData && snapshot.data.docs.length > 0

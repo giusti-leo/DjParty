@@ -55,14 +55,12 @@ class SpotifyRequests extends ChangeNotifier {
     return authenticationToken;
   }
 
-/*  Future<bool> connectToSpotify() async {
+  Future<bool> connectToSpotify() async {
+    bool _loading = false;
     try {
-      setState(() {
-        _loading = true;
-      });
+      _loading = true;
       var result = await SpotifySdk.connectToSpotifyRemote(
-          clientId: clientID,
-          redirectUrl: 'test-1-login://callback');
+          clientId: clientID, redirectUrl: 'test-1-login://callback');
       if (result) {
         _connected = true;
       } else {
@@ -71,27 +69,22 @@ class SpotifyRequests extends ChangeNotifier {
       setStatus(result
           ? 'connect to spotify successful'
           : 'connect to spotify failed');
-      setState(() {
-        _loading = false;
-      });
+      _loading = false;
+      return _loading;
     } on PlatformException catch (e) {
-      setState(() {
-        _loading = false;
-      });
+      _loading = false;
       setStatus(e.code, message: e.message);
+      return _loading;
     } on MissingPluginException {
-      setState(() {
-        _loading = false;
-      });
+      _loading = false;
       setStatus('not implemented');
+      return _loading;
     }
   }
 
-  */
-
   Future<http.Response> _addItemToPlaylist(String uri) async {
     return http.post(
-      Uri.parse(addEndpoint + "?uris=" + uri!),
+      Uri.parse(addEndpoint + "?uris=" + uri),
       headers: <String, String>{
         'Content-Type': 'application/json',
         'Authorization': "Bearer " + myToken!
@@ -101,7 +94,7 @@ class SpotifyRequests extends ChangeNotifier {
 
   Future<http.Response> _addItemToSpotifyQueue(String uri) async {
     return http.post(
-      Uri.parse(queueEndpoint + "?uri=" + uri!),
+      Uri.parse(queueEndpoint + "?uri=" + uri),
       headers: <String, String>{
         'Content-Type': 'application/json',
         'Authorization': "Bearer " + myToken!

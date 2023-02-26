@@ -153,7 +153,7 @@ class MenuScreen extends StatelessWidget {
                   children: [
                     Text(sp.name!,
                         style:
-                            const TextStyle(color: Colors.white, fontSize: 16))
+                            const TextStyle(color: Colors.white, fontSize: 12))
                   ],
                 )
               ],
@@ -225,7 +225,7 @@ class MenuScreen extends StatelessWidget {
                     width: 28,
                   ),
                   Text('Logout',
-                      style: TextStyle(color: Colors.white, fontSize: 20))
+                      style: TextStyle(color: Colors.white, fontSize: 12))
                 ]),
                 onTap: () async {
                   {

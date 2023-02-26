@@ -14,6 +14,7 @@ import 'package:djparty/services/FirebaseRequests.dart';
 import 'package:djparty/services/InternetProvider.dart';
 import 'package:djparty/services/SignInProvider.dart';
 import 'package:djparty/page/SearchItemScreen.dart';
+import 'package:djparty/services/SpotifyRequests.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -51,6 +52,9 @@ class Main extends StatelessWidget {
         ),
         ChangeNotifierProvider(
           create: ((context) => FirebaseRequests()),
+        ),
+        ChangeNotifierProvider(
+          create: ((context) => SpotifyRequests()),
         ),
       ],
       child: MaterialApp(
