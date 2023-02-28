@@ -120,22 +120,22 @@ class _UserProfileState extends State<UserProfile> {
                                         backgroundColor: Colors.white,
                                         backgroundImage:
                                             NetworkImage(sp.imageUrl!),
-                                        maxRadius: width * 0.15 - 5,
+                                        maxRadius: width * 0.15 - 2,
                                       ),
                                     )
                                   : CircleAvatar(
                                       backgroundColor: Colors.white,
                                       maxRadius: width * 0.15,
                                       child: CircleAvatar(
-                                          maxRadius: width * 0.15 - 5,
-                                          backgroundColor: Color(sp.image!),
+                                          maxRadius: width * 0.15 - 2,
+                                          backgroundColor: Colors.black,
                                           child: Text(
                                             sp.init.toString().toUpperCase(),
                                             textAlign: TextAlign.center,
-                                            style: TextStyle(
-                                                color: Color(sp.initColor!),
+                                            style: const TextStyle(
+                                                color: Colors.greenAccent,
                                                 fontSize: 40,
-                                                fontStyle: FontStyle.italic),
+                                                fontStyle: FontStyle.normal),
                                           ))),
                             ]),
                         const SizedBox(

@@ -1,3 +1,4 @@
+import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:djparty/page/Login.dart';
 import 'package:djparty/page/SignIn.dart';
@@ -35,101 +36,100 @@ class _ResetPasswordState extends State<ResetPassword> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-        child: MaterialApp(
-            home: Scaffold(
-                key: _scaffoldKey,
-                backgroundColor: const Color.fromARGB(128, 53, 74, 62),
-                appBar: AppBar(
-                  backgroundColor: const Color.fromARGB(128, 53, 74, 62),
-                  shadowColor: const Color.fromRGBO(30, 215, 96, 0.9),
-                  title: const Text('Reset your password',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 24,
-                          color: Color.fromRGBO(30, 215, 96, 0.9))),
-                  centerTitle: true,
-                  leading: GestureDetector(
-                    child: const Icon(
-                      Icons.arrow_back_ios_new,
-                      color: Color.fromRGBO(30, 215, 96, 0.9),
-                    ),
-                    onTap: () {
-                      Navigator.pop(context);
-                    },
-                  ),
+    return MaterialApp(
+        home: Scaffold(
+            key: _scaffoldKey,
+            backgroundColor: const Color.fromARGB(128, 53, 74, 62),
+            appBar: AppBar(
+              backgroundColor: const Color.fromARGB(128, 53, 74, 62),
+              shadowColor: const Color.fromARGB(128, 83, 99, 90),
+              title: const Text('Reset your password',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 24,
+                      color: Colors.white)),
+              centerTitle: true,
+              leading: GestureDetector(
+                child: const Icon(
+                  Icons.arrow_back_ios_new,
+                  color: Colors.white,
                 ),
-                body: SingleChildScrollView(
-                    child: Form(
-                        key: _formKey,
-                        child: Column(children: <Widget>[
-                          const SizedBox(
-                            height: 20,
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 15),
-                            child: TextFormField(
-                              controller: _emailidController,
-                              keyboardType: TextInputType.emailAddress,
-                              style: const TextStyle(color: Colors.white),
-                              decoration: const InputDecoration(
-                                  focusColor: Color.fromRGBO(30, 215, 96, 0.9),
-                                  prefixIcon: Icon(
-                                    Icons.mail_outline_rounded,
+                onTap: () {
+                  Navigator.pop(context);
+                },
+              ),
+            ),
+            body: SingleChildScrollView(
+                child: Form(
+                    key: _formKey,
+                    child: Column(children: <Widget>[
+                      const SizedBox(
+                        height: 20,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 15),
+                        child: TextFormField(
+                          controller: _emailidController,
+                          keyboardType: TextInputType.emailAddress,
+                          style: const TextStyle(color: Colors.white),
+                          decoration: const InputDecoration(
+                              focusColor: Color.fromRGBO(30, 215, 96, 0.9),
+                              prefixIcon: Icon(
+                                Icons.mail_outline_rounded,
+                                color: Color.fromRGBO(30, 215, 96, 0.9),
+                              ),
+                              filled: true,
+                              enabledBorder: OutlineInputBorder(
+                                borderSide: BorderSide(
                                     color: Color.fromRGBO(30, 215, 96, 0.9),
-                                  ),
-                                  filled: true,
-                                  enabledBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(
-                                        color: Color.fromRGBO(30, 215, 96, 0.9),
-                                        width: 3),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(
-                                        color: Color.fromRGBO(30, 215, 96, 0.9),
-                                        width: 3),
-                                  ),
-                                  labelText: 'Email',
-                                  labelStyle: TextStyle(
-                                      color: Color.fromRGBO(30, 215, 96, 0.9),
-                                      fontSize: 16),
-                                  iconColor: Color.fromRGBO(30, 215, 96, 0.9),
-                                  hintText: ''),
+                                    width: 1),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                    color: Color.fromRGBO(30, 215, 96, 0.9),
+                                    width: 1),
+                              ),
+                              labelText: 'Email',
+                              labelStyle: TextStyle(
+                                  color: Color.fromRGBO(30, 215, 96, 0.9),
+                                  fontSize: 16),
+                              iconColor: Color.fromRGBO(30, 215, 96, 0.9),
+                              hintText: ''),
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 20,
+                      ),
+                      RoundedLoadingButton(
+                        onPressed: () {
+                          passwordReset();
+                        },
+                        controller: resetController,
+                        successColor: Color.fromRGBO(30, 215, 96, 0.9),
+                        width: MediaQuery.of(context).size.width * 0.80,
+                        elevation: 0,
+                        borderRadius: 25,
+                        color: Color.fromRGBO(30, 215, 96, 0.9),
+                        child: Wrap(
+                          children: const [
+                            Icon(
+                              FontAwesomeIcons.music,
+                              size: 20,
+                              color: Colors.white,
                             ),
-                          ),
-                          const SizedBox(
-                            height: 20,
-                          ),
-                          RoundedLoadingButton(
-                            onPressed: () {
-                              passwordReset();
-                            },
-                            controller: resetController,
-                            successColor: Color.fromRGBO(30, 215, 96, 0.9),
-                            width: MediaQuery.of(context).size.width * 0.80,
-                            elevation: 0,
-                            borderRadius: 25,
-                            color: Color.fromRGBO(30, 215, 96, 0.9),
-                            child: Wrap(
-                              children: const [
-                                Icon(
-                                  FontAwesomeIcons.music,
-                                  size: 20,
-                                  color: Colors.white,
-                                ),
-                                SizedBox(
-                                  width: 15,
-                                ),
-                                Text("Reset password",
-                                    style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w500)),
-                              ],
+                            SizedBox(
+                              width: 15,
                             ),
-                          ),
-                        ]))))));
+                            Text("Reset password",
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w500)),
+                          ],
+                        ),
+                      ),
+                    ])))));
   }
 
   Future passwordReset() async {
@@ -154,10 +154,22 @@ class _ResetPasswordState extends State<ResetPassword> {
         resetController.reset();
         return;
       } else {
-        resetController.success();
-        handleAfterReset();
+        resetController.reset();
+        showMailBoxCheck();
       }
     });
+  }
+
+  Future showMailBoxCheck() {
+    return AwesomeDialog(
+      context: context,
+      dialogType: DialogType.info,
+      animType: AnimType.topSlide,
+      showCloseIcon: true,
+      dismissOnTouchOutside: false,
+      title: "Password Reset Request",
+      desc: "Check your Mail box",
+    ).show();
   }
 
   handleAfterReset() {

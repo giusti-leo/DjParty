@@ -87,7 +87,7 @@ class _insertPartyName extends State<GeneratorScreen> {
                   child: TextFormField(
                     toolbarOptions: const ToolbarOptions(
                         copy: true, paste: true, selectAll: true, cut: true),
-                    cursorColor: Color.fromRGBO(30, 215, 96, 0.9),
+                    cursorColor: const Color.fromRGBO(30, 215, 96, 0.9),
                     controller: partyName,
                     style: const TextStyle(
                       color: Colors.white,
