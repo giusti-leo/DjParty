@@ -42,7 +42,7 @@ class SpotifyRequests extends ChangeNotifier {
 
   Future<String> getAuthToken() async {
     var authenticationToken = await SpotifySdk.getAccessToken(
-        clientId: clientID,
+        clientId: 'a502045e3c4b47d6b9bcfded418afd32',
         redirectUrl: 'test-1-login://callback',
         scope: 'app-remote-control, '
             'user-modify-playback-state, '
@@ -50,8 +50,8 @@ class SpotifyRequests extends ChangeNotifier {
             'playlist-modify-public,user-read-currently-playing,'
             'playlist-modify-private,'
             'user-read-playback-state');
+    setStatus('Got a token: $authenticationToken');
     _myToken = '$authenticationToken';
-    print(myToken);
     return authenticationToken;
   }
 
@@ -82,7 +82,7 @@ class SpotifyRequests extends ChangeNotifier {
     }
   }
 
-  Future<http.Response> _addItemToPlaylist(String uri) async {
+  Future<http.Response> addItemToPlaylist(String uri) async {
     return http.post(
       Uri.parse(addEndpoint + "?uris=" + uri),
       headers: <String, String>{
@@ -92,7 +92,7 @@ class SpotifyRequests extends ChangeNotifier {
     );
   }
 
-  Future<http.Response> _addItemToSpotifyQueue(String uri) async {
+  Future<http.Response> addItemToSpotifyQueue(String uri) async {
     return http.post(
       Uri.parse(queueEndpoint + "?uri=" + uri),
       headers: <String, String>{
@@ -107,7 +107,8 @@ class SpotifyRequests extends ChangeNotifier {
     _logger.i('$code$text');
   }
 
-  Future<void> checkDiffMs() async {
+  Future<bool> checkDiffMs() async {
+    bool checked = false;
     var response = await http.get(
       Uri.parse(checkEndpoint),
       headers: <String, String>{
@@ -119,10 +120,13 @@ class SpotifyRequests extends ChangeNotifier {
     //var playerList = playerJson.toList();
     if (playerJson["item"]["duration_ms"] - playerJson["progress_ms"] <=
         10000) {
-      //currentUri = "spotify:track:2qSAO6IlPb5HpoySjTJsn7";
-      //_addItemToQueue();
+      checked = true;
+      //"spotify:track:2qSAO6IlPb5HpoySjTJsn7";
+      addItemToSpotifyQueue('spotify:track:2qSAO6IlPb5HpoySjTJsn7');
     } else {
+      checked = false;
       checkDiffMs();
     }
+    return checked;
   }
 }

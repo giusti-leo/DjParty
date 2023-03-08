@@ -14,6 +14,8 @@ import 'package:logger/logger.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import 'package:djparty/services/SpotifyRequests.dart';
+
 class SearchItemScreen extends StatefulWidget {
   static String routeName = 'SearchItemScreen';
   const SearchItemScreen({Key? key}) : super(key: key);
@@ -32,7 +34,7 @@ class _SearchItemScreen extends State<SearchItemScreen> {
   Offset _tapPosition = Offset.zero;
   int selectedIndex = 100;
   List<Track> _tracks = [];
-  String myToken = "";
+  //String myToken = "";
   String input = "";
 
   bool _insert = false;
@@ -66,16 +68,20 @@ class _SearchItemScreen extends State<SearchItemScreen> {
     getData();
   }
 
-  Future<List<dynamic>> GetTracks(String input, String myToken) async {
-    var response = await http.get(Uri.parse(
-        endpoint + "?q=" + input + "&type=track" + "&access_token=" + myToken));
+  Future<List<dynamic>> GetTracks(String input, String? myToken) async {
+    var response = await http.get(Uri.parse(endpoint +
+        "?q=" +
+        input +
+        "&type=track" +
+        "&access_token=" +
+        myToken!));
     final tracksJson = json.decode(response.body)['tracks'];
     var trackList = tracksJson['items'].toList();
 
     return trackList;
   }
 
-  Future _updateTracks(String input, String myToken, String user) async {
+  Future _updateTracks(String input, String? myToken, String user) async {
     List<dynamic> tracks = await GetTracks(input, myToken);
     List<Track> tmp = [];
     for (var element in tracks) {
@@ -96,14 +102,15 @@ class _SearchItemScreen extends State<SearchItemScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (isCalled == false) {
-      setState(() {
-        getAuthToken();
-      });
-      isCalled = true;
-    }
+    // if (isCalled == false) {
+    //   setState(() {
+    //     getAuthToken();
+    //   });
+    //   isCalled = true;
+    // }
 
     final sp = context.read<SignInProvider>();
+    final sr = context.read<SpotifyRequests>();
 
     return MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -128,7 +135,7 @@ class _SearchItemScreen extends State<SearchItemScreen> {
                     color: Colors.white,
                   ),
                   onChanged: (input) async =>
-                      _tracks = await _updateTracks(input, myToken, sp.uid!),
+                      _tracks = await _updateTracks(input, sr.myToken, sp.uid!),
                   onTap: () => setState(() {
                     _insert = false;
                   }),
@@ -207,20 +214,20 @@ class _SearchItemScreen extends State<SearchItemScreen> {
     return result;
   }
 
-  Future<String> getAuthToken() async {
-    var authenticationToken = await SpotifySdk.getAccessToken(
-        clientId: 'a502045e3c4b47d6b9bcfded418afd32',
-        redirectUrl: 'test-1-login://callback',
-        scope: 'app-remote-control, '
-            'user-modify-playback-state, '
-            'playlist-read-private, '
-            'playlist-modify-public,user-read-currently-playing,'
-            'playlist-modify-private,'
-            'user-read-playback-state');
-    setStatus('Got a token: $authenticationToken');
-    myToken = '$authenticationToken';
-    return authenticationToken;
-  }
+  // Future<String> getAuthToken() async {
+  //   var authenticationToken = await SpotifySdk.getAccessToken(
+  //       clientId: 'a502045e3c4b47d6b9bcfded418afd32',
+  //       redirectUrl: 'test-1-login://callback',
+  //       scope: 'app-remote-control, '
+  //           'user-modify-playback-state, '
+  //           'playlist-read-private, '
+  //           'playlist-modify-public,user-read-currently-playing,'
+  //           'playlist-modify-private,'
+  //           'user-read-playback-state');
+  //   setStatus('Got a token: $authenticationToken');
+  //   myToken = '$authenticationToken';
+  //   return authenticationToken;
+  // }
 
   void setStatus(String code, {String? message}) {
     var text = message ?? '';
@@ -242,7 +249,7 @@ class _SearchItemScreen extends State<SearchItemScreen> {
 
   void _showContextMenu(BuildContext context, Track currentTrack) async {
     final RenderObject? overlay =
-        Overlay.of(context)?.context.findRenderObject();
+        Overlay.of(context).context.findRenderObject();
     await showMenu(
         context: context,
         position: RelativeRect.fromRect(
@@ -341,22 +348,22 @@ class _SearchItemScreen extends State<SearchItemScreen> {
     );
   }*/
 
-  Future<void> checkDiffMs() async {
-    var response = await http.get(
-      Uri.parse(checkEndpoint),
-      headers: <String, String>{
-        'Content-Type': 'application/json',
-        'Authorization': "Bearer " + myToken
-      },
-    );
-    final playerJson = json.decode(response.body);
-    //var playerList = playerJson.toList();
-    if (playerJson["item"]["duration_ms"] - playerJson["progress_ms"] <=
-        10000) {
-      //currentUri = "spotify:track:2qSAO6IlPb5HpoySjTJsn7";
-      //_addItemToQueue();
-    } else {
-      checkDiffMs();
-    }
-  }
+  // Future<void> checkDiffMs() async {
+  //   var response = await http.get(
+  //     Uri.parse(checkEndpoint),
+  //     headers: <String, String>{
+  //       'Content-Type': 'application/json',
+  //       'Authorization': "Bearer " + myToken
+  //     },
+  //   );
+  //   final playerJson = json.decode(response.body);
+  //   //var playerList = playerJson.toList();
+  //   if (playerJson["item"]["duration_ms"] - playerJson["progress_ms"] <=
+  //       10000) {
+  //     //currentUri = "spotify:track:2qSAO6IlPb5HpoySjTJsn7";
+  //     //_addItemToQueue();
+  //   } else {
+  //     checkDiffMs();
+  //   }
+  // }
 }
