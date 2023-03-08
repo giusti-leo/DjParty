@@ -60,6 +60,7 @@ class _SpotifyTabController extends State<SpotifyTabController>
 
     if (sp.uid == fr.admin) {
       sr.connectToSpotify();
+      sr.getAuthToken();
     }
 
     await FirebaseFirestore.instance
@@ -86,6 +87,7 @@ class _SpotifyTabController extends State<SpotifyTabController>
     TabController tabController = TabController(length: 4, vsync: this);
     final fr = context.read<FirebaseRequests>();
     final sp = context.read<SignInProvider>();
+    final sr = context.read<SpotifyRequests>();
 
     final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 

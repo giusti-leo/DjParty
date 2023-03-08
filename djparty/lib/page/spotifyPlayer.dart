@@ -2,11 +2,13 @@
 
 import 'package:djparty/services/FirebaseRequests.dart';
 import 'package:djparty/services/InternetProvider.dart';
+import 'package:djparty/services/SpotifyRequests.dart';
 import 'package:djparty/utils/nextScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:rounded_loading_button/rounded_loading_button.dart';
+import 'package:spotify_sdk/models/player_state.dart';
 import 'package:spotify_sdk/spotify_sdk.dart';
 import 'package:logger/logger.dart';
 import 'package:spotify_sdk/models/connection_status.dart';
@@ -15,7 +17,6 @@ import 'package:djparty/services/SignInProvider.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
 import 'package:spotify_sdk/models/image_uri.dart';
-import 'package:spotify_sdk/models/player_state.dart';
 import 'package:spotify_sdk/models/player_context.dart';
 import 'package:djparty/Icons/SizedIconButton.dart';
 import 'package:djparty/page/SearchItemScreen.dart';
@@ -43,9 +44,13 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
     fr.getDataFromSharedPreferences();
   }
 
+  String myToken = "";
+
   Timer? timer;
   @override
   void initState() {
+    final sr = context.read<SpotifyRequests>();
+    sr.getAuthToken();
     super.initState();
     getData();
   }
@@ -200,6 +205,7 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
 
   Widget _handleEndParty(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
+    final sr = context.read<SpotifyRequests>();
 
     return Stack(children: [
       Positioned(
@@ -324,6 +330,7 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
   Widget _playerWidget(BuildContext context) {
     final sp = context.read<SignInProvider>();
     final fr = context.read<FirebaseRequests>();
+    final sr = context.read<SpotifyRequests>();
 
     return StreamBuilder<PlayerState>(
       stream: SpotifySdk.subscribePlayerState(),
@@ -343,6 +350,10 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
           isPaused = true;
         } else {
           isPaused = false;
+        }
+
+        if (trackDuration - playerPosition <= 10) {
+          sr.addItemToSpotifyQueue("spotify:track:6NRvZuFXn2ixp8YdzUvG5n");
         }
 
         return Scaffold(
