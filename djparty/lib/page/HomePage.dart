@@ -1,4 +1,5 @@
 import 'package:djparty/Icons/spotify_icons.dart';
+import 'package:djparty/main.dart';
 import 'package:djparty/page/GenerateShare.dart';
 import 'package:djparty/page/Home.dart';
 import 'package:djparty/page/InsertCode.dart';
@@ -131,19 +132,28 @@ class MenuScreen extends StatelessWidget {
                   children: [
                     (sp.imageUrl != '')
                         ? CircleAvatar(
+                            radius: 37,
                             backgroundColor: Colors.white,
-                            backgroundImage: NetworkImage("${sp.imageUrl}"),
-                            radius: 35,
+                            child: CircleAvatar(
+                              radius: 35,
+                              backgroundColor: Colors.white,
+                              backgroundImage: NetworkImage("${sp.imageUrl}"),
+                            ),
                           )
                         : CircleAvatar(
-                            backgroundColor: Color(sp.image!),
-                            child: Text(
-                              sp.init.toString().toUpperCase(),
-                              style: TextStyle(
-                                color: Color(sp.initColor!),
-                                fontSize: 20,
-                              ),
-                            ))
+                            radius: 37,
+                            backgroundColor: Colors.white,
+                            child: CircleAvatar(
+                                radius: 35,
+                                backgroundColor: Colors.black,
+                                child: Text(
+                                  sp.init.toString().toUpperCase(),
+                                  style: const TextStyle(
+                                      color: Colors.greenAccent,
+                                      fontSize: 20,
+                                      fontStyle: FontStyle.normal),
+                                )),
+                          )
                   ],
                 ),
                 const SizedBox(
@@ -151,18 +161,18 @@ class MenuScreen extends StatelessWidget {
                 ),
                 Row(
                   children: [
-                    Text(sp.name!,
+                    Text('${sp.name}',
                         style:
                             const TextStyle(color: Colors.white, fontSize: 12))
                   ],
                 )
               ],
             )),
-            Spacer(
+            const Spacer(
               flex: 1,
             ),
             ...MenuItems.all.map(buildMenuItem).toList(),
-            Spacer(
+            const Spacer(
               flex: 2,
             ),
             /*
@@ -225,11 +235,12 @@ class MenuScreen extends StatelessWidget {
                     width: 28,
                   ),
                   Text('Logout',
-                      style: TextStyle(color: Colors.white, fontSize: 12))
+                      style: TextStyle(color: Colors.white, fontSize: 16))
                 ]),
                 onTap: () async {
                   {
                     await sp.userSignOut();
+                    nextScreenReplace(context, const Main());
                   }
                 },
               ),

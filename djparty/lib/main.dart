@@ -42,31 +42,30 @@ class Main extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(
-          create: ((context) => SignInProvider()),
+    return MaterialApp(
+      home: MultiProvider(
+        providers: [
+          ChangeNotifierProvider(
+            create: ((context) => SignInProvider()),
+          ),
+          ChangeNotifierProvider(
+            create: ((context) => InternetProvider()),
+          ),
+          ChangeNotifierProvider(
+            create: ((context) => FirebaseRequests()),
+          ),
+          ChangeNotifierProvider(
+            create: ((context) => SpotifyRequests()),
+          ),
+        ],
+        child: MaterialApp(
+          home: const SplashScreen(),
+          debugShowCheckedModeBanner: true,
+          routes: {
+            SignIn.routeName: (context) => const Login(),
+            HomePage.routeName: (context) => const HomePage(),
+          },
         ),
-        ChangeNotifierProvider(
-          create: ((context) => InternetProvider()),
-        ),
-        ChangeNotifierProvider(
-          create: ((context) => FirebaseRequests()),
-        ),
-        ChangeNotifierProvider(
-          create: ((context) => SpotifyRequests()),
-        ),
-      ],
-      child: MaterialApp(
-        home: const SplashScreen(),
-        debugShowCheckedModeBanner: true,
-        routes: {
-          SignIn.routeName: (context) => const SignIn(),
-          HomePage.routeName: (context) => const HomePage(),
-          ResetPassword.routeName: ((context) => const ResetPassword()),
-          EditProfile.routeName: (context) => EditProfile(),
-          PartyPlaylist.routeName: ((context) => const PartyPlaylist())
-        },
       ),
     );
   }

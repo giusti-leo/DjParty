@@ -1,3 +1,4 @@
+import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:djparty/page/Home.dart';
 import 'package:djparty/page/HomePage.dart';
@@ -50,25 +51,30 @@ class _LoginState extends State<Login> {
   @override
   void initState() {
     super.initState();
+    visible = false;
+  }
+
+  @override
+  void dispose() {
     _emailController.clear();
     _userPasswordController1.clear();
     _userPasswordController2.clear();
-    visible = false;
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color.fromARGB(128, 53, 74, 62),
+      backgroundColor: Color.fromARGB(128, 83, 99, 90),
       appBar: AppBar(
-        backgroundColor: const Color.fromARGB(128, 53, 74, 62),
-        shadowColor: const Color.fromRGBO(30, 215, 96, 0.9),
+        backgroundColor: Color.fromARGB(128, 38, 40, 39),
+        shadowColor: Color.fromARGB(128, 102, 128, 114),
         title: const Text('Create Dj Party account',
             textAlign: TextAlign.center,
             style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 24,
-                color: Color.fromRGBO(30, 215, 96, 0.9))),
+                color: Colors.white)),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -86,23 +92,26 @@ class _LoginState extends State<Login> {
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     style: const TextStyle(color: Colors.white),
+                    toolbarOptions: const ToolbarOptions(
+                        copy: true, paste: true, selectAll: true, cut: true),
+                    cursorColor: const Color.fromRGBO(30, 215, 96, 0.9),
                     decoration: const InputDecoration(
                         prefixIcon: Icon(
                           Icons.mail_outline_rounded,
                           color: Color.fromRGBO(30, 215, 96, 0.9),
                         ),
                         filled: true,
-                        fillColor: const Color.fromARGB(128, 53, 74, 62),
+                        fillColor: Color.fromARGB(128, 53, 74, 62),
                         hintStyle: TextStyle(color: Colors.black),
                         enabledBorder: OutlineInputBorder(
                           borderSide: BorderSide(
                               color: Color.fromRGBO(30, 215, 96, 0.9),
-                              width: 3),
+                              width: 1),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderSide: BorderSide(
                               color: Color.fromRGBO(30, 215, 96, 0.9),
-                              width: 3),
+                              width: 1),
                         ),
                         labelText: 'Email',
                         labelStyle: TextStyle(
@@ -119,6 +128,9 @@ class _LoginState extends State<Login> {
                     controller: _userPasswordController1,
                     obscureText: !_passwordVisible1,
                     style: const TextStyle(color: Colors.white),
+                    toolbarOptions: const ToolbarOptions(
+                        copy: true, paste: true, selectAll: true, cut: true),
+                    cursorColor: const Color.fromRGBO(30, 215, 96, 0.9),
                     decoration: InputDecoration(
                         prefixIcon: const Icon(
                           Icons.lock_outline_rounded,
@@ -129,7 +141,7 @@ class _LoginState extends State<Login> {
                               _passwordVisible1
                                   ? Icons.visibility
                                   : Icons.visibility_off,
-                              color: Color.fromRGBO(30, 215, 96, 0.9),
+                              color: const Color.fromRGBO(30, 215, 96, 0.9),
                             ),
                             onPressed: () async {
                               setState(() {
@@ -148,13 +160,13 @@ class _LoginState extends State<Login> {
                           borderRadius: BorderRadius.all(Radius.circular(5.0)),
                           borderSide: BorderSide(
                               color: Color.fromRGBO(30, 215, 96, 0.9),
-                              width: 3),
+                              width: 1),
                         ),
                         focusedBorder: const OutlineInputBorder(
                           borderRadius: BorderRadius.all(Radius.circular(5.0)),
                           borderSide: BorderSide(
                               color: Color.fromRGBO(30, 215, 96, 0.9),
-                              width: 3),
+                              width: 1),
                         ),
                         labelText: 'New Password',
                         labelStyle: const TextStyle(
@@ -171,6 +183,9 @@ class _LoginState extends State<Login> {
                     obscureText: !_passwordVisible2,
                     keyboardType: TextInputType.visiblePassword,
                     style: const TextStyle(color: Colors.white),
+                    toolbarOptions: const ToolbarOptions(
+                        copy: true, paste: true, selectAll: true, cut: true),
+                    cursorColor: const Color.fromRGBO(30, 215, 96, 0.9),
                     decoration: InputDecoration(
                         prefixIcon: const Icon(
                           Icons.lock_outline_rounded,
@@ -181,7 +196,7 @@ class _LoginState extends State<Login> {
                               _passwordVisible2
                                   ? Icons.visibility
                                   : Icons.visibility_off,
-                              color: Color.fromRGBO(30, 215, 96, 0.9),
+                              color: const Color.fromRGBO(30, 215, 96, 0.9),
                             ),
                             onPressed: () async {
                               setState(() {
@@ -199,13 +214,13 @@ class _LoginState extends State<Login> {
                           borderRadius: BorderRadius.all(Radius.circular(5.0)),
                           borderSide: BorderSide(
                               color: Color.fromRGBO(30, 215, 96, 0.9),
-                              width: 3),
+                              width: 1),
                         ),
                         focusedBorder: const OutlineInputBorder(
                           borderRadius: BorderRadius.all(Radius.circular(5.0)),
                           borderSide: BorderSide(
                               color: Color.fromRGBO(30, 215, 96, 0.9),
-                              width: 3),
+                              width: 1),
                         ),
                         labelText: 'Confirm New Password',
                         labelStyle: const TextStyle(
@@ -219,11 +234,11 @@ class _LoginState extends State<Login> {
                     signup();
                   },
                   controller: registrationController,
-                  successColor: Color.fromRGBO(30, 215, 96, 0.9),
+                  successColor: const Color.fromRGBO(30, 215, 96, 0.9),
                   width: MediaQuery.of(context).size.width * 0.80,
                   elevation: 0,
                   borderRadius: 25,
-                  color: Color.fromRGBO(30, 215, 96, 0.9),
+                  color: const Color.fromRGBO(30, 215, 96, 0.9),
                   child: Wrap(
                     children: const [
                       Icon(
@@ -245,17 +260,34 @@ class _LoginState extends State<Login> {
                 const SizedBox(
                   height: 30,
                 ),
-                const SizedBox(
-                  height: 50,
-                  child: Text(
-                    '----------------------- or -----------------------',
-                    selectionColor: Colors.white,
-                    style: TextStyle(
-                        fontSize: 16, color: Color.fromRGBO(30, 215, 96, 0.9)),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 25.0),
+                  child: Row(
+                    children: const [
+                      Expanded(
+                        child: Divider(
+                          thickness: 0.5,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                        child: Text(
+                          'Or continue with',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                      Expanded(
+                        child: Divider(
+                          thickness: 0.5,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(
-                  height: 10,
+                  height: 30,
                 ),
                 RoundedLoadingButton(
                   onPressed: () {
@@ -320,19 +352,30 @@ class _LoginState extends State<Login> {
                   height: 10,
                 ),
                 SizedBox(
-                  child: TextButton(
-                    onPressed: () {
-                      handleToSignIn();
-                    },
-                    child: const Text(
-                      'Have already an account? Log in ',
+                    child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      'Have already an account? ',
                       style: TextStyle(
-                        fontSize: 18,
-                        color: Color.fromRGBO(30, 215, 96, 0.9),
+                        fontSize: 14,
+                        color: Colors.white,
                       ),
                     ),
-                  ),
-                ),
+                    TextButton(
+                      onPressed: () {
+                        handleToSignIn();
+                      },
+                      child: const Text(
+                        ' Log in ',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Color.fromRGBO(30, 215, 96, 0.9),
+                        ),
+                      ),
+                    ),
+                  ],
+                )),
               ]),
             ),
           ],
@@ -371,6 +414,11 @@ class _LoginState extends State<Login> {
       }
       // checking whether user exists or not
       sp.checkUserExists().then((value) async {
+        if (sp.hasError == true) {
+          showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+          facebookController.reset();
+          return;
+        }
         if (value == true) {
           // user exists
           await sp.getUserDataFromFirestore((sp.uid.toString())).then((value) =>
@@ -481,27 +529,34 @@ class _LoginState extends State<Login> {
         return;
       } else {
         sp.saveDataToFirestore().then((value) {
-          sp.getUserDataFromFirestore(sp.uid.toString()).then((value) => sp
-              .saveDataToSharedPreferences()
-              .then((value) => sp.sendEmailVerification(context).then((value) {
-                    if (sp.hasError == true) {
-                      showInSnackBar(
-                          context, sp.errorCode.toString(), Colors.red);
-                      registrationController.reset();
-                      return;
-                    } else {
-                      showInSnackBar(
-                          context, 'Check your Mail Box', Colors.greenAccent);
-                      registrationController.success();
-                      nextScreenReplace(context, const SignIn());
-                    }
-                  })));
+          sp.sendEmailVerification(context).then((value) {
+            if (sp.hasError == true) {
+              showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+              registrationController.reset();
+              return;
+            } else {
+              registrationController.reset();
+              showMailBoxCheck();
+            }
+          });
         });
       }
       _emailController.clear();
       _userPasswordController1.clear();
       _userPasswordController2.clear();
     });
+  }
+
+  Future showMailBoxCheck() {
+    return AwesomeDialog(
+      context: context,
+      dialogType: DialogType.info,
+      animType: AnimType.topSlide,
+      showCloseIcon: true,
+      dismissOnTouchOutside: false,
+      title: "Email Verification",
+      desc: "Check your Mail box and verify your email",
+    ).show();
   }
 
   bool checkvalidity() {

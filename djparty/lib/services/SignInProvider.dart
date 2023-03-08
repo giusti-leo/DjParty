@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -77,6 +78,7 @@ class SignInProvider extends ChangeNotifier {
     final SharedPreferences s = await SharedPreferences.getInstance();
     s.setBool("signed_out", true);
     _isSignedIn = false;
+
     notifyListeners();
   }
 
@@ -108,8 +110,6 @@ class SignInProvider extends ChangeNotifier {
           notifyListeners();
           return;
         }
-
-        _uid = value.user!.uid;
 
         setSignIn();
         notifyListeners();
@@ -153,7 +153,7 @@ class SignInProvider extends ChangeNotifier {
       );
 
       // saving the values
-      _name = email.trim();
+      _name = email.split('@')[0];
       _email = email;
       _imageUrl = '';
       _uid = firebaseAuth.currentUser!.uid;
@@ -194,8 +194,38 @@ class SignInProvider extends ChangeNotifier {
     }
   }
 
-  // sign in with google
-  Future signInWithGoogle() async {
+  Future<OAuthCredential> getFacebookCredentials() async {
+    OAuthCredential oAuthCredential = AuthCredential as OAuthCredential;
+    try {
+      final LoginResult result = await facebookAuth.login();
+
+      if (result.status == LoginStatus.success) {
+        OAuthCredential credential =
+            FacebookAuthProvider.credential(result.accessToken!.token);
+        return credential;
+      }
+      return oAuthCredential;
+    } on FirebaseAuthException catch (e) {
+      switch (e.code) {
+        case "null":
+          _errorCode = "Some unexpected error while trying to sign in";
+          _hasError = true;
+
+          notifyListeners();
+          return oAuthCredential;
+
+        default:
+          _errorCode = e.toString();
+          _hasError = true;
+          notifyListeners();
+
+          return oAuthCredential;
+      }
+    }
+  }
+
+  FutureOr<AuthCredential?> getGoogleCredentials() async {
+    AuthCredential? authCredential;
     try {
       final GoogleSignIn googleSignIn = GoogleSignIn();
 
@@ -207,31 +237,13 @@ class SignInProvider extends ChangeNotifier {
 
         final GoogleSignInAuthentication googleSignInAuthentication =
             await googleSignInAccount.authentication;
-        final AuthCredential credential = GoogleAuthProvider.credential(
+        final OAuthCredential credential = GoogleAuthProvider.credential(
           accessToken: googleSignInAuthentication.accessToken,
           idToken: googleSignInAuthentication.idToken,
         );
-
-        // signing to firebase user instance
-        final User userDetails =
-            (await firebaseAuth.signInWithCredential(credential)).user!;
-
-        // now save all values
-        _name = userDetails.displayName;
-        _email = userDetails.email;
-        _imageUrl = userDetails.photoURL;
-        _provider = "GOOGLE";
-        _uid = userDetails.uid;
-        _description = '';
-        _image = 0;
-        _init = userDetails.email![0];
-        _initColor = const Color.fromARGB(255, 0, 0, 0).value;
-
-        notifyListeners();
-      } else {
-        _errorCode = 'Stop';
-        notifyListeners();
+        return credential;
       }
+      return authCredential;
     } on FirebaseAuthException catch (e) {
       switch (e.code) {
         case "account-exists-with-different-credential":
@@ -239,15 +251,44 @@ class SignInProvider extends ChangeNotifier {
               "You already have an account with us. Use correct provider";
           _hasError = true;
           notifyListeners();
-          break;
+          return authCredential;
 
         case "null":
           _errorCode = "Some unexpected error while trying to sign in";
           _hasError = true;
 
           notifyListeners();
-          break;
+          return authCredential;
 
+        default:
+          _errorCode = e.toString();
+          _hasError = true;
+          notifyListeners();
+
+          return authCredential;
+      }
+    }
+  }
+
+  // sign in with google
+  Future signInWithGoogle() async {
+    try {
+      AuthCredential? credential = await getGoogleCredentials();
+
+      final User userDetails =
+          (await firebaseAuth.signInWithCredential(credential!)).user!;
+
+      _name = userDetails.displayName;
+      _email = userDetails.email;
+      _imageUrl = userDetails.photoURL;
+      _provider = userDetails.providerData.toString();
+      _uid = userDetails.uid;
+      _image = 0;
+      _init = userDetails.email![0];
+      _initColor = const Color.fromARGB(255, 0, 0, 0).value;
+      notifyListeners();
+    } on FirebaseAuthException catch (e) {
+      switch (e.code) {
         default:
           _errorCode = e.toString();
           _hasError = true;
@@ -295,28 +336,46 @@ class SignInProvider extends ChangeNotifier {
   Future signInWithFacebook() async {
     try {
       final LoginResult result = await facebookAuth.login();
-      // getting the profile
+
       final graphResponse = await http.get(Uri.parse(
           'https://graph.facebook.com/v2.12/me?fields=name,picture.width(800).height(800),first_name,last_name,email&access_token=${result.accessToken!.token}'));
 
       final profile = jsonDecode(graphResponse.body);
 
       if (result.status == LoginStatus.success) {
-        final OAuthCredential credential =
+        final credential =
             FacebookAuthProvider.credential(result.accessToken!.token);
 
-        final User userDetails =
-            (await firebaseAuth.signInWithCredential(credential)).user!;
+        final userDetails = (await firebaseAuth
+                .signInWithCredential(credential)
+                .catchError((e) async {
+          if (e.code == 'account-exists-with-different-credential') {
+            var email = profile["email"];
+            final signInMethods =
+                await FirebaseAuth.instance.fetchSignInMethodsForEmail(email);
+            if (signInMethods.contains("google.com")) {
+              final googleCredentials = await getGoogleCredentials();
+
+              final userDetails =
+                  (await firebaseAuth.signInWithCredential(googleCredentials!))
+                      .user!;
+              if (userDetails.email == e.email) {
+                await userDetails.linkWithCredential(e.credential);
+              }
+            }
+          }
+        }))
+            .user;
 
         // saving the values
         _name = profile['name'];
         _email = profile['email'];
         _imageUrl = profile['picture']['data']['url'];
-        _uid = userDetails.uid;
+        _uid = userDetails!.uid;
         _hasError = false;
         _provider = "FACEBOOK";
         _description = '';
-        _image = Color.fromARGB(255, 255, 255, 255).value;
+        _image = const Color.fromARGB(255, 255, 255, 255).value;
         _init = profile['email']![0];
         _initColor = const Color.fromARGB(255, 0, 0, 0).value;
         notifyListeners();
@@ -330,6 +389,7 @@ class SignInProvider extends ChangeNotifier {
           _errorCode =
               "You already have an account with us. Use correct provider";
           _hasError = true;
+
           notifyListeners();
           break;
 

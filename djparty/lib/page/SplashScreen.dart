@@ -22,8 +22,7 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     final sp = context.read<SignInProvider>();
     super.initState();
-    // create a timer of 2 seconds
-    Timer(const Duration(seconds: 2), () {
+    Timer(const Duration(seconds: 1), () {
       sp.isSignedIn == false
           ? nextScreenReplace(context, const Login())
           : nextScreenReplace(context, const HomePage());
@@ -45,23 +44,8 @@ class _SplashScreenState extends State<SplashScreen> {
               height: heigth,
               colorBlendMode: BlendMode.hardLight,
             ),
-            nextScreen: splashScreen(),
+            nextScreen: Container(),
             splashTransition: SplashTransition.fadeTransition,
             backgroundColor: Colors.black));
-  }
-
-  Widget splashScreen() {
-    double width = MediaQuery.of(context).size.width;
-    double heigth = MediaQuery.of(context).size.height;
-
-    return Scaffold(
-      body: SafeArea(
-        child: Image(
-          image: const AssetImage('assets/images/logo.jpg'),
-          width: width,
-          height: heigth,
-        ),
-      ),
-    );
   }
 }

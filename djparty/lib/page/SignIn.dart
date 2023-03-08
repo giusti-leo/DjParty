@@ -52,207 +52,203 @@ class _SignInState extends State<SignIn> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: MaterialApp(
-        home: Scaffold(
-          key: _scaffoldKey,
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        key: _scaffoldKey,
+        backgroundColor: const Color.fromARGB(128, 53, 74, 62),
+        appBar: AppBar(
           backgroundColor: const Color.fromARGB(128, 53, 74, 62),
-          appBar: AppBar(
-            backgroundColor: const Color.fromARGB(128, 53, 74, 62),
-            shadowColor: Color.fromRGBO(30, 215, 96, 0.9),
-            title: const Text('Login',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 24,
-                    color: Color.fromRGBO(30, 215, 96, 0.9))),
-            centerTitle: true,
-            leading: GestureDetector(
-              child: const Icon(
-                Icons.arrow_back_ios_new,
-                color: Color.fromRGBO(30, 215, 96, 0.9),
-              ),
-              onTap: () {
-                handleStepBack();
-              },
+          title: const Text('Login',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 24,
+                  color: Colors.white)),
+          centerTitle: true,
+          leading: GestureDetector(
+            child: const Icon(
+              Icons.arrow_back_ios_new,
+              color: Colors.white,
             ),
+            onTap: () {
+              handleStepBack();
+            },
           ),
-          body: SingleChildScrollView(
-            child: Form(
-              key: _formKey,
-              child: Column(
-                children: <Widget>[
-                  const SizedBox(
-                    height: 20,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 15),
-                    child: TextFormField(
-                      controller: _emailidController,
-                      keyboardType: TextInputType.emailAddress,
-                      style: const TextStyle(color: Colors.white),
-                      decoration: const InputDecoration(
-                          focusColor: Color.fromRGBO(30, 215, 96, 0.9),
-                          prefixIcon: Icon(
-                            Icons.mail_outline_rounded,
-                            color: Color.fromRGBO(30, 215, 96, 0.9),
-                          ),
-                          //filled: true,
-                          enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                                color: Color.fromRGBO(30, 215, 96, 0.9),
-                                width: 3),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                                color: Color.fromRGBO(30, 215, 96, 0.9),
-                                width: 3),
-                          ),
-                          labelText: 'Email',
-                          labelStyle: TextStyle(
+        ),
+        body: SingleChildScrollView(
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: <Widget>[
+                const SizedBox(
+                  height: 20,
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                  child: TextFormField(
+                    controller: _emailidController,
+                    keyboardType: TextInputType.emailAddress,
+                    style: const TextStyle(color: Colors.white),
+                    toolbarOptions: const ToolbarOptions(
+                        copy: true, paste: true, selectAll: true, cut: true),
+                    cursorColor: const Color.fromRGBO(30, 215, 96, 0.9),
+                    decoration: const InputDecoration(
+                        focusColor: Color.fromRGBO(30, 215, 96, 0.9),
+                        prefixIcon: Icon(
+                          Icons.mail_outline_rounded,
+                          color: Color.fromRGBO(30, 215, 96, 0.9),
+                        ),
+                        //filled: true,
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
                               color: Color.fromRGBO(30, 215, 96, 0.9),
-                              fontSize: 16),
-                          iconColor: Color.fromRGBO(30, 215, 96, 0.9),
-                          hintText: ''),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(
-                        left: 15.0, right: 15.0, top: 10.0, bottom: 30.0),
-                    child: TextFormField(
-                      controller: _passwordController,
-                      obscureText: !_passwordVisible,
-                      keyboardType: TextInputType.visiblePassword,
-                      style: const TextStyle(color: Colors.white),
-                      decoration: InputDecoration(
-                          prefixIcon: const Icon(
-                            Icons.lock_outline_rounded,
-                            color: Color.fromRGBO(30, 215, 96, 0.9),
-                          ),
-                          suffixIcon: IconButton(
-                              icon: Icon(
-                                _passwordVisible
-                                    ? Icons.visibility
-                                    : Icons.visibility_off,
-                                color: Color.fromRGBO(30, 215, 96, 0.9),
-                              ),
-                              onPressed: () async {
-                                setState(() {
-                                  _passwordVisible = !_passwordVisible;
-                                });
-                                await Future.delayed(
-                                    const Duration(seconds: 3));
-                                setState(() {
-                                  _passwordVisible = !_passwordVisible;
-                                });
-                              }),
-                          //filled: true,
-                          fillColor: const Color.fromARGB(128, 53, 74, 62),
-                          enabledBorder: const OutlineInputBorder(
-                            borderRadius:
-                                BorderRadius.all(Radius.circular(5.0)),
-                            borderSide: BorderSide(
-                                color: Color.fromRGBO(30, 215, 96, 0.9),
-                                width: 3),
-                          ),
-                          focusedBorder: const OutlineInputBorder(
-                            borderRadius:
-                                BorderRadius.all(Radius.circular(5.0)),
-                            borderSide: BorderSide(
+                              width: 1),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
                               color: Color.fromRGBO(30, 215, 96, 0.9),
-                              width: 2,
+                              width: 1),
+                        ),
+                        labelText: 'Email',
+                        labelStyle: TextStyle(
+                            color: Color.fromRGBO(30, 215, 96, 0.9),
+                            fontSize: 16),
+                        iconColor: Color.fromRGBO(30, 215, 96, 0.9),
+                        hintText: ''),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(
+                      left: 15.0, right: 15.0, top: 10.0, bottom: 30.0),
+                  child: TextFormField(
+                    controller: _passwordController,
+                    obscureText: !_passwordVisible,
+                    keyboardType: TextInputType.visiblePassword,
+                    style: const TextStyle(color: Colors.white),
+                    toolbarOptions: const ToolbarOptions(
+                        copy: true, paste: true, selectAll: true, cut: true),
+                    cursorColor: const Color.fromRGBO(30, 215, 96, 0.9),
+                    decoration: InputDecoration(
+                        prefixIcon: const Icon(
+                          Icons.lock_outline_rounded,
+                          color: Color.fromRGBO(30, 215, 96, 0.9),
+                        ),
+                        suffixIcon: IconButton(
+                            icon: Icon(
+                              _passwordVisible
+                                  ? Icons.visibility
+                                  : Icons.visibility_off,
+                              color: const Color.fromRGBO(30, 215, 96, 0.9),
                             ),
-                          ),
-                          labelText: 'Password',
-                          labelStyle: const TextStyle(
+                            onPressed: () async {
+                              setState(() {
+                                _passwordVisible = !_passwordVisible;
+                              });
+                              await Future.delayed(const Duration(seconds: 3));
+                              setState(() {
+                                _passwordVisible = !_passwordVisible;
+                              });
+                            }),
+                        //filled: true,
+                        fillColor: const Color.fromARGB(128, 53, 74, 62),
+                        enabledBorder: const OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(5.0)),
+                          borderSide: BorderSide(
                               color: Color.fromRGBO(30, 215, 96, 0.9),
-                              fontSize: 16),
-                          hintText: ''),
-                    ),
-                  ),
-                  RoundedLoadingButton(
-                    onPressed: () {
-                      login(context, _emailidController.text,
-                          _passwordController.text);
-                    },
-                    controller: signinController,
-                    successColor: Color.fromRGBO(30, 215, 96, 0.9),
-                    width: MediaQuery.of(context).size.width * 0.80,
-                    elevation: 0,
-                    borderRadius: 25,
-                    color: Color.fromRGBO(30, 215, 96, 0.9),
-                    child: Wrap(
-                      children: const [
-                        Icon(
-                          FontAwesomeIcons.music,
-                          size: 20,
-                          color: Colors.white,
+                              width: 1),
                         ),
-                        SizedBox(
-                          width: 15,
+                        focusedBorder: const OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(5.0)),
+                          borderSide: BorderSide(
+                            color: Color.fromRGBO(30, 215, 96, 0.9),
+                            width: 1,
+                          ),
                         ),
-                        Text("Sign in",
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 15,
-                                fontWeight: FontWeight.w500)),
-                      ],
-                    ),
+                        labelText: 'Password',
+                        labelStyle: const TextStyle(
+                            color: Color.fromRGBO(30, 215, 96, 0.9),
+                            fontSize: 16),
+                        hintText: ''),
                   ),
-                  Visibility(
-                      maintainSize: true,
-                      maintainAnimation: true,
-                      maintainState: true,
-                      visible: visible,
-                      child: ClipRRect(
-                          borderRadius:
-                              const BorderRadius.all(Radius.circular(10)),
-                          child: Container(
-                              color: Colors.greenAccent,
-                              width: 320,
-                              margin: const EdgeInsets.only(),
-                              child: const LinearProgressIndicator(
-                                minHeight: 2,
-                                backgroundColor:
-                                    const Color.fromARGB(128, 53, 74, 62),
-                                valueColor:
-                                    AlwaysStoppedAnimation(Colors.white),
-                              )))),
-                  SizedBox(
-                    height: 50,
-                    width: 300,
-                    child: TextButton(
-                      onPressed: () {
-                        Navigator.pushNamed(context, ResetPassword.routeName);
-                      },
-                      child: const Text(
-                        'Forgot Password?',
-                        selectionColor: Colors.white,
-                        style: TextStyle(
-                            fontSize: 18,
-                            color: Color.fromRGBO(30, 215, 96, 0.9)),
+                ),
+                RoundedLoadingButton(
+                  onPressed: () {
+                    login(context, _emailidController.text,
+                        _passwordController.text);
+                  },
+                  controller: signinController,
+                  successColor: const Color.fromRGBO(30, 215, 96, 0.9),
+                  width: MediaQuery.of(context).size.width * 0.80,
+                  elevation: 0,
+                  borderRadius: 25,
+                  color: const Color.fromRGBO(30, 215, 96, 0.9),
+                  child: Wrap(
+                    children: const [
+                      Icon(
+                        FontAwesomeIcons.music,
+                        size: 20,
+                        color: Colors.white,
                       ),
+                      SizedBox(
+                        width: 15,
+                      ),
+                      Text("Sign in",
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500)),
+                    ],
+                  ),
+                ),
+                Visibility(
+                    maintainSize: true,
+                    maintainAnimation: true,
+                    maintainState: true,
+                    visible: visible,
+                    child: ClipRRect(
+                        borderRadius:
+                            const BorderRadius.all(Radius.circular(10)),
+                        child: Container(
+                            color: Colors.greenAccent,
+                            width: 320,
+                            margin: const EdgeInsets.only(),
+                            child: const LinearProgressIndicator(
+                              minHeight: 2,
+                              backgroundColor: Color.fromARGB(128, 53, 74, 62),
+                              valueColor: AlwaysStoppedAnimation(Colors.white),
+                            )))),
+                SizedBox(
+                  height: 70,
+                  width: 300,
+                  child: TextButton(
+                    onPressed: () {
+                      nextScreen(context, const ResetPassword());
+                    },
+                    child: const Text(
+                      'Forgot Password?',
+                      selectionColor: Color.fromRGBO(30, 215, 96, 0.9),
+                      style: TextStyle(fontSize: 14, color: Colors.white),
                     ),
                   ),
-                  Visibility(
-                      maintainSize: true,
-                      maintainAnimation: true,
-                      maintainState: true,
-                      visible: gvisible,
-                      child: ClipRRect(
-                          borderRadius:
-                              const BorderRadius.all(Radius.circular(10)),
-                          child: Container(
-                              width: 320,
-                              margin: const EdgeInsets.only(),
-                              child: const LinearProgressIndicator(
-                                minHeight: 2,
-                                backgroundColor: Colors.white,
-                                valueColor:
-                                    AlwaysStoppedAnimation(Colors.white),
-                              )))),
-                ],
-              ),
+                ),
+                Visibility(
+                    maintainSize: true,
+                    maintainAnimation: true,
+                    maintainState: true,
+                    visible: gvisible,
+                    child: ClipRRect(
+                        borderRadius:
+                            const BorderRadius.all(Radius.circular(10)),
+                        child: Container(
+                            width: 320,
+                            margin: const EdgeInsets.only(),
+                            child: const LinearProgressIndicator(
+                              minHeight: 2,
+                              backgroundColor: Colors.white,
+                              valueColor: AlwaysStoppedAnimation(Colors.white),
+                            )))),
+              ],
             ),
           ),
         ),
@@ -308,7 +304,6 @@ class _SignInState extends State<SignIn> {
         signinController.reset();
         return;
       } else {
-        // checking whether user exists or not
         sp.getUserDataFromFirestore(sp.uid!).then((value) => sp
             .saveDataToSharedPreferences()
             .then((value) => sp.setSignIn().then((value) {

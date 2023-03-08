@@ -96,12 +96,34 @@ class _HomeState extends State<Home> {
     bool expandFlag = false;
     final sp = context.read<SignInProvider>();
     final width = MediaQuery.of(context).size.width;
+    final heigth = MediaQuery.of(context).size.height;
 
     return StreamBuilder(
         stream: parties,
         builder: (context, AsyncSnapshot snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting ||
-              snapshot.hasData == false) {
+          if (!snapshot.hasData ||
+              snapshot.data!.docs == null ||
+              snapshot.data.docs.length == 0) {
+            return Center(
+                child: RichText(
+              text: TextSpan(
+                text: 'Hello ',
+                style: const TextStyle(
+                    fontWeight: FontWeight.normal, color: Colors.white),
+                children: <TextSpan>[
+                  TextSpan(
+                      text: '${sp.name}',
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, color: Colors.white)),
+                  const TextSpan(
+                      text: '! Create or join a party',
+                      style: TextStyle(
+                          fontWeight: FontWeight.normal, color: Colors.white)),
+                ],
+              ),
+            ));
+          }
+          if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
                 child: CircularProgressIndicator(
               color: Color.fromARGB(158, 61, 219, 71),
@@ -132,9 +154,9 @@ class _HomeState extends State<Home> {
                                   color: Colors.black, fontSize: 18),
                             ),
                             subtitle: Text(
-                              "${tmp.toDate().day} / ${tmp.toDate().month} / ${tmp.toDate().year}",
+                              "${tmp.toDate().day}/${tmp.toDate().month}/${tmp.toDate().year}",
                               style: const TextStyle(
-                                  color: Colors.blueGrey, fontSize: 14),
+                                  color: Colors.blueGrey, fontSize: 12),
                             ),
                             children: [
                               Stack(
@@ -142,8 +164,7 @@ class _HomeState extends State<Home> {
                                   Column(
                                     children: [
                                       Text(
-                                        'Party Code : ' +
-                                            snapshot.data.docs[index]['code'],
+                                        'Party Code : ${snapshot.data.docs[index]['code']}',
                                         style: const TextStyle(
                                           color: Colors.black,
                                           fontSize: 20,
@@ -154,33 +175,18 @@ class _HomeState extends State<Home> {
                                           Divider(height: 32),
                                         ],
                                       ),
-                                      /*
-                                    Center(
-                                      child: RepaintBoundary(
-                                        key: Key(index),
-                                        child: QrImage(
-                                          data: snapshot.data.docs[index]
-                                              ['code'],
-                                          size: 200,
-                                          backgroundColor: Colors.white,
-                                        ),
-                                      ),
-                                    ),*/
-
                                       Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
                                         crossAxisAlignment:
                                             CrossAxisAlignment.center,
                                         children: [
-                                          SizedBox(
-                                            width: width * 0.08,
+                                          const SizedBox(
+                                            width: 10,
                                           ),
-                                          (snapshot.data.docs[index]['admin']
-                                                      .toString() ==
+                                          (snapshot.data.docs[index]['admin'] ==
                                                   sp.uid)
                                               ? Expanded(
                                                   child: AnimatedButton(
+                                                    width: width * 0,
                                                     text: 'Delete',
                                                     pressEvent: () {
                                                       AwesomeDialog(
@@ -204,10 +210,6 @@ class _HomeState extends State<Home> {
                                                                     215,
                                                                     96,
                                                                     0.9),
-                                                            width: width * 0.25,
-                                                            height: 37,
-                                                            elevation: 0,
-                                                            borderRadius: 25,
                                                             color: const Color
                                                                     .fromRGBO(
                                                                 30,
@@ -224,21 +226,21 @@ class _HomeState extends State<Home> {
                                                                           'code']
                                                                       .toString());
                                                             },
-                                                            child: Wrap(
-                                                              children: const [
-                                                                Center(
-                                                                  child: Text(
-                                                                      "Delete",
-                                                                      style: TextStyle(
-                                                                          color: Colors
-                                                                              .white,
-                                                                          fontSize:
-                                                                              14,
-                                                                          fontWeight:
-                                                                              FontWeight.w500)),
-                                                                )
-                                                              ],
-                                                            ),
+                                                            child:
+                                                                const SizedBox(
+                                                                    child:
+                                                                        Center(
+                                                              child: Text(
+                                                                  "Delete",
+                                                                  style: TextStyle(
+                                                                      color: Colors
+                                                                          .white,
+                                                                      fontSize:
+                                                                          14,
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .w500)),
+                                                            )),
                                                           ),
                                                           dismissOnTouchOutside:
                                                               true,
@@ -250,7 +252,6 @@ class _HomeState extends State<Home> {
                                                                           widget
                                                                               .drawerController)))).show();
                                                     },
-                                                    width: width * 0.25,
                                                     borderRadius:
                                                         BorderRadius.circular(
                                                             25),
@@ -284,8 +285,7 @@ class _HomeState extends State<Home> {
                                                                       215,
                                                                       96,
                                                                       0.9),
-                                                              width:
-                                                                  width * 0.25,
+                                                              width: 100,
                                                               height: 37,
                                                               elevation: 0,
                                                               borderRadius: 25,
@@ -361,8 +361,12 @@ class _HomeState extends State<Home> {
                                               ],
                                             ),
                                           ),
-                                          SizedBox(
-                                            width: width * .08,
+                                          Row(
+                                            children: [
+                                              SizedBox(
+                                                width: width * 0.08,
+                                              )
+                                            ],
                                           ),
                                           RoundedLoadingButton(
                                             onPressed: () {
@@ -391,14 +395,14 @@ class _HomeState extends State<Home> {
                                               ],
                                             ),
                                           ),
-                                          SizedBox(
-                                            width: width * 0.08,
+                                          const SizedBox(
+                                            width: 10,
                                           ),
                                         ],
                                       ),
                                       Row(
                                         children: const [
-                                          Divider(height: 16),
+                                          Divider(height: 32),
                                         ],
                                       ),
                                     ],
@@ -482,8 +486,8 @@ class _HomeState extends State<Home> {
                   })
               : const Center(
                   child: CircularProgressIndicator(
-                  color: const Color.fromRGBO(30, 215, 96, 0.9),
-                  backgroundColor: Color.fromARGB(128, 52, 74, 61),
+                  color: Color.fromRGBO(30, 215, 96, 0.9),
+                  backgroundColor: Color.fromARGB(128, 53, 74, 62),
                   strokeWidth: 10,
                 ));
         });
@@ -599,10 +603,10 @@ class _HomeState extends State<Home> {
       home: Scaffold(
         backgroundColor: const Color.fromARGB(255, 35, 34, 34),
         appBar: AppBar(
+          backgroundColor: const Color.fromARGB(128, 64, 79, 70),
           leading: InkWell(
               child: Icon(Icons.menu),
               onTap: (() => widget.drawerController.toggle!())),
-          backgroundColor: const Color.fromARGB(255, 35, 34, 34),
           title: const Text(
             'DjParty',
             style: TextStyle(
@@ -615,7 +619,7 @@ class _HomeState extends State<Home> {
                 nextScreen(context, GeneratorScreen());
               },
               icon: const Icon(
-                Icons.create,
+                Icons.add_box_outlined,
               ),
             ),
             IconButton(
@@ -636,9 +640,11 @@ class _HomeState extends State<Home> {
             )
           ],
         ),
-        body: Stack(children: <Widget>[
-          streamParties(),
-        ]),
+        body: Stack(
+          children: <Widget>[
+            streamParties(),
+          ],
+        ),
       ),
     );
   }
