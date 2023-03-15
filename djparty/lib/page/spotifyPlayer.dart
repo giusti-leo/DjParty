@@ -15,6 +15,7 @@ import 'package:spotify_sdk/models/connection_status.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:djparty/services/SignInProvider.dart';
 import 'package:provider/provider.dart';
+import 'package:linear_timer/linear_timer.dart';
 import 'dart:async';
 import 'package:spotify_sdk/models/image_uri.dart';
 import 'package:spotify_sdk/models/player_context.dart';
@@ -32,7 +33,9 @@ class SpotifyPlayer extends StatefulWidget {
   _SpotifyPlayerState createState() => _SpotifyPlayerState();
 }
 
-class _SpotifyPlayerState extends State<SpotifyPlayer> {
+class _SpotifyPlayerState extends State<SpotifyPlayer>
+    with TickerProviderStateMixin {
+  late LinearTimerController timerController1 = LinearTimerController(this);
   bool nextSong = false;
   final RoundedLoadingButtonController partyController =
       RoundedLoadingButtonController();
@@ -44,24 +47,21 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
     fr.getDataFromSharedPreferences();
   }
 
-  String myToken = "";
-
-  Timer? timer;
   @override
   void initState() {
-    final sr = context.read<SpotifyRequests>();
-    sr.getAuthToken();
     super.initState();
     getData();
   }
 
   String firstTrackUri = "";
+  String nextTrackUri = "";
 
   dynamic isPaused = true;
   double votingIndex = 0;
   bool _loading = false;
   bool _connected = true;
   late List<String> partecipant_list;
+  int nextTrackIndex = 1;
 
   final Logger _logger = Logger(
     printer: PrettyPrinter(
@@ -286,7 +286,7 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
       var SnapDoc = snapshot.docs[0];
       firstTrackUri = SnapDoc["uri"];
       db.update({"songCurrentlyPlayed": firstTrackUri});
-      play();
+      play(firstTrackUri);
     }));
   }
 
@@ -332,6 +332,13 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
     final fr = context.read<FirebaseRequests>();
     final sr = context.read<SpotifyRequests>();
 
+    @override
+    void dispose() {
+      timerController1.dispose();
+
+      super.dispose();
+    }
+
     return StreamBuilder<PlayerState>(
       stream: SpotifySdk.subscribePlayerState(),
       builder: (BuildContext context, AsyncSnapshot<PlayerState> snapshot) {
@@ -350,10 +357,7 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
           isPaused = true;
         } else {
           isPaused = false;
-        }
-
-        if (trackDuration - playerPosition <= 10) {
-          sr.addItemToSpotifyQueue("spotify:track:6NRvZuFXn2ixp8YdzUvG5n");
+          timerController1.start();
         }
 
         return Scaffold(
@@ -366,6 +370,20 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
                   width: 250,
                   height: 250,
                   child: spotifyImageWidget(track.imageUri),
+                ),
+                const SizedBox(height: 20),
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16.0),
+                ),
+                LinearTimer(
+                  duration: Duration(milliseconds: trackDuration - 2000),
+                  color: Colors.green,
+                  backgroundColor: Colors.grey[200],
+                  controller: timerController1,
+                  onTimerEnd: () {
+                    _playNextTrack();
+                    timerController1.reset();
+                  },
                 ),
                 const SizedBox(height: 20),
                 (fr.admin == sp.uid)
@@ -401,6 +419,19 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
     );
   }
 
+  Future _playNextTrack() async {
+    final fr = context.read<FirebaseRequests>();
+    var db = FirebaseFirestore.instance.collection('parties').doc(fr.partyCode);
+    var queue = db.collection('queue').orderBy("timestamp");
+    await queue.get().then(((snapshot) {
+      var SnapDoc = snapshot.docs[nextTrackIndex];
+      nextTrackUri = SnapDoc["uri"];
+      db.update({"songCurrentlyPlayed": nextTrackUri});
+      play(nextTrackUri);
+    }));
+    nextTrackIndex++;
+  }
+
   Widget _PlayPauseWidget() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -411,7 +442,10 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
             Icons.skip_previous_rounded,
             color: const Color.fromRGBO(30, 215, 96, 0.9),
           ),
-          onPressed: skipPrevious,
+          onPressed: () {
+            skipPrevious();
+            timerController1.reset();
+          },
         ),
         isPaused
             ? IconButton(
@@ -420,21 +454,32 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
                   Icons.play_circle_fill_rounded,
                   color: const Color.fromRGBO(30, 215, 96, 0.9),
                 ),
-                onPressed: (resume))
+                onPressed: () {
+                  resume();
+                  timerController1.start();
+                },
+              )
             : IconButton(
                 iconSize: 50,
                 icon: const Icon(
                   Icons.pause_circle_filled_rounded,
                   color: const Color.fromRGBO(30, 215, 96, 0.9),
                 ),
-                onPressed: (pause)),
+                onPressed: () {
+                  pause();
+                  timerController1.stop();
+                },
+              ),
         IconButton(
           iconSize: 32,
           icon: const Icon(
             Icons.skip_next_rounded,
             color: const Color.fromRGBO(30, 215, 96, 0.9),
           ),
-          onPressed: skipNext,
+          onPressed: () {
+            skipNext();
+            timerController1.reset();
+          },
         ),
       ],
     );
@@ -458,7 +503,7 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
           children: <Widget>[
             Text(
               'From: ${playerContext.title} (${playerContext.type})',
-              style: TextStyle(color: Colors.grey),
+              style: const TextStyle(color: Colors.grey),
             ),
           ],
         );
@@ -492,9 +537,9 @@ class _SpotifyPlayerState extends State<SpotifyPlayer> {
         });
   }
 
-  Future<void> play() async {
+  Future<void> play(String uri) async {
     try {
-      await SpotifySdk.play(spotifyUri: firstTrackUri);
+      await SpotifySdk.play(spotifyUri: uri);
     } on PlatformException catch (e) {
       setStatus(e.code, message: e.message);
     } on MissingPluginException {
