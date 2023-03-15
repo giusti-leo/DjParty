@@ -249,7 +249,7 @@ class _SearchItemScreen extends State<SearchItemScreen> {
 
   void _showContextMenu(BuildContext context, Track currentTrack) async {
     final RenderObject? overlay =
-        Overlay.of(context).context.findRenderObject();
+        Overlay.of(context)?.context.findRenderObject();
     await showMenu(
         context: context,
         position: RelativeRect.fromRect(
