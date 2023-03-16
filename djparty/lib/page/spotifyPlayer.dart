@@ -348,7 +348,7 @@ class _SpotifyPlayerState extends State<SpotifyPlayer>
         var track = snapshot.data?.track;
         currentTrackImageUri = track?.imageUri;
         var playerState = snapshot.data;
-        int trackDuration = ((track!.duration) / 1000) as int;
+        int trackDuration = track!.duration;
         var playerPosition = playerState!.playbackPosition;
 
         if (playerState == null || track == null) {
@@ -358,10 +358,10 @@ class _SpotifyPlayerState extends State<SpotifyPlayer>
         }
         if (playerState.isPaused == true) {
           isPaused = true;
-          timerController.stop();
-          setState(() {
-            timerRunning = false;
-          });
+          // timerController.stop();
+          // setState(() {
+          //   timerRunning = false;
+          // });
         } else {
           isPaused = false;
           timerController1.start();
@@ -396,20 +396,20 @@ class _SpotifyPlayerState extends State<SpotifyPlayer>
                 (fr.admin == sp.uid)
                     ? _PlayPauseWidget()
                     : const SizedBox(height: 1),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    LinearTimer(
-                      duration: Duration(seconds: trackDuration),
-                      controller: timerController,
-                      onTimerEnd: () {
-                        setState(() {
-                          timerRunning = false;
-                        });
-                      },
-                    )
-                  ],
-                ),
+                // Column(
+                //   mainAxisAlignment: MainAxisAlignment.center,
+                //   children: [
+                //     LinearTimer(
+                //       duration: Duration(seconds: trackDuration),
+                //       controller: timerController,
+                //       onTimerEnd: () {
+                //         setState(() {
+                //           timerRunning = false;
+                //         });
+                //       },
+                //     )
+                //   ],
+                // ),
                 Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                   Text(
                     '${track.name}',
