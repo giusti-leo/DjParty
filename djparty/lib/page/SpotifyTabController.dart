@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:djparty/page/HomePage.dart';
 import 'package:djparty/page/PartySettings.dart';
 import 'package:djparty/page/RankingPage.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_countdown_timer/flutter_countdown_timer.dart';
 import 'package:flutter/material.dart';
 import 'package:djparty/services/SignInProvider.dart';
@@ -11,7 +12,9 @@ import 'package:djparty/page/Queue.dart';
 import 'package:djparty/page/VotingPage.dart';
 import 'package:djparty/utils/nextScreen.dart';
 import 'package:djparty/Icons/c_d_icons.dart';
+import 'package:linear_timer/linear_timer.dart';
 import 'package:provider/provider.dart';
+import 'package:spotify_sdk/models/player_state.dart';
 import 'package:spotify_sdk/spotify_sdk.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:logger/logger.dart';
@@ -39,10 +42,14 @@ class _SpotifyTabController extends State<SpotifyTabController>
 
   late DateTime _nextVotingPhase;
 
+  int nextTrackIndex = 1;
+  String nextTrackUri = "";
+
   int _interval = 0;
   int _votingTime = 0;
   bool _votingStatus = false;
   int endCountdown = 0;
+  late LinearTimerController timerController1 = LinearTimerController(this);
 
   int _computeCountdown() {
     DateTime tmpNow = DateTime.now();
@@ -232,6 +239,7 @@ class _SpotifyTabController extends State<SpotifyTabController>
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          _linearTimerWidget(context),
           const SizedBox(
             height: 10,
           ),
@@ -251,6 +259,76 @@ class _SpotifyTabController extends State<SpotifyTabController>
         ],
       ),
     );
+  }
+
+  Widget _linearTimerWidget(BuildContext context) {
+    return StreamBuilder<PlayerState>(
+      stream: SpotifySdk.subscribePlayerState(),
+      builder: (BuildContext context, AsyncSnapshot<PlayerState> snapshot) {
+        var track = snapshot.data?.track;
+        var playerState = snapshot.data;
+        int trackDuration = track!.duration;
+
+        if (playerState == null) {
+          return Center(
+            child: Container(),
+          );
+        }
+
+        if (playerState.isPaused == true) {
+          timerController1.stop();
+        } else {
+          timerController1.start();
+        }
+
+        return Scaffold(
+          backgroundColor: const Color.fromARGB(255, 35, 34, 34),
+          body: Container(
+            child: Center(
+              child: ListView(padding: const EdgeInsets.all(8), children: [
+                const SizedBox(height: 20),
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16.0),
+                ),
+                LinearTimer(
+                  duration: Duration(milliseconds: trackDuration - 2000),
+                  color: Colors.green,
+                  backgroundColor: Colors.grey[200],
+                  controller: timerController1,
+                  onTimerEnd: () {
+                    _playNextTrack();
+                    timerController1.reset();
+                  },
+                ),
+              ]),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future _playNextTrack() async {
+    final fr = context.read<FirebaseRequests>();
+    var db = FirebaseFirestore.instance.collection('parties').doc(fr.partyCode);
+    var queue = db.collection('queue').orderBy("timestamp");
+    await queue.get().then(((snapshot) {
+      var SnapDoc = snapshot.docs[nextTrackIndex];
+      nextTrackUri = SnapDoc["uri"];
+      db.update({"songCurrentlyPlayed": nextTrackUri});
+      play(nextTrackUri);
+    }));
+    nextTrackIndex++;
+  }
+
+  Future<void> play(String uri) async {
+    try {
+      await SpotifySdk.play(spotifyUri: uri);
+    } on PlatformException catch (e) {
+      showInSnackBar(context, e.message!, Colors.red);
+    } on MissingPluginException {
+      showInSnackBar(context, 'not implemented', Colors.red);
+    }
   }
 
   Widget _countdown(BuildContext context) {

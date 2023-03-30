@@ -475,8 +475,7 @@ packages:
     dependency: "direct main"
     description:
       name: linear_timer
-      sha256: d8707448e9464c7436565791406b9b73a785ce09c5c3dd870b8c5cd9755355d5
-      url: "https://pub.dev"
+      url: "https://pub.dartlang.org"
     source: hosted
     version: "2.0.0"
   lints:
@@ -885,4 +884,4 @@ packages:
     version: "6.1.0"
 sdks:
   dart: ">=2.18.5 <3.0.0"
-  flutter: ">=3.0.0"
+  flutter: ">=3.3.0"

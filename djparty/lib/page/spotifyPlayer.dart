@@ -57,7 +57,6 @@ class _SpotifyPlayerState extends State<SpotifyPlayer>
   }
 
   String firstTrackUri = "";
-  String nextTrackUri = "";
 
   dynamic isPaused = true;
   double votingIndex = 0;
@@ -65,6 +64,11 @@ class _SpotifyPlayerState extends State<SpotifyPlayer>
   bool _connected = true;
   late List<String> partecipant_list;
   int nextTrackIndex = 1;
+  String nextTrackUri = "";
+  bool changed = false;
+
+  int trackDuration = 0;
+  int timer = 0;
 
   final Logger _logger = Logger(
     printer: PrettyPrinter(
@@ -78,26 +82,7 @@ class _SpotifyPlayerState extends State<SpotifyPlayer>
   );
 
   late ImageUri? currentTrackImageUri;
-/*
-  @override
-  Widget build(BuildContext context) {
-
-    return StreamBuilder<ConnectionStatus>(
-      stream: SpotifySdk.subscribeConnectionStatus(),
-      builder: (context, snapshot) {
-        _connected = false;
-        var data = snapshot.data;
-        if (data != null) {
-          _connected = data.connected;
-        }
-        return Scaffold(
-          backgroundColor: Color.fromARGB(255, 35, 34, 34),
-          body: _playerWidget(context),
-        );
-      },
-    );
-  }
-  */
+  late ImageUri? image;
 
   @override
   Widget build(BuildContext context) {
@@ -335,40 +320,29 @@ class _SpotifyPlayerState extends State<SpotifyPlayer>
     final fr = context.read<FirebaseRequests>();
     final sr = context.read<SpotifyRequests>();
 
-    @override
-    void dispose() {
-      timerController1.dispose();
-
-      super.dispose();
-    }
-
     return StreamBuilder<PlayerState>(
       stream: SpotifySdk.subscribePlayerState(),
       builder: (BuildContext context, AsyncSnapshot<PlayerState> snapshot) {
         var track = snapshot.data?.track;
         currentTrackImageUri = track?.imageUri;
         var playerState = snapshot.data;
-        int trackDuration = track!.duration;
-        var playerPosition = playerState!.playbackPosition;
+        trackDuration = track!.duration;
 
-        if (playerState == null || track == null) {
+        if (currentTrackImageUri == null || playerState == null) {
           return Center(
             child: Container(),
           );
         }
+
         if (playerState.isPaused == true) {
           isPaused = true;
-          // timerController.stop();
-          // setState(() {
-          //   timerRunning = false;
-          // });
         } else {
           isPaused = false;
           timerController1.start();
         }
 
         return Scaffold(
-          backgroundColor: Color.fromARGB(255, 35, 34, 34),
+          backgroundColor: const Color.fromARGB(255, 35, 34, 34),
           body: Container(
             child: Center(
               child: ListView(padding: const EdgeInsets.all(8), children: [
@@ -382,6 +356,7 @@ class _SpotifyPlayerState extends State<SpotifyPlayer>
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 16.0),
                 ),
+                /*
                 LinearTimer(
                   duration: Duration(milliseconds: trackDuration - 2000),
                   color: Colors.green,
@@ -391,25 +366,7 @@ class _SpotifyPlayerState extends State<SpotifyPlayer>
                     _playNextTrack();
                     timerController1.reset();
                   },
-                ),
-                const SizedBox(height: 20),
-                (fr.admin == sp.uid)
-                    ? _PlayPauseWidget()
-                    : const SizedBox(height: 1),
-                // Column(
-                //   mainAxisAlignment: MainAxisAlignment.center,
-                //   children: [
-                //     LinearTimer(
-                //       duration: Duration(seconds: trackDuration),
-                //       controller: timerController,
-                //       onTimerEnd: () {
-                //         setState(() {
-                //           timerRunning = false;
-                //         });
-                //       },
-                //     )
-                //   ],
-                // ),
+                ),*/
                 Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                   Text(
                     '${track.name}',
@@ -429,9 +386,9 @@ class _SpotifyPlayerState extends State<SpotifyPlayer>
                 const SizedBox(
                   height: 20,
                 ),
-                Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                /*Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                   _buildPlayerContextWidget(),
-                ]),
+                ]),*/
               ]),
             ),
           ),
@@ -461,7 +418,7 @@ class _SpotifyPlayerState extends State<SpotifyPlayer>
           iconSize: 32,
           icon: const Icon(
             Icons.skip_previous_rounded,
-            color: const Color.fromRGBO(30, 215, 96, 0.9),
+            color: Color.fromRGBO(30, 215, 96, 0.9),
           ),
           onPressed: () {
             skipPrevious();
