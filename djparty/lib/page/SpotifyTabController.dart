@@ -281,28 +281,15 @@ class _SpotifyTabController extends State<SpotifyTabController>
           timerController1.start();
         }
 
-        return Scaffold(
-          backgroundColor: const Color.fromARGB(255, 35, 34, 34),
-          body: Container(
-            child: Center(
-              child: ListView(padding: const EdgeInsets.all(8), children: [
-                const SizedBox(height: 20),
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 16.0),
-                ),
-                LinearTimer(
-                  duration: Duration(milliseconds: trackDuration - 2000),
-                  color: Colors.green,
-                  backgroundColor: Colors.grey[200],
-                  controller: timerController1,
-                  onTimerEnd: () {
-                    _playNextTrack();
-                    timerController1.reset();
-                  },
-                ),
-              ]),
-            ),
-          ),
+        return LinearTimer(
+          duration: Duration(milliseconds: trackDuration - 2000),
+          color: Colors.green,
+          backgroundColor: Colors.grey[200],
+          controller: timerController1,
+          onTimerEnd: () {
+            _playNextTrack();
+            timerController1.reset();
+          },
         );
       },
     );

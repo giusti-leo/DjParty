@@ -15,7 +15,7 @@ import 'package:spotify_sdk/models/connection_status.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:djparty/services/SignInProvider.dart';
 import 'package:provider/provider.dart';
-import 'package:linear_timer/linear_timer.dart';
+//import 'package:linear_timer/linear_timer.dart';
 import 'dart:async';
 import 'package:spotify_sdk/models/image_uri.dart';
 import 'package:spotify_sdk/models/player_context.dart';
@@ -23,7 +23,7 @@ import 'package:djparty/Icons/SizedIconButton.dart';
 import 'package:djparty/page/SearchItemScreen.dart';
 import 'package:djparty/page/PartyPlaylist.dart';
 import 'package:djparty/page/Home.dart';
-import 'package:linear_timer/linear_timer.dart';
+//import 'package:linear_timer/linear_timer.dart';
 
 class SpotifyPlayer extends StatefulWidget {
   static String routeName = 'SpotifyPlayer';
@@ -36,11 +36,11 @@ class SpotifyPlayer extends StatefulWidget {
 
 class _SpotifyPlayerState extends State<SpotifyPlayer>
     with TickerProviderStateMixin {
-  late LinearTimerController timerController1 = LinearTimerController(this);
+  //late LinearTimerController timerController1 = LinearTimerController(this);
   bool nextSong = false;
   final RoundedLoadingButtonController partyController =
       RoundedLoadingButtonController();
-  late LinearTimerController timerController = LinearTimerController(this);
+  //late LinearTimerController timerController = LinearTimerController(this);
   bool timerRunning = false;
 
   Future getData() async {
@@ -338,7 +338,7 @@ class _SpotifyPlayerState extends State<SpotifyPlayer>
           isPaused = true;
         } else {
           isPaused = false;
-          timerController1.start();
+          //timerController1.start();
         }
 
         return Scaffold(
@@ -422,7 +422,7 @@ class _SpotifyPlayerState extends State<SpotifyPlayer>
           ),
           onPressed: () {
             skipPrevious();
-            timerController1.reset();
+            //timerController1.reset();
           },
         ),
         isPaused
@@ -434,7 +434,7 @@ class _SpotifyPlayerState extends State<SpotifyPlayer>
                 ),
                 onPressed: () {
                   resume();
-                  timerController1.start();
+                  //timerController1.start();
                 },
               )
             : IconButton(
@@ -445,7 +445,7 @@ class _SpotifyPlayerState extends State<SpotifyPlayer>
                 ),
                 onPressed: () {
                   pause();
-                  timerController1.stop();
+                  //timerController1.stop();
                 },
               ),
         IconButton(
@@ -456,7 +456,7 @@ class _SpotifyPlayerState extends State<SpotifyPlayer>
           ),
           onPressed: () {
             skipNext();
-            timerController1.reset();
+            //timerController1.reset();
           },
         ),
       ],
