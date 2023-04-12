@@ -35,6 +35,7 @@ class SpotifyTabController extends StatefulWidget {
 
 class _SpotifyTabController extends State<SpotifyTabController>
     with TickerProviderStateMixin {
+  dynamic isPaused = true;
   bool error = false;
   bool voting = false;
   bool changed = false;
@@ -232,66 +233,76 @@ class _SpotifyTabController extends State<SpotifyTabController>
   }
 
   Widget _bottomAppBar(BuildContext context) {
-    return BottomAppBar(
-      elevation: 8.0,
-      notchMargin: 8.0,
-      color: const Color.fromARGB(255, 45, 44, 44),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _linearTimerWidget(context),
-          const SizedBox(
-            height: 10,
-          ),
-          Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-            Center(
-              child: Text(
-                  !_votingStatus ? "Next voting in :  " : "Voting ends in :  ",
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  )),
+    return SizedBox(
+      height: 55,
+      child: BottomAppBar(
+        elevation: 8.0,
+        notchMargin: 8.0,
+        color: const Color.fromARGB(255, 45, 44, 44),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _linearTimerWidget(context),
+            const SizedBox(
+              height: 10,
             ),
-            _countdown(context),
-          ])
-        ],
+            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              Center(
+                child: Text(
+                    !_votingStatus
+                        ? "Next voting in :  "
+                        : "Voting ends in :  ",
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    )),
+              ),
+              _countdown(context),
+            ])
+          ],
+        ),
       ),
     );
   }
 
   Widget _linearTimerWidget(BuildContext context) {
-    return StreamBuilder<PlayerState>(
-      stream: SpotifySdk.subscribePlayerState(),
-      builder: (BuildContext context, AsyncSnapshot<PlayerState> snapshot) {
-        var track = snapshot.data?.track;
-        var playerState = snapshot.data;
-        int trackDuration = track!.duration;
+    return SizedBox(
+      height: 5,
+      child: StreamBuilder<PlayerState>(
+        stream: SpotifySdk.subscribePlayerState(),
+        builder: (BuildContext context, AsyncSnapshot<PlayerState> snapshot) {
+          var track = snapshot.data?.track;
+          var playerState = snapshot.data;
+          int trackDuration = track!.duration;
 
-        if (playerState == null) {
-          return Center(
-            child: Container(),
+          if (playerState == null) {
+            return Center(
+              child: Container(),
+            );
+          }
+
+          if (playerState.isPaused == true) {
+            isPaused = true;
+            timerController1.stop();
+          } else {
+            isPaused = false;
+            timerController1.start();
+          }
+
+          return LinearTimer(
+            duration: Duration(milliseconds: trackDuration - 2000),
+            color: Colors.green,
+            backgroundColor: Colors.grey[200],
+            controller: timerController1,
+            onTimerEnd: () {
+              _playNextTrack();
+              timerController1.reset();
+            },
           );
-        }
-
-        if (playerState.isPaused == true) {
-          timerController1.stop();
-        } else {
-          timerController1.start();
-        }
-
-        return LinearTimer(
-          duration: Duration(milliseconds: trackDuration - 2000),
-          color: Colors.green,
-          backgroundColor: Colors.grey[200],
-          controller: timerController1,
-          onTimerEnd: () {
-            _playNextTrack();
-            timerController1.reset();
-          },
-        );
-      },
+        },
+      ),
     );
   }
 

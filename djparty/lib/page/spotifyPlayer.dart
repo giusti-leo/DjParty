@@ -147,9 +147,10 @@ class _SpotifyPlayerState extends State<SpotifyPlayer>
                   _connected = data.connected;
                 }
                 return Scaffold(
-                  backgroundColor: const Color.fromARGB(255, 35, 34, 34),
-                  body: _playerWidget(context),
-                );
+                    backgroundColor: const Color.fromARGB(255, 35, 34, 34),
+                    body: Container()
+                    //body: _playerWidget(context),
+                    );
               },
             );
           } else if (snapshot.data!.get('isEnded')) {
@@ -316,30 +317,11 @@ class _SpotifyPlayerState extends State<SpotifyPlayer>
   }
 
   Widget _playerWidget(BuildContext context) {
-    final sp = context.read<SignInProvider>();
-    final fr = context.read<FirebaseRequests>();
-    final sr = context.read<SpotifyRequests>();
-
     return StreamBuilder<PlayerState>(
       stream: SpotifySdk.subscribePlayerState(),
       builder: (BuildContext context, AsyncSnapshot<PlayerState> snapshot) {
         var track = snapshot.data?.track;
         currentTrackImageUri = track?.imageUri;
-        var playerState = snapshot.data;
-        trackDuration = track!.duration;
-
-        if (currentTrackImageUri == null || playerState == null) {
-          return Center(
-            child: Container(),
-          );
-        }
-
-        if (playerState.isPaused == true) {
-          isPaused = true;
-        } else {
-          isPaused = false;
-          //timerController1.start();
-        }
 
         return Scaffold(
           backgroundColor: const Color.fromARGB(255, 35, 34, 34),
@@ -350,7 +332,7 @@ class _SpotifyPlayerState extends State<SpotifyPlayer>
                 SizedBox(
                   width: 250,
                   height: 250,
-                  child: spotifyImageWidget(track.imageUri),
+                  child: spotifyImageWidget(track!.imageUri),
                 ),
                 const SizedBox(height: 20),
                 const Padding(
@@ -394,72 +376,6 @@ class _SpotifyPlayerState extends State<SpotifyPlayer>
           ),
         );
       },
-    );
-  }
-
-  Future _playNextTrack() async {
-    final fr = context.read<FirebaseRequests>();
-    var db = FirebaseFirestore.instance.collection('parties').doc(fr.partyCode);
-    var queue = db.collection('queue').orderBy("timestamp");
-    await queue.get().then(((snapshot) {
-      var SnapDoc = snapshot.docs[nextTrackIndex];
-      nextTrackUri = SnapDoc["uri"];
-      db.update({"songCurrentlyPlayed": nextTrackUri});
-      play(nextTrackUri);
-    }));
-    nextTrackIndex++;
-  }
-
-  Widget _PlayPauseWidget() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: <Widget>[
-        IconButton(
-          iconSize: 32,
-          icon: const Icon(
-            Icons.skip_previous_rounded,
-            color: Color.fromRGBO(30, 215, 96, 0.9),
-          ),
-          onPressed: () {
-            skipPrevious();
-            //timerController1.reset();
-          },
-        ),
-        isPaused
-            ? IconButton(
-                iconSize: 50,
-                icon: const Icon(
-                  Icons.play_circle_fill_rounded,
-                  color: const Color.fromRGBO(30, 215, 96, 0.9),
-                ),
-                onPressed: () {
-                  resume();
-                  //timerController1.start();
-                },
-              )
-            : IconButton(
-                iconSize: 50,
-                icon: const Icon(
-                  Icons.pause_circle_filled_rounded,
-                  color: const Color.fromRGBO(30, 215, 96, 0.9),
-                ),
-                onPressed: () {
-                  pause();
-                  //timerController1.stop();
-                },
-              ),
-        IconButton(
-          iconSize: 32,
-          icon: const Icon(
-            Icons.skip_next_rounded,
-            color: const Color.fromRGBO(30, 215, 96, 0.9),
-          ),
-          onPressed: () {
-            skipNext();
-            //timerController1.reset();
-          },
-        ),
-      ],
     );
   }
 
@@ -525,47 +441,47 @@ class _SpotifyPlayerState extends State<SpotifyPlayer>
     }
   }
 
-  Future<void> pause() async {
-    isPaused = true;
-    try {
-      await SpotifySdk.pause();
-    } on PlatformException catch (e) {
-      setStatus(e.code, message: e.message);
-    } on MissingPluginException {
-      setStatus('not implemented');
-    }
-  }
+  // Future<void> pause() async {
+  //   isPaused = true;
+  //   try {
+  //     await SpotifySdk.pause();
+  //   } on PlatformException catch (e) {
+  //     setStatus(e.code, message: e.message);
+  //   } on MissingPluginException {
+  //     setStatus('not implemented');
+  //   }
+  // }
 
-  Future<void> resume() async {
-    isPaused = false;
-    try {
-      await SpotifySdk.resume();
-    } on PlatformException catch (e) {
-      setStatus(e.code, message: e.message);
-    } on MissingPluginException {
-      setStatus('not implemented');
-    }
-  }
+  // Future<void> resume() async {
+  //   isPaused = false;
+  //   try {
+  //     await SpotifySdk.resume();
+  //   } on PlatformException catch (e) {
+  //     setStatus(e.code, message: e.message);
+  //   } on MissingPluginException {
+  //     setStatus('not implemented');
+  //   }
+  // }
 
-  Future<void> skipNext() async {
-    try {
-      await SpotifySdk.skipNext();
-    } on PlatformException catch (e) {
-      setStatus(e.code, message: e.message);
-    } on MissingPluginException {
-      setStatus('not implemented');
-    }
-  }
+  // Future<void> skipNext() async {
+  //   try {
+  //     await SpotifySdk.skipNext();
+  //   } on PlatformException catch (e) {
+  //     setStatus(e.code, message: e.message);
+  //   } on MissingPluginException {
+  //     setStatus('not implemented');
+  //   }
+  // }
 
-  Future<void> skipPrevious() async {
-    try {
-      await SpotifySdk.skipPrevious();
-    } on PlatformException catch (e) {
-      setStatus(e.code, message: e.message);
-    } on MissingPluginException {
-      setStatus('not implemented');
-    }
-  }
+  // Future<void> skipPrevious() async {
+  //   try {
+  //     await SpotifySdk.skipPrevious();
+  //   } on PlatformException catch (e) {
+  //     setStatus(e.code, message: e.message);
+  //   } on MissingPluginException {
+  //     setStatus('not implemented');
+  //   }
+  // }
 
   Future getPlayerState() async {
     try {
