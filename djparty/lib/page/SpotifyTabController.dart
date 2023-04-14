@@ -273,6 +273,13 @@ class _SpotifyTabController extends State<SpotifyTabController>
       child: StreamBuilder<PlayerState>(
         stream: SpotifySdk.subscribePlayerState(),
         builder: (BuildContext context, AsyncSnapshot<PlayerState> snapshot) {
+          if (snapshot.data?.track == null ||
+              snapshot.data!.track?.duration == null ||
+              snapshot.data == null) {
+            return Center(
+              child: Container(),
+            );
+          }
           var track = snapshot.data?.track;
           var playerState = snapshot.data;
           int trackDuration = track!.duration;
