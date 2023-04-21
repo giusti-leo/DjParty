@@ -588,6 +588,22 @@ class FirebaseRequests extends ChangeNotifier {
     }
   }
 
+  Future<void> setPartyEnded(String code) async {
+    try {
+      DateTime now = DateTime.now();
+      await partyCollection.doc(code).update({
+        'isEnded': true,
+      });
+    } on FirebaseException catch (e) {
+      switch (e.code) {
+        default:
+          _errorCode = e.toString();
+          _hasError = true;
+          notifyListeners();
+      }
+    }
+  }
+
   Future<void> userLikesSong(String song, String user) async {
     List<String> users = [user];
     try {
@@ -755,5 +771,4 @@ class FirebaseRequests extends ChangeNotifier {
   }
 
   */
-
 }

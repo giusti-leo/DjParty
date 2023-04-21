@@ -1,5 +1,6 @@
 //import 'dart:html';
 
+import 'package:djparty/Icons/c_d_icons.dart';
 import 'package:djparty/services/FirebaseRequests.dart';
 import 'package:djparty/services/InternetProvider.dart';
 import 'package:djparty/services/SpotifyRequests.dart';
@@ -16,6 +17,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:djparty/services/SignInProvider.dart';
 import 'package:provider/provider.dart';
 //import 'package:linear_timer/linear_timer.dart';
+import 'package:http/http.dart' as http;
 import 'dart:async';
 import 'package:spotify_sdk/models/image_uri.dart';
 import 'package:spotify_sdk/models/player_context.dart';
@@ -154,7 +156,7 @@ class _SpotifyPlayerState extends State<SpotifyPlayer>
               },
             );
           } else if (snapshot.data!.get('isEnded')) {
-            return _handleEndParty(context);
+            return _EndParty(context);
           } else {
             if (sp.uid! == fr.admin) {
               return _adminLobby(context);
@@ -192,34 +194,33 @@ class _SpotifyPlayerState extends State<SpotifyPlayer>
     );
   }
 
-  Widget _handleEndParty(BuildContext context) {
+  Widget _EndParty(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     final sr = context.read<SpotifyRequests>();
 
-    return Stack(children: [
-      Positioned(
-        bottom: 20,
-        child: RoundedLoadingButton(
+    return Column(
+      children: [
+        const Text(
+          "The current party is ended!",
+          style: TextStyle(
+            color: Colors.white,
+          ),
+        ),
+        ElevatedButton(
           onPressed: () {
-            _handleStartParty(context);
+            _handleCreatePlaylist(context);
           },
-          controller: partyController,
-          successColor: const Color.fromRGBO(30, 215, 96, 0.9),
-          width: width * 0.80,
-          elevation: 0,
-          borderRadius: 25,
-          color: const Color.fromRGBO(30, 215, 96, 0.9),
           child: Wrap(
             children: const [
               Icon(
-                FontAwesomeIcons.music,
+                CD.spotify,
                 size: 20,
                 color: Colors.white,
               ),
               SizedBox(
                 width: 15,
               ),
-              Text("Start the Party",
+              Text("Get the Spotify Playlist of the Party!",
                   style: TextStyle(
                       color: Colors.white,
                       fontSize: 15,
@@ -227,8 +228,8 @@ class _SpotifyPlayerState extends State<SpotifyPlayer>
             ],
           ),
         ),
-      )
-    ]);
+      ],
+    );
   }
 
   Widget _adminLobby(BuildContext context) {
@@ -280,6 +281,7 @@ class _SpotifyPlayerState extends State<SpotifyPlayer>
   }
 
   Future _handleStartParty(BuildContext context) async {
+    pause();
     final sp = context.read<SignInProvider>();
     final ip = context.read<InternetProvider>();
     final fr = context.read<FirebaseRequests>();
@@ -441,16 +443,16 @@ class _SpotifyPlayerState extends State<SpotifyPlayer>
     }
   }
 
-  // Future<void> pause() async {
-  //   isPaused = true;
-  //   try {
-  //     await SpotifySdk.pause();
-  //   } on PlatformException catch (e) {
-  //     setStatus(e.code, message: e.message);
-  //   } on MissingPluginException {
-  //     setStatus('not implemented');
-  //   }
-  // }
+  Future<void> pause() async {
+    isPaused = true;
+    try {
+      await SpotifySdk.pause();
+    } on PlatformException catch (e) {
+      setStatus(e.code, message: e.message);
+    } on MissingPluginException {
+      setStatus('not implemented');
+    }
+  }
 
   // Future<void> resume() async {
   //   isPaused = false;
@@ -544,4 +546,16 @@ class _SpotifyPlayerState extends State<SpotifyPlayer>
     var text = message ?? '';
     _logger.i('$code$text');
   }
+}
+
+void _handleCreatePlaylist(BuildContext context) {
+  final sr = context.read<SpotifyRequests>();
+  final fr = context.read<FirebaseRequests>();
+  sr.createPlaylist(fr.partyName!, sr.userId!);
+  Future.delayed(const Duration(milliseconds: 2000), () {
+    sr.getPlaylistId(sr.userId!, fr.partyName!);
+  });
+  Future.delayed(const Duration(milliseconds: 2000), () {
+    sr.addSongsToPlaylist(fr.partyCode!);
+  });
 }

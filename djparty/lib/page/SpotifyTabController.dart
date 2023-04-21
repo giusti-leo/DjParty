@@ -12,6 +12,7 @@ import 'package:djparty/page/Queue.dart';
 import 'package:djparty/page/VotingPage.dart';
 import 'package:djparty/utils/nextScreen.dart';
 import 'package:djparty/Icons/c_d_icons.dart';
+import 'package:rounded_loading_button/rounded_loading_button.dart';
 import 'package:linear_timer/linear_timer.dart';
 import 'package:provider/provider.dart';
 import 'package:spotify_sdk/models/player_state.dart';
@@ -24,6 +25,7 @@ import 'package:djparty/services/FirebaseRequests.dart';
 import 'package:djparty/services/InternetProvider.dart';
 import 'package:djparty/services/SpotifyRequests.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:wakelock/wakelock.dart';
 
 class SpotifyTabController extends StatefulWidget {
   static String routeName = 'SpotifyTabController';
@@ -35,11 +37,14 @@ class SpotifyTabController extends StatefulWidget {
 
 class _SpotifyTabController extends State<SpotifyTabController>
     with TickerProviderStateMixin {
+  final RoundedLoadingButtonController partyController =
+      RoundedLoadingButtonController();
   dynamic isPaused = true;
   bool error = false;
   bool voting = false;
   bool changed = false;
   bool countdown = false;
+  bool enabled = true;
 
   late DateTime _nextVotingPhase;
 
@@ -65,6 +70,7 @@ class _SpotifyTabController extends State<SpotifyTabController>
 
     sp.getDataFromSharedPreferences();
     fr.getDataFromSharedPreferences();
+    sr.getUserId();
 
     if (sp.uid == fr.admin) {
       sr.connectToSpotify();
@@ -84,6 +90,7 @@ class _SpotifyTabController extends State<SpotifyTabController>
 
   @override
   void initState() {
+    Wakelock.enable();
     voting = false;
     changed = false;
     getData();
@@ -118,15 +125,41 @@ class _SpotifyTabController extends State<SpotifyTabController>
             ),
           ),
           centerTitle: true,
-          leading: GestureDetector(
-            child: const Icon(
-              Icons.arrow_back_ios_new,
-              color: Colors.white,
-            ),
-            onTap: () {
-              _handleStepBack();
-            },
-          ),
+          leading: (sp.uid == fr.admin)
+              ? RoundedLoadingButton(
+                  onPressed: () {
+                    _handleEndParty(context);
+                    pause();
+                  },
+                  controller: partyController,
+                  successColor: const Color.fromRGBO(30, 215, 96, 0.9),
+                  width: 30,
+                  elevation: 0,
+                  borderRadius: 25,
+                  color: const Color.fromRGBO(30, 215, 96, 0.9),
+                  child: Wrap(
+                    //alignment: WrapAlignment.center,
+                    children: const [
+                      SizedBox(
+                        width: 25,
+                      ),
+                      Text("End Party",
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500)),
+                    ],
+                  ),
+                )
+              : GestureDetector(
+                  child: const Icon(
+                    Icons.arrow_back_ios_new,
+                    color: Colors.white,
+                  ),
+                  onTap: () {
+                    _handleStepBack();
+                  },
+                ),
           actions: (sp.uid == fr.admin)
               ? [
                   IconButton(
@@ -180,6 +213,43 @@ class _SpotifyTabController extends State<SpotifyTabController>
         bottomNavigationBar: _buildBottomBar(context),
       ),
     );
+  }
+
+  Future _handleEndParty(BuildContext context) async {
+    final sp = context.read<SignInProvider>();
+    final ip = context.read<InternetProvider>();
+    final fr = context.read<FirebaseRequests>();
+    await ip.checkInternetConnection();
+    var db = FirebaseFirestore.instance
+        .collection('parties')
+        .doc(fr.partyCode)
+        .collection('queue')
+        .orderBy("Timestamp");
+
+    if (ip.hasInternet == false) {
+      showInSnackBar(context, "Check your Internet connection", Colors.red);
+      partyController.reset();
+      return;
+    }
+
+    fr.checkPartyExists(code: fr.partyCode!).then((value) async {
+      if (sp.hasError == true) {
+        showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+        partyController.reset();
+        return;
+      }
+      if (value == true) {
+        partyController.success();
+        Future.delayed(const Duration(milliseconds: 1000));
+        fr.setPartyEnded(fr.partyCode!).then((value) {
+          if (sp.hasError == true) {
+            showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+            partyController.reset();
+            return;
+          }
+        });
+      }
+    });
   }
 
   Widget _buildBottomBar(BuildContext context) {
@@ -428,6 +498,21 @@ class _SpotifyTabController extends State<SpotifyTabController>
         await _handleEndCountdown();
       },
     );
+  }
+
+  Future<void> pause() async {
+    isPaused = true;
+    try {
+      await SpotifySdk.pause();
+    } on PlatformException catch (e) {
+      setStatus(e.code, message: e.message);
+    } on MissingPluginException {
+      setStatus('not implemented');
+    }
+  }
+
+  void setStatus(String code, {String? message}) {
+    var text = message ?? '';
   }
 
   Future _handleEndCountdown() async {
