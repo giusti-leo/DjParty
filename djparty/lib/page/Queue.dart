@@ -194,13 +194,6 @@ class _Queue extends State<Queue> {
                                       if (party.votingStatus) {
                                         return Column(
                                           children: [
-                                            Text(
-                                              'Hi ${sp.name} . Try to search and add some new song in the Queue',
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 20,
-                                              ),
-                                            ),
                                             ListTile(
                                               tileColor: const Color.fromARGB(
                                                   255, 35, 34, 34),
