@@ -390,10 +390,15 @@ class _SpotifyTabController extends State<SpotifyTabController>
               child: Container(),
             );
           }
-
           var track = snapshot.data?.track;
           var playerState = snapshot.data;
           int trackDuration = track!.duration;
+
+          if (playerState == null) {
+            return Center(
+              child: Container(),
+            );
+          }
 
           if (playerState?.isPaused == true) {
             isPaused = true;
