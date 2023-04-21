@@ -67,7 +67,8 @@ dependencies:
   flutter_zoom_drawer: ^3.0.3
   awesome_dialog: ^3.0.2
   linear_timer: ^2.0.0
-  
+  update_notification: ^1.0.1
+  quickalert: ^1.0.1  
 
 dev_dependencies:
   flutter_test:

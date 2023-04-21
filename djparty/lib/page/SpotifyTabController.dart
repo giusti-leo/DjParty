@@ -1,4 +1,7 @@
 import 'dart:async';
+import 'dart:math';
+import 'package:djparty/entities/Party.dart';
+import 'package:djparty/entities/Track.dart';
 import 'package:djparty/page/HomePage.dart';
 import 'package:djparty/page/PartySettings.dart';
 import 'package:djparty/page/RankingPage.dart';
@@ -14,6 +17,7 @@ import 'package:djparty/utils/nextScreen.dart';
 import 'package:djparty/Icons/c_d_icons.dart';
 import 'package:linear_timer/linear_timer.dart';
 import 'package:provider/provider.dart';
+import 'package:spotify_sdk/models/connection_status.dart';
 import 'package:spotify_sdk/models/player_state.dart';
 import 'package:spotify_sdk/spotify_sdk.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -66,10 +70,8 @@ class _SpotifyTabController extends State<SpotifyTabController>
     sp.getDataFromSharedPreferences();
     fr.getDataFromSharedPreferences();
 
-    if (sp.uid == fr.admin) {
-      sr.connectToSpotify();
-      sr.getAuthToken();
-    }
+    sr.connectToSpotify();
+    sr.getAuthToken();
 
     await FirebaseFirestore.instance
         .collection('parties')
@@ -95,99 +97,204 @@ class _SpotifyTabController extends State<SpotifyTabController>
     TabController tabController = TabController(length: 4, vsync: this);
     final fr = context.read<FirebaseRequests>();
     final sp = context.read<SignInProvider>();
-    final sr = context.read<SpotifyRequests>();
 
     final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      navigatorKey: navigatorKey,
-      theme: ThemeData(
-          colorScheme: ColorScheme.fromSwatch().copyWith(
-              primary: const Color.fromARGB(228, 53, 191, 101),
-              secondary: const Color.fromARGB(255, 35, 34, 34))),
-      home: Scaffold(
-        backgroundColor: const Color.fromARGB(255, 35, 34, 34),
-        appBar: AppBar(
-          elevation: 0,
+        debugShowCheckedModeBanner: false,
+        navigatorKey: navigatorKey,
+        theme: ThemeData(
+            colorScheme: ColorScheme.fromSwatch().copyWith(
+                primary: const Color.fromARGB(228, 53, 191, 101),
+                secondary: const Color.fromARGB(255, 35, 34, 34))),
+        home: Scaffold(
           backgroundColor: const Color.fromARGB(255, 35, 34, 34),
-          title: Text(
-            fr.partyName!,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          centerTitle: true,
-          leading: GestureDetector(
-            child: const Icon(
-              Icons.arrow_back_ios_new,
-              color: Colors.white,
-            ),
-            onTap: () {
-              _handleStepBack();
-            },
-          ),
-          actions: (sp.uid == fr.admin)
-              ? [
-                  IconButton(
-                    onPressed: () {
-                      nextScreen(context, const PartySettings());
-                    },
-                    icon: const Icon(
-                      Icons.settings,
-                    ),
-                  )
-                ]
-              : [],
-        ),
-        body: LayoutBuilder(
-            builder: (BuildContext context, BoxConstraints constraints) {
-          return Column(children: [
-            Align(
-              alignment: Alignment.center,
-              child: TabBar(
-                  controller: tabController,
-                  isScrollable: true,
-                  labelPadding: const EdgeInsets.only(left: 20, right: 20),
-                  labelColor: Colors.white,
-                  unselectedLabelColor: Colors.grey,
-                  indicator: CircleTabIndicator(
-                      color: Color.fromRGBO(30, 215, 96, 0.9), radius: 4),
-                  tabs: const [
-                    Tab(text: "Player"),
-                    Tab(text: "Search"),
-                    Tab(text: "Queue"),
-                    Tab(text: "Ranking"),
-                  ]),
-            ),
-            SizedBox(
-              width: double.maxFinite,
-              height: constraints.maxHeight - 50,
-              child: TabBarView(
-                controller: tabController,
-                children: [
-                  const SpotifyPlayer(),
-                  const SearchItemScreen(),
-                  Queue(
-                    voting: voting,
-                  ),
-                  const RankingPage(),
-                ],
+          appBar: AppBar(
+            elevation: 0,
+            backgroundColor: const Color.fromARGB(255, 35, 34, 34),
+            title: Text(
+              fr.partyName!,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
               ),
             ),
-          ]);
-        }),
-        bottomNavigationBar: _buildBottomBar(context),
-      ),
-    );
+            centerTitle: true,
+            leading: GestureDetector(
+              child: const Icon(
+                Icons.arrow_back_ios_new,
+                color: Colors.white,
+              ),
+              onTap: () {
+                _handleStepBack();
+              },
+            ),
+            actions: (sp.uid == fr.admin)
+                ? [
+                    IconButton(
+                      onPressed: () {
+                        nextScreen(context, const PartySettings());
+                      },
+                      icon: const Icon(
+                        Icons.settings,
+                      ),
+                    ),
+                  ]
+                : [],
+          ),
+          body: LayoutBuilder(
+              builder: (BuildContext context, BoxConstraints constraints) {
+            return Column(children: [
+              Align(
+                alignment: Alignment.center,
+                child: TabBar(
+                    controller: tabController,
+                    isScrollable: true,
+                    labelPadding: const EdgeInsets.only(left: 20, right: 20),
+                    labelColor: Colors.white,
+                    unselectedLabelColor: Colors.grey,
+                    indicator: CircleTabIndicator(
+                        color: Color.fromRGBO(30, 215, 96, 0.9), radius: 4),
+                    tabs: const [
+                      Tab(text: "Player"),
+                      Tab(text: "Search"),
+                      Tab(text: "Queue"),
+                      Tab(text: "Ranking"),
+                    ]),
+              ),
+              SizedBox(
+                width: double.maxFinite,
+                height: constraints.maxHeight / 1.5,
+                child: TabBarView(
+                  controller: tabController,
+                  children: [
+                    const SpotifyPlayer(),
+                    const SearchItemScreen(),
+                    Queue(
+                      voting: voting,
+                    ),
+                    const RankingPage(),
+                  ],
+                ),
+              ),
+              SizedBox(
+                height: 10,
+                child: StreamBuilder(
+                    stream: FirebaseFirestore.instance
+                        .collection('parties')
+                        .doc(fr.partyCode)
+                        .snapshots(),
+                    builder: (context, snapshot) {
+                      final partySnap = snapshot.data!.data();
+                      Party party;
+                      party = Party.getPartyFromFirestore(partySnap);
+
+                      if (party.isStarted && !party.isEnded) {
+                        if (party.admin == sp.uid && party.status == 'S') {
+                          return StreamBuilder(
+                              stream: FirebaseFirestore.instance
+                                  .collection('parties')
+                                  .doc(fr.partyCode)
+                                  .collection('queue')
+                                  .snapshots(),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState ==
+                                    ConnectionState.waiting) {
+                                  return const Center(
+                                      child: CircularProgressIndicator(
+                                    color: Color.fromARGB(158, 61, 219, 71),
+                                    backgroundColor:
+                                        Color.fromARGB(128, 52, 74, 61),
+                                    strokeWidth: 10,
+                                  ));
+                                }
+                                //ci sono canzoni nella coda
+                                if (snapshot.hasData &&
+                                    snapshot.data!.size > 0) {
+                                  // 'If there are songs in the Queue at the end of the Voting phase, Music will start'
+                                  _addTrack();
+                                }
+                                return Container();
+                              });
+                        }
+                      }
+                      return Container();
+                    }),
+              ),
+            ]);
+          }),
+          bottomNavigationBar: _buildBottomBar(context),
+        ));
+  }
+
+  Future _addTrack() async {
+    final fr = context.read<FirebaseRequests>();
+    var db = FirebaseFirestore.instance.collection('parties').doc(fr.partyCode);
+    String trackUri = '';
+    bool done = false;
+    await FirebaseFirestore.instance
+        .collection('parties')
+        .doc(fr.partyCode)
+        .collection('queue')
+        .orderBy('votes', descending: true)
+        .get()
+        .then((snapshot) async {
+      if (snapshot.size > 0) {
+        for (var el in snapshot.docs) {
+          Track track = Track.getTrackFromFirestore(el);
+          trackUri = track.uri;
+          if (track.inQueue && !done) {
+            db.update({
+              "status": 'R',
+              "songCurrentlyPlayed": track.uri,
+            });
+            db.collection('queue').doc(track.uri).update(
+                {'inQueue': false, 'Streamings': FieldValue.increment(1)});
+            db.collection('members').doc(track.admin).update({
+              'points': FieldValue.increment(2),
+            });
+
+            for (var element in track.likes) {
+              await db.collection('members').doc(element).update({
+                'points': FieldValue.increment(1),
+              });
+            }
+
+            done = true;
+          }
+        }
+
+        if (!done) {
+          Random random = Random();
+          int randomNumber = random.nextInt(snapshot.size);
+          var snapDoc = snapshot.docs[randomNumber];
+          Track track = Track.getTrackFromFirestore(snapDoc);
+          await db
+              .collection('queue')
+              .doc(track.uri)
+              .update({'Streamings': FieldValue.increment(1)});
+          await db.update({
+            "status": 'R',
+            "songCurrentlyPlayed": track.uri,
+          });
+          trackUri = track.uri;
+          done = true;
+        }
+      } else {
+        return;
+      }
+    });
+
+    play(trackUri);
   }
 
   Widget _buildBottomBar(BuildContext context) {
     final sp = context.read<SignInProvider>();
     final fr = context.read<FirebaseRequests>();
 
+    final height = MediaQuery.of(context).size.height;
+
     return SizedBox(
-        height: 55,
+        height: height * .08,
         child: StreamBuilder(
             stream: FirebaseFirestore.instance
                 .collection('parties')
@@ -208,19 +315,20 @@ class _SpotifyTabController extends State<SpotifyTabController>
                   ),
                 );
               } else {
-                if (!(snapshot.data.get('isStarted') &&
-                    !snapshot.data.get('isEnded'))) {
+                final partySnap = snapshot.data!.data();
+                Party party;
+                party = Party.getPartyFromFirestore(partySnap);
+                if (!(party.isStarted && !party.isEnded)) {
                   return const SizedBox();
                 } else {
                   countdown = true;
 
                   _nextVotingPhase =
-                      (snapshot.data!.get("nextVotingPhase") as Timestamp)
-                          .toDate();
+                      (party.nextVotingPhase as Timestamp).toDate();
 
-                  _interval = snapshot.data!.get('timer');
-                  _votingTime = snapshot.data!.get('votingTime');
-                  _votingStatus = snapshot.data!.get('votingStatus');
+                  _interval = party.timer;
+                  _votingTime = party.votingTime;
+                  _votingStatus = party.votingStatus;
 
                   endCountdown = _computeCountdown();
 
@@ -234,33 +342,35 @@ class _SpotifyTabController extends State<SpotifyTabController>
 
   Widget _bottomAppBar(BuildContext context) {
     return SizedBox(
-      height: 55,
+      height: 10,
       child: BottomAppBar(
         elevation: 8.0,
         notchMargin: 8.0,
         color: const Color.fromARGB(255, 45, 44, 44),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           children: [
             _linearTimerWidget(context),
             const SizedBox(
               height: 10,
             ),
-            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              Center(
-                child: Text(
-                    !_votingStatus
-                        ? "Next voting in :  "
-                        : "Voting ends in :  ",
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    )),
-              ),
-              _countdown(context),
-            ])
+            Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Center(
+                    child: Text(
+                        !_votingStatus
+                            ? "Next voting in :  "
+                            : "Voting ends in :  ",
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        )),
+                  ),
+                  _countdown(context),
+                ])
           ],
         ),
       ),
@@ -269,21 +379,23 @@ class _SpotifyTabController extends State<SpotifyTabController>
 
   Widget _linearTimerWidget(BuildContext context) {
     return SizedBox(
-      height: 5,
+      height: 8,
       child: StreamBuilder<PlayerState>(
         stream: SpotifySdk.subscribePlayerState(),
         builder: (BuildContext context, AsyncSnapshot<PlayerState> snapshot) {
-          var track = snapshot.data?.track;
-          var playerState = snapshot.data;
-          int trackDuration = track!.duration;
-
-          if (playerState == null) {
+          if (snapshot.data?.track == null ||
+              snapshot.data!.track?.duration == null ||
+              snapshot.data == null) {
             return Center(
               child: Container(),
             );
           }
 
-          if (playerState.isPaused == true) {
+          var track = snapshot.data?.track;
+          var playerState = snapshot.data;
+          int trackDuration = track!.duration;
+
+          if (playerState?.isPaused == true) {
             isPaused = true;
             timerController1.stop();
           } else {
@@ -292,18 +404,27 @@ class _SpotifyTabController extends State<SpotifyTabController>
           }
 
           return LinearTimer(
-            duration: Duration(milliseconds: trackDuration - 2000),
+            minHeight: 10,
+            duration: Duration(milliseconds: trackDuration),
             color: Colors.green,
             backgroundColor: Colors.grey[200],
             controller: timerController1,
             onTimerEnd: () {
-              _playNextTrack();
+              _setSelection();
+              Future.delayed(const Duration(milliseconds: 1000));
               timerController1.reset();
             },
           );
         },
       ),
     );
+  }
+
+  Future _setSelection() async {
+    final fr = context.read<FirebaseRequests>();
+    var db = FirebaseFirestore.instance.collection('parties').doc(fr.partyCode);
+    await db
+        .update({"status": 'S', 'songsReproduced': FieldValue.increment(1)});
   }
 
   Future _playNextTrack() async {

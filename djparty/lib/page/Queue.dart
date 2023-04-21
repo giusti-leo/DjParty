@@ -1,4 +1,7 @@
+import 'dart:ffi';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:djparty/entities/Party.dart';
 import 'package:djparty/services/FirebaseRequests.dart';
 import 'package:djparty/services/InternetProvider.dart';
 import 'package:djparty/services/SignInProvider.dart';
@@ -46,7 +49,7 @@ class _Queue extends State<Queue> {
     var response = await http.get(Uri.parse(endpoint),
         headers: <String, String>{
           'Content-Type': 'application/json',
-          'Authorization': "Bearer " + myToken
+          'Authorization': "Bearer $myToken"
         });
     final tracksJson = json.decode(response.body);
     var trackList = tracksJson['queue'].toList();
@@ -85,6 +88,7 @@ class _Queue extends State<Queue> {
   @override
   Widget build(BuildContext context) {
     final fr = context.read<FirebaseRequests>();
+    final sp = context.read<SignInProvider>();
 
     return MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -92,128 +96,206 @@ class _Queue extends State<Queue> {
             colorScheme: ColorScheme.fromSwatch().copyWith(
                 primary: const Color.fromARGB(228, 53, 191, 101),
                 secondary: const Color.fromARGB(228, 53, 191, 101))),
-        home: StreamBuilder(
-            stream: FirebaseFirestore.instance
-                .collection('parties')
-                .doc(fr.partyCode)
-                .collection('queue')
-                .orderBy('timestamp')
-                .snapshots(),
-            builder: (context, AsyncSnapshot snapshot) {
-              return snapshot.hasData && snapshot.data.docs.length > 0
-                  ? Scaffold(
-                      backgroundColor: const Color.fromARGB(255, 35, 34, 34),
-                      body: Column(children: [
-                        Expanded(
-                          child: ListView.builder(
-                              shrinkWrap: false,
-                              itemCount: snapshot.data.docs.length,
-                              itemBuilder: (BuildContext context, int index) {
-                                final track = snapshot.data.docs[index];
-                                Track currentTrack =
-                                    Track.getTrackFromFirestore(track);
-                                return (widget.voting)
-                                    ? Column(
-                                        children: [
-                                          ListTile(
-                                            contentPadding:
-                                                const EdgeInsets.all(10.0),
-                                            title: Text(currentTrack.name!,
-                                                style: const TextStyle(
-                                                  fontSize: 20,
-                                                  fontWeight: FontWeight.w800,
-                                                  color: Colors.white,
-                                                )),
-                                            subtitle: Text(
-                                                currentTrack.artists![0],
-                                                style: const TextStyle(
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w800,
-                                                  color: Color.fromARGB(
-                                                      255, 134, 132, 132),
-                                                )),
-                                            leading: Image.network(
-                                              currentTrack.images!,
-                                              fit: BoxFit.cover,
-                                              height: 60,
-                                              width: 60,
+        home: SizedBox(
+          height: 5,
+          child: StreamBuilder(
+              stream: FirebaseFirestore.instance
+                  .collection('parties')
+                  .doc(fr.partyCode)
+                  .collection('queue')
+                  .where('inQueue', isEqualTo: true)
+                  .orderBy('likes', descending: true)
+                  .limit(30)
+                  .snapshots(),
+              builder: (context, AsyncSnapshot snap1) {
+                bool empty = true;
+                if (snap1.connectionState == ConnectionState.waiting) {
+                  return const Center(
+                      child: CircularProgressIndicator(
+                    color: Color.fromARGB(158, 61, 219, 71),
+                    backgroundColor: Color.fromARGB(128, 52, 74, 61),
+                    strokeWidth: 10,
+                  ));
+                }
+                if (!snap1.hasData) {
+                  return const Center(
+                      child: Text(
+                    'No data found',
+                    style: TextStyle(fontSize: 20, color: Colors.white),
+                  ));
+                }
+                if (snap1.data.docs.toString() == '[]') {
+                  return Center(
+                      child: RichText(
+                    text: TextSpan(
+                      text: 'Hello ',
+                      style: const TextStyle(
+                          fontWeight: FontWeight.normal, color: Colors.white),
+                      children: <TextSpan>[
+                        TextSpan(
+                            text: '${sp.name}',
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white)),
+                        const TextSpan(
+                            text: '. Add some new songs!',
+                            style: TextStyle(
+                                fontWeight: FontWeight.normal,
+                                color: Colors.white)),
+                      ],
+                    ),
+                  ));
+                } else {
+                  return StreamBuilder(
+                      stream: FirebaseFirestore.instance
+                          .collection('parties')
+                          .doc(fr.partyCode)
+                          .snapshots(),
+                      builder: (context, AsyncSnapshot snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                              child: CircularProgressIndicator(
+                            color: Color.fromARGB(158, 61, 219, 71),
+                            backgroundColor: Color.fromARGB(128, 52, 74, 61),
+                            strokeWidth: 10,
+                          ));
+                        }
+                        if (!snapshot.hasData) {
+                          return const Center(
+                              child: Text(
+                            'No data found',
+                            selectionColor: Colors.white,
+                            strutStyle: StrutStyle(
+                              fontSize: 20,
+                            ),
+                          ));
+                        }
+
+                        final partySnap = snapshot.data!.data();
+                        Party party;
+                        party = Party.getPartyFromFirestore(partySnap);
+
+                        return Scaffold(
+                            backgroundColor:
+                                const Color.fromARGB(255, 35, 34, 34),
+                            body: Column(children: [
+                              Expanded(
+                                flex: 1,
+                                child: ListView.builder(
+                                    shrinkWrap: false,
+                                    itemCount: snap1.data.docs.length,
+                                    itemBuilder:
+                                        (BuildContext context, int index) {
+                                      final track = snap1.data.docs[index];
+                                      Track currentTrack =
+                                          Track.getTrackFromFirestore(track);
+                                      //if (currentTrack.inQueue) empty = false;
+                                      if (party.votingStatus) {
+                                        return Column(
+                                          children: [
+                                            Text(
+                                              'Hi ${sp.name} . Try to search and add some new song in the Queue',
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 20,
+                                              ),
                                             ),
-                                            trailing: Icon(
-                                                userLikeSong(currentTrack)
-                                                    ? Icons.favorite
-                                                    : Icons.favorite_border,
-                                                color:
-                                                    userLikeSong(currentTrack)
-                                                        ? const Color.fromRGBO(
-                                                            30, 215, 96, 0.9)
-                                                        : Colors.white),
-                                            onTap: () {
-                                              _handleLikeLogic(currentTrack);
-                                            },
-                                          ),
-                                          Text(
-                                            'votes: ${currentTrack.likes.length}',
-                                            style: const TextStyle(
-                                                color: Colors.white),
-                                          ),
-                                          const Divider(
-                                            color: Colors.white24,
-                                            height: 1,
-                                          )
-                                        ],
-                                      )
-                                    : Column(
-                                        children: [
-                                          ListTile(
-                                            contentPadding:
-                                                const EdgeInsets.all(10.0),
-                                            title: Text(currentTrack.name!,
-                                                style: const TextStyle(
-                                                  fontSize: 20,
-                                                  fontWeight: FontWeight.w800,
-                                                  color: Colors.white,
-                                                )),
-                                            subtitle: Text(
-                                                currentTrack.artists![0],
-                                                style: const TextStyle(
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w800,
-                                                  color: Color.fromARGB(
-                                                      255, 134, 132, 132),
-                                                )),
-                                            leading: Image.network(
-                                              currentTrack.images!,
-                                              fit: BoxFit.cover,
-                                              height: 60,
-                                              width: 60,
+                                            ListTile(
+                                              tileColor: const Color.fromARGB(
+                                                  255, 35, 34, 34),
+                                              contentPadding:
+                                                  const EdgeInsets.all(10.0),
+                                              title: Text(currentTrack.name,
+                                                  style: const TextStyle(
+                                                    fontSize: 20,
+                                                    fontWeight: FontWeight.w800,
+                                                    color: Colors.white,
+                                                  )),
+                                              subtitle: Text(
+                                                  currentTrack.artists[0],
+                                                  style: const TextStyle(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.w800,
+                                                    color: Color.fromARGB(
+                                                        255, 134, 132, 132),
+                                                  )),
+                                              leading: Image.network(
+                                                currentTrack.images,
+                                                fit: BoxFit.cover,
+                                                height: 60,
+                                                width: 60,
+                                              ),
+                                              trailing: Icon(
+                                                  userLikeSong(currentTrack)
+                                                      ? Icons.favorite
+                                                      : Icons.favorite_border,
+                                                  color: userLikeSong(
+                                                          currentTrack)
+                                                      ? const Color.fromRGBO(
+                                                          30, 215, 96, 0.9)
+                                                      : Colors.white),
+                                              onTap: () {
+                                                _handleLikeLogic(currentTrack);
+                                              },
                                             ),
-                                          ),
-                                          Text(
-                                            'votes: ${currentTrack.likes.length}',
-                                            style: const TextStyle(
-                                                color: Colors.white),
-                                          ),
-                                          const Divider(
-                                            color: Colors.white24,
-                                            height: 1,
-                                          )
-                                        ],
-                                      );
-                              }),
-                        )
-                      ]))
-                  : Container(
-                      alignment: Alignment.center,
-                      child: const Text(
-                        "Add song to the queue",
-                        style: TextStyle(
-                          fontSize: 20,
-                          color: Colors.grey,
-                          fontFamily: 'Roboto',
-                        ),
-                      ),
-                    );
-            }));
+                                            Text(
+                                              'Like: ${currentTrack.likes.length}',
+                                              style: const TextStyle(
+                                                  color: Colors.white),
+                                            ),
+                                            const Divider(
+                                              color: Colors.white24,
+                                              height: 1,
+                                            ),
+                                          ],
+                                        );
+                                      } else {
+                                        return Column(
+                                          children: [
+                                            ListTile(
+                                              contentPadding:
+                                                  const EdgeInsets.all(10.0),
+                                              title: Text(currentTrack.name!,
+                                                  style: const TextStyle(
+                                                    fontSize: 20,
+                                                    fontWeight: FontWeight.w800,
+                                                    color: Colors.white,
+                                                  )),
+                                              subtitle: Text(
+                                                  currentTrack.artists![0],
+                                                  style: const TextStyle(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.w800,
+                                                    color: Color.fromARGB(
+                                                        255, 134, 132, 132),
+                                                  )),
+                                              leading: Image.network(
+                                                currentTrack.images,
+                                                fit: BoxFit.cover,
+                                                height: 60,
+                                                width: 60,
+                                              ),
+                                            ),
+                                            Text(
+                                              'votes: ${currentTrack.likes.length}',
+                                              style: const TextStyle(
+                                                  color: Colors.white),
+                                            ),
+                                            const Divider(
+                                              color: Colors.white24,
+                                              height: 1,
+                                            )
+                                          ],
+                                        );
+                                      }
+                                    }),
+                              )
+                            ]));
+                      });
+                }
+              }),
+        ));
   }
 
   Future<String> getAuthToken() async {

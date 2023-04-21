@@ -333,9 +333,11 @@ class FirebaseRequests extends ChangeNotifier {
         'votingStatus': false,
         'nextVotingPhase': DateTime.now(),
         'startParty': DateTime.now(),
+        'status': 'C',
         'timer': 2,
         'votingTime': 3,
-        'songCurrentlyPlayed': ''
+        'songCurrentlyPlayed': '',
+        'songsReproduced': 0
       }).then((value) => print('Party added'));
       notifyListeners();
     } on FirebaseException catch (e) {
@@ -575,8 +577,9 @@ class FirebaseRequests extends ChangeNotifier {
       await partyCollection.doc(code).update({
         'isStarted': true,
         'startParty': now,
-        'votingStatus': false,
-        'nextVotingPhase': now.add(const Duration(minutes: 1)),
+        'votingStatus': true,
+        'nextVotingPhase': now.add(Duration(minutes: _votingTimer!)),
+        'status': 'S'
       });
     } on FirebaseException catch (e) {
       switch (e.code) {
@@ -597,6 +600,7 @@ class FirebaseRequests extends ChangeNotifier {
           .doc(song)
           .update({
         'votes': FieldValue.arrayUnion(users),
+        'likes': FieldValue.increment(1)
       });
     } on FirebaseException catch (e) {
       switch (e.code) {
@@ -617,6 +621,7 @@ class FirebaseRequests extends ChangeNotifier {
           .doc(song)
           .update({
         'votes': FieldValue.arrayRemove(users),
+        'likes': FieldValue.increment(-1)
       });
     } on FirebaseException catch (e) {
       switch (e.code) {
@@ -654,10 +659,12 @@ class FirebaseRequests extends ChangeNotifier {
         'songName': track.name,
         'uri': track.uri,
         'votes': [],
-        'artists': FieldValue.arrayUnion(track.artists!),
+        'likes': 0,
+        'artists': FieldValue.arrayUnion(track.artists),
         'duration_ms': track.duration,
         'image': track.images,
         'timestamp': Timestamp.now(),
+        'Streamings': 0,
         'inQueue': true
       }).then((value) => print('Song added to Collection'));
     } on FirebaseException catch (e) {

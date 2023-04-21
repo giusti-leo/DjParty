@@ -58,7 +58,7 @@ class _RankingPageState extends State<RankingPage> {
                     final user = snapshot.data.docs[index];
                     User currentUser = User.getTrackFromFirestore(user);
                     return Padding(
-                        padding: const EdgeInsets.all(8),
+                        padding: const EdgeInsets.all(12),
                         child: Card(
                           elevation: 20,
                           color: const Color.fromARGB(255, 215, 208, 208),
@@ -97,18 +97,23 @@ class _RankingPageState extends State<RankingPage> {
                                                 fontSize: 40,
                                                 fontStyle: FontStyle.italic),
                                           ))),
-                              SizedBox(
-                                height: height * 0.065,
+                              const Text(
+                                '   ',
+                                style: const TextStyle(color: Colors.black),
                               ),
                               Text(
                                 currentUser.username.toString(),
                                 style: const TextStyle(color: Colors.black),
                               ),
                               SizedBox(
-                                width: width * 0.35,
+                                width: width * 0.25,
                               ),
                               Text(
                                 'Score: ${currentUser.points}',
+                                style: const TextStyle(color: Colors.black),
+                              ),
+                              const Text(
+                                '   ',
                                 style: const TextStyle(color: Colors.black),
                               ),
                               SizedBox(
