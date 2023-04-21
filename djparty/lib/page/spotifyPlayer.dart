@@ -599,10 +599,6 @@ class _SpotifyPlayerState extends State<SpotifyPlayer>
       await SpotifySdk.play(spotifyUri: uri);
     } on PlatformException catch (e) {
       setStatus(e.code, message: e.message);
-      final sr = context.read<SpotifyRequests>();
-      //sr.connectToSpotify();
-      //sr.getAuthToken();
-      //play(uri);
     } on MissingPluginException {
       setStatus('not implemented');
     }
