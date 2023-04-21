@@ -57,6 +57,7 @@ class _SearchItemScreen extends State<SearchItemScreen> {
   Future getData() async {
     final sp = context.read<SignInProvider>();
     final fr = context.read<FirebaseRequests>();
+    final sr = context.read<SpotifyRequests>();
 
     sp.getDataFromSharedPreferences();
     fr.getDataFromSharedPreferences();
@@ -109,6 +110,8 @@ class _SearchItemScreen extends State<SearchItemScreen> {
     //   isCalled = true;
     // }
 
+    print(_tracks);
+
     final sp = context.read<SignInProvider>();
     final sr = context.read<SpotifyRequests>();
 
@@ -157,12 +160,16 @@ class _SearchItemScreen extends State<SearchItemScreen> {
                               _insert = true;
                             });
                           },
+                          onPanCancel: () => setState(() {
+                            selectedIndex = 100;
+                            _insert = true;
+                          }),
                           onTap: () {
-                            _showContextMenu(context, track);
                             setState(() {
                               selectedIndex = index;
                               _insert = true;
                             });
+                            _showContextMenu(context, track);
                           },
                           child: Column(
                             children: [
@@ -229,10 +236,12 @@ class _SearchItemScreen extends State<SearchItemScreen> {
   //   return authenticationToken;
   // }
 
+/*
   void setStatus(String code, {String? message}) {
     var text = message ?? '';
     _logger.i('$code$text');
   }
+  */
 
   bool toggleSelection(bool selected) {
     setState(() {
@@ -264,15 +273,16 @@ class _SearchItemScreen extends State<SearchItemScreen> {
                 onPressed: () {
                   _handleAddSongToQueue(currentTrack);
                   setState(() {
-                    _insert = false;
+                    _insert = true;
+                    selectedIndex = 100;
                   });
+                  Navigator.pop(context);
                 }),
           ),
         ]);
   }
 
   Future _handleAddSongToQueue(Track currentTrack) async {
-    //connectToSpotify();
     final sp = context.read<SignInProvider>();
     final ip = context.read<InternetProvider>();
     final fr = context.read<FirebaseRequests>();

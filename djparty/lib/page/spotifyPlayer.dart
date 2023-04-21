@@ -1,6 +1,12 @@
 //import 'dart:html';
 
 import 'package:djparty/Icons/c_d_icons.dart';
+import 'dart:math';
+import 'package:djparty/entities/Track.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+
+import 'package:djparty/entities/Party.dart';
 import 'package:djparty/services/FirebaseRequests.dart';
 import 'package:djparty/services/InternetProvider.dart';
 import 'package:djparty/services/SpotifyRequests.dart';
@@ -25,7 +31,9 @@ import 'package:djparty/Icons/SizedIconButton.dart';
 import 'package:djparty/page/SearchItemScreen.dart';
 import 'package:djparty/page/PartyPlaylist.dart';
 import 'package:djparty/page/Home.dart';
+import 'package:update_notification/screens/update_notification.dart';
 //import 'package:linear_timer/linear_timer.dart';
+import 'package:quickalert/quickalert.dart';
 
 class SpotifyPlayer extends StatefulWidget {
   static String routeName = 'SpotifyPlayer';
@@ -64,7 +72,6 @@ class _SpotifyPlayerState extends State<SpotifyPlayer>
   double votingIndex = 0;
   bool _loading = false;
   bool _connected = true;
-  late List<String> partecipant_list;
   int nextTrackIndex = 1;
   String nextTrackUri = "";
   bool changed = false;
@@ -92,82 +99,168 @@ class _SpotifyPlayerState extends State<SpotifyPlayer>
     final fr = context.read<FirebaseRequests>();
 
     return StreamBuilder(
-      stream: FirebaseFirestore.instance
-          .collection('parties')
-          .doc(fr.partyCode)
-          .snapshots(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-              child: CircularProgressIndicator(
-            color: Color.fromARGB(158, 61, 219, 71),
-            backgroundColor: Color.fromARGB(128, 52, 74, 61),
-            strokeWidth: 10,
-          ));
-        }
-        if (!snapshot.hasData) {
-          return Container(
-            alignment: Alignment.topCenter,
-            child: const Text(
-              "Server problems",
-              style: TextStyle(
-                fontSize: 20,
-                color: Colors.grey,
-                fontWeight: FontWeight.normal,
-                fontFamily: 'Roboto',
-              ),
-            ),
-          );
-        } else {
-          if (snapshot.data!.get('isStarted') &&
-              !snapshot.data!.get('isEnded')) {
-            if (snapshot.data!.get('songCurrentlyPlayed') == '') {
-              if (snapshot.data!.get('votingStatus') == false) {
-                _addfirstTrack();
-              }
-              return Container(
-                alignment: Alignment.topCenter,
-                child: const Center(
-                  child: Text(
-                    "The Player will be updated once the first song will be picked",
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey,
-                      fontWeight: FontWeight.normal,
-                      fontFamily: 'Roboto',
-                    ),
-                  ),
+        stream: FirebaseFirestore.instance
+            .collection('parties')
+            .doc(fr.partyCode)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+                child: CircularProgressIndicator(
+              color: Color.fromARGB(158, 61, 219, 71),
+              backgroundColor: Color.fromARGB(128, 52, 74, 61),
+              strokeWidth: 10,
+            ));
+          }
+          if (!snapshot.hasData) {
+            return Container(
+              alignment: Alignment.topCenter,
+              child: const Text(
+                "Server problems",
+                style: TextStyle(
+                  fontSize: 20,
+                  color: Colors.grey,
+                  fontWeight: FontWeight.normal,
+                  fontFamily: 'Roboto',
                 ),
-              );
-            }
-            return StreamBuilder<ConnectionStatus>(
-              stream: SpotifySdk.subscribeConnectionStatus(),
-              builder: (context, snapshot) {
-                _connected = false;
-                var data = snapshot.data;
-                if (data != null) {
-                  _connected = data.connected;
-                }
-                return Scaffold(
-                    backgroundColor: const Color.fromARGB(255, 35, 34, 34),
-                    body: Container()
-                    //body: _playerWidget(context),
-                    );
-              },
+              ),
             );
-          } else if (snapshot.data!.get('isEnded')) {
-            return _EndParty(context);
           } else {
-            if (sp.uid! == fr.admin) {
-              return _adminLobby(context);
+            final partySnap = snapshot.data!.data();
+            Party party;
+            party = Party.getPartyFromFirestore(partySnap);
+
+            if (party.isStarted && !party.isEnded) {
+              if (party.status == 'R') {
+                return StreamBuilder<ConnectionStatus>(
+                  stream: SpotifySdk.subscribeConnectionStatus(),
+                  builder: (context, snapshot) {
+                    _connected = false;
+                    var data = snapshot.data;
+                    if (data != null) {
+                      _connected = data.connected;
+                    }
+
+                    return Scaffold(
+                      backgroundColor: const Color.fromARGB(255, 35, 34, 34),
+                      body: _playerWidget(context),
+                    );
+                  },
+                );
+              } else {
+                return Scaffold(
+                  backgroundColor: const Color.fromARGB(255, 35, 34, 34),
+                  body: Center(
+                      child: Column(
+                    children: [
+                      const SizedBox(height: 50),
+                      SizedBox(
+                        width: 250,
+                        height: 250,
+                        child: Image.asset(
+                          'assets/images/logo.jpg',
+                          width: 400,
+                          height: 400,
+                          colorBlendMode: BlendMode.hardLight,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 12.0),
+                      ),
+                      Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'No Music in reprodution',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                              ),
+                            ),
+                          ]),
+                      const SizedBox(
+                        height: 20,
+                      ),
+                    ],
+                  )),
+                );
+              }
+            } else if (party.isEnded) {
+              return _EndParty(context);
             } else {
-              partecipant_list = snapshot.data!.get('partecipant_list');
-              return _regularUserLobby(context, partecipant_list.length);
+              if (sp.uid! == fr.admin) {
+                return _adminLobby(context);
+              } else {
+                return _regularUserLobby(context, party.partecipantList.length);
+              }
             }
           }
-        }
-      },
-    );
+        });
+
+    /*
+            QuickAlert.show(
+                context: context,
+                type: QuickAlertType.info,
+                text: 'It is Voting Time!',
+                autoCloseDuration: const Duration(seconds: 3));
+                */
+/*
+            if (party.songsReproduced == 0) {
+              return FutureBuilder(
+                future: FirebaseFirestore.instance
+                    .collection('parties')
+                    .doc(fr.partyCode)
+                    .collection('queue')
+                    .where('admin', isEqualTo: sp.uid!)
+                    .count()
+                    .get(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(
+                        child: CircularProgressIndicator(
+                      color: Color.fromARGB(158, 61, 219, 71),
+                      backgroundColor: Color.fromARGB(128, 52, 74, 61),
+                      strokeWidth: 10,
+                    ));
+                  }
+                  //ci sono canzoni nella coda che sono state aggiunte dall'utente
+                  if (snapshot.data!.count > 0) {
+                    /*
+                    QuickAlert.show(
+                          context: context,
+                          type: QuickAlertType.info,
+                          text: 'Music will start when Voting ends',
+                          autoCloseDuration: const Duration(seconds: 3));
+                          */
+
+                    return Container();
+                  }
+                  
+                  //non ci sono canzoni nella coda che sono state aggiunte dall'utente
+                  /*
+                    QuickAlert.show(
+                        context: context,
+                        type: QuickAlertType.info,
+                        text:
+                            'Now you can vote songs in the Queue!\nYou can also add more!',
+                        autoCloseDuration: const Duration(seconds: 3));*/
+                  return Container();
+                },
+              );
+            }
+          }
+           else {
+                  //non ci sono canzoni nella coda
+                  /*
+                  QuickAlert.show(
+                    context: context,
+                    type: QuickAlertType.info,
+                    text:
+                        'No songs in the Queue.\nPlease add your songs to the Queue',
+                  );*/
+                  return Container();
+                }*/
   }
 
   Widget _regularUserLobby(BuildContext context, int n) {
@@ -268,16 +361,64 @@ class _SpotifyPlayerState extends State<SpotifyPlayer>
     ));
   }
 
-  Future _addfirstTrack() async {
+  Future _addTrack() async {
     final fr = context.read<FirebaseRequests>();
     var db = FirebaseFirestore.instance.collection('parties').doc(fr.partyCode);
-    var queue = db.collection('queue').orderBy("timestamp");
-    await queue.get().then(((snapshot) {
-      var SnapDoc = snapshot.docs[0];
-      firstTrackUri = SnapDoc["uri"];
-      db.update({"songCurrentlyPlayed": firstTrackUri});
+    await FirebaseFirestore.instance
+        .collection('parties')
+        .doc(fr.partyCode)
+        .collection('queue')
+        .orderBy('votes', descending: true)
+        .get()
+        .then((snapshot) async {
+      if (snapshot.size > 0) {
+        var snapDoc = snapshot.docs[0];
+        Track track = Track.getTrackFromFirestore(snapDoc);
+
+        db.update({
+          "status": 'R',
+          "songCurrentlyPlayed": track.uri,
+          "songsReproduced": FieldValue.increment(1)
+        });
+        db.collection('queue').doc(track.uri).update({'inQueue': false});
+        db.collection('members').doc(track.admin).update({
+          'points': 2,
+        });
+        /*
+        for (var element in track.likes) {
+          await db.collection('members').doc(element).update({
+            'points': 1,
+          });
+        }
+        */
+      } else {
+        /*
+        QuickAlert.show(
+            context: context,
+            type: QuickAlertType.info,
+            text:
+                'If You want to listen different songs add them.\nAll the songs in the Queue has been already reproduced ...but Music never stops!',
+            autoCloseDuration: const Duration(seconds: 3));
+        */
+        await FirebaseFirestore.instance
+            .collection('parties')
+            .doc(fr.partyCode)
+            .collection('queue')
+            .get()
+            .then((value) async {
+          Random random = new Random();
+          int randomNumber = random.nextInt(snapshot.size);
+          var snapDoc = snapshot.docs[randomNumber];
+          Track track = Track.getTrackFromFirestore(snapDoc);
+          await db.update({
+            "status": 'R',
+            "songCurrentlyPlayed": track.uri,
+            "songsReproduced": FieldValue.increment(1)
+          });
+        });
+      }
       play(firstTrackUri);
-    }));
+    });
   }
 
   Future _handleStartParty(BuildContext context) async {
@@ -286,11 +427,6 @@ class _SpotifyPlayerState extends State<SpotifyPlayer>
     final ip = context.read<InternetProvider>();
     final fr = context.read<FirebaseRequests>();
     await ip.checkInternetConnection();
-    var db = FirebaseFirestore.instance
-        .collection('parties')
-        .doc(fr.partyCode)
-        .collection('queue')
-        .orderBy("Timestamp");
 
     if (ip.hasInternet == false) {
       showInSnackBar(context, "Check your Internet connection", Colors.red);
@@ -307,78 +443,105 @@ class _SpotifyPlayerState extends State<SpotifyPlayer>
       if (value == true) {
         partyController.success();
         Future.delayed(const Duration(milliseconds: 1000));
-        fr.setPartyStarted(fr.partyCode!).then((value) {
-          if (sp.hasError == true) {
-            showInSnackBar(context, sp.errorCode.toString(), Colors.red);
-            partyController.reset();
-            return;
-          }
+        fr.getPartyDataFromFirestore(fr.partyCode!).then((value) {
+          fr.saveDataToSharedPreferences().then((value) {
+            fr.setPartyStarted(fr.partyCode!).then((value) {
+              if (sp.hasError == true) {
+                showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+                partyController.reset();
+                return;
+              }
+            });
+          });
         });
       }
     });
   }
 
   Widget _playerWidget(BuildContext context) {
-    return StreamBuilder<PlayerState>(
-      stream: SpotifySdk.subscribePlayerState(),
-      builder: (BuildContext context, AsyncSnapshot<PlayerState> snapshot) {
-        var track = snapshot.data?.track;
-        currentTrackImageUri = track?.imageUri;
+    final fr = context.read<FirebaseRequests>();
 
-        return Scaffold(
-          backgroundColor: const Color.fromARGB(255, 35, 34, 34),
-          body: Container(
-            child: Center(
-              child: ListView(padding: const EdgeInsets.all(8), children: [
-                const SizedBox(height: 50),
-                SizedBox(
-                  width: 250,
-                  height: 250,
-                  child: spotifyImageWidget(track!.imageUri),
-                ),
-                const SizedBox(height: 20),
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 16.0),
-                ),
-                /*
-                LinearTimer(
-                  duration: Duration(milliseconds: trackDuration - 2000),
-                  color: Colors.green,
-                  backgroundColor: Colors.grey[200],
-                  controller: timerController1,
-                  onTimerEnd: () {
-                    _playNextTrack();
-                    timerController1.reset();
-                  },
-                ),*/
-                Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  Text(
-                    '${track.name}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
+    return StreamBuilder(
+        stream: FirebaseFirestore.instance
+            .collection('parties')
+            .doc(fr.partyCode)
+            .snapshots(),
+        builder: (context, AsyncSnapshot snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+                child: CircularProgressIndicator(
+              color: Color.fromARGB(158, 61, 219, 71),
+              backgroundColor: Color.fromARGB(128, 52, 74, 61),
+              strokeWidth: 10,
+            ));
+          }
+          if (!snapshot.hasData) {
+            return Container();
+          }
+          var currentSong = snapshot.data.get('songCurrentlyPlayed');
+          if (currentSong == '') {
+            return const Center(
+                child: Text('No song selected',
+                    style: TextStyle(color: Colors.white)));
+          }
+          return FutureBuilder(
+            future: FirebaseFirestore.instance
+                .collection('parties')
+                .doc(fr.partyCode)
+                .collection('queue')
+                .doc(currentSong)
+                .get(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(
+                    child: CircularProgressIndicator(
+                  color: Color.fromARGB(158, 61, 219, 71),
+                  backgroundColor: Color.fromARGB(128, 52, 74, 61),
+                  strokeWidth: 10,
+                ));
+              }
+              Track track = Track.getTrackFromFirestore(snapshot.data!.data());
+              return Scaffold(
+                backgroundColor: const Color.fromARGB(255, 35, 34, 34),
+                body: Center(
+                    child: Column(
+                  children: [
+                    const SizedBox(height: 50),
+                    SizedBox(
+                        width: 250,
+                        height: 250,
+                        child: Image.network(track.images)),
+                    const SizedBox(height: 20),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 12.0),
                     ),
-                  ),
-                  Text(
-                    '${track.artist.name}',
-                    style: const TextStyle(
-                      color: Colors.grey,
-                      fontSize: 17,
+                    Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            track.name,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                            ),
+                          ),
+                          Text(
+                            track.artists.first,
+                            style: const TextStyle(
+                              color: Colors.grey,
+                              fontSize: 17,
+                            ),
+                          ),
+                        ]),
+                    const SizedBox(
+                      height: 20,
                     ),
-                  ),
-                ]),
-                const SizedBox(
-                  height: 20,
-                ),
-                /*Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  _buildPlayerContextWidget(),
-                ]),*/
-              ]),
-            ),
-          ),
-        );
-      },
-    );
+                  ],
+                )),
+              );
+            },
+          );
+        });
   }
 
   Widget _buildPlayerContextWidget() {

@@ -68,7 +68,8 @@ dependencies:
   awesome_dialog: ^3.0.2
   linear_timer: ^2.0.0
   wakelock: ^0.6.2
-  
+  update_notification: ^1.0.1
+  quickalert: ^1.0.1  
 
 dev_dependencies:
   flutter_test:

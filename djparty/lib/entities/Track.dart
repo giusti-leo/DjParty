@@ -1,26 +1,18 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Track {
-  final String? uri;
-  final List<String>? artists;
-  final String? images;
-  final String? name;
-  final String? admin;
-  final Timestamp? timestamp;
-  final int? duration;
-  final bool? inQueue;
+  final String uri;
+  final List<String> artists;
+  final String images;
+  final String name;
+  final String admin;
+  final Timestamp timestamp;
+  final int duration;
+  final bool inQueue;
   List<String> likes;
 
-  Track(
-      List<String> this.likes,
-      String this.uri,
-      List<String> this.artists,
-      String this.images,
-      String this.name,
-      String this.admin,
-      int this.duration,
-      Timestamp this.timestamp,
-      bool this.inQueue);
+  Track(this.likes, this.uri, this.artists, this.images, this.name, this.admin,
+      this.duration, this.timestamp, this.inQueue);
 
   factory Track.getTrackFromFirestore(dynamic track) {
     List<dynamic> artists = track['artists'].toList();
