@@ -146,66 +146,72 @@ class _SearchItemScreen extends State<SearchItemScreen> {
                 const SizedBox(
                   height: 10,
                 ),
-                Expanded(
-                  child: ListView.builder(
-                      shrinkWrap: false,
-                      itemCount: _tracks.length,
-                      itemBuilder: (BuildContext context, int index) {
-                        Track track = _tracks[index];
-                        return GestureDetector(
-                          onTapDown: (details) {
-                            _getTapPosition(details);
-                            setState(() {
-                              selectedIndex = 100;
-                              _insert = true;
-                            });
-                          },
-                          onPanCancel: () => setState(() {
-                            selectedIndex = 100;
-                            _insert = true;
-                          }),
-                          onTap: () {
-                            setState(() {
-                              selectedIndex = index;
-                              _insert = true;
-                            });
-                            _showContextMenu(context, track);
-                          },
-                          child: Column(
-                            children: [
-                              ListTile(
-                                contentPadding: const EdgeInsets.all(10.0),
-                                title: Text(track.name!,
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w800,
-                                      color: myColor,
-                                    )),
-                                tileColor: selectedIndex == index
-                                    ? const Color.fromARGB(228, 53, 191, 101)
-                                    : null,
-                                subtitle: Text(printArtists(track.artists!),
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w800,
-                                      color: Color.fromARGB(255, 134, 132, 132),
-                                    )),
-                                leading: Image.network(
-                                  track.images!,
-                                  fit: BoxFit.cover,
-                                  height: 60,
-                                  width: 60,
+                _tracks.toString() != '[]'
+                    ? Expanded(
+                        child: ListView.builder(
+                            shrinkWrap: false,
+                            itemCount: _tracks.length,
+                            itemBuilder: (BuildContext context, int index) {
+                              Track track = _tracks[index];
+                              return GestureDetector(
+                                onTapDown: (details) {
+                                  _getTapPosition(details);
+                                  setState(() {
+                                    selectedIndex = 100;
+                                    _insert = true;
+                                  });
+                                },
+                                onPanCancel: () => setState(() {
+                                  selectedIndex = 100;
+                                  _insert = true;
+                                }),
+                                onTap: () {
+                                  setState(() {
+                                    selectedIndex = index;
+                                    _insert = true;
+                                  });
+                                  _showContextMenu(context, track);
+                                },
+                                child: Column(
+                                  children: [
+                                    ListTile(
+                                      contentPadding:
+                                          const EdgeInsets.all(10.0),
+                                      title: Text(track.name!,
+                                          style: TextStyle(
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.w800,
+                                            color: myColor,
+                                          )),
+                                      tileColor: selectedIndex == index
+                                          ? const Color.fromARGB(
+                                              228, 53, 191, 101)
+                                          : null,
+                                      subtitle:
+                                          Text(printArtists(track.artists!),
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w800,
+                                                color: Color.fromARGB(
+                                                    255, 134, 132, 132),
+                                              )),
+                                      leading: Image.network(
+                                        track.images!,
+                                        fit: BoxFit.cover,
+                                        height: 60,
+                                        width: 60,
+                                      ),
+                                    ),
+                                    const Divider(
+                                      color: Colors.white24,
+                                      height: 1,
+                                    )
+                                  ],
                                 ),
-                              ),
-                              const Divider(
-                                color: Colors.white24,
-                                height: 1,
-                              )
-                            ],
-                          ),
-                        );
-                      }),
-                )
+                              );
+                            }),
+                      )
+                    : Container()
               ],
             )));
   }
@@ -337,6 +343,7 @@ class _SearchItemScreen extends State<SearchItemScreen> {
       }
     });
   }
+
 /*
   Future<http.Response> _addItemToPlaylist() async {
     return http.post(
