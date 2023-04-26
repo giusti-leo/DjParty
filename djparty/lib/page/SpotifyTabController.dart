@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:djparty/entities/Party.dart';
 import 'package:djparty/entities/Track.dart';
 import 'package:djparty/page/HomePage.dart';
@@ -52,12 +53,16 @@ class _SpotifyTabController extends State<SpotifyTabController>
 
   int nextTrackIndex = 1;
   String nextTrackUri = "";
+  String partyID = '';
+  bool ended = false;
 
   int _interval = 0;
   int _votingTime = 0;
   bool _votingStatus = false;
   int endCountdown = 0;
   late LinearTimerController timerController1 = LinearTimerController(this);
+  final RoundedLoadingButtonController exitController =
+      RoundedLoadingButtonController();
 
   int _computeCountdown() {
     DateTime tmpNow = DateTime.now();
@@ -73,6 +78,8 @@ class _SpotifyTabController extends State<SpotifyTabController>
     sp.getDataFromSharedPreferences();
     fr.getDataFromSharedPreferences();
     sr.getUserId();
+
+    partyID = fr.partyCode!;
 
     if (sp.uid == fr.admin) {
       sr.connectToSpotify();
@@ -99,6 +106,87 @@ class _SpotifyTabController extends State<SpotifyTabController>
     super.initState();
   }
 
+  void showDataAlert(BuildContext context) {
+    showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(
+                Radius.circular(
+                  20.0,
+                ),
+              ),
+            ),
+            contentPadding: const EdgeInsets.only(
+              top: 10.0,
+            ),
+            title: const Text(
+              "Warning",
+              style: TextStyle(fontSize: 24.0),
+              textAlign: TextAlign.center,
+            ),
+            content: Container(
+              height: 250,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    const Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Text(
+                        "No party can't continue without its admin. If you exit the party wiil end.",
+                        style: TextStyle(fontSize: 17),
+                      ),
+                    ),
+                    Container(
+                      width: double.infinity,
+                      height: 60,
+                      padding: const EdgeInsets.all(8.0),
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          pause();
+                          _adminEndParty(context);
+                          _handleStepBack();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          primary: Colors.black,
+                          // fixedSize: Size(250, 50),
+                        ),
+                        child: const Text(
+                          "End the party",
+                        ),
+                      ),
+                    ),
+                    Container(
+                      width: double.infinity,
+                      height: 60,
+                      padding: const EdgeInsets.all(8.0),
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          primary: Colors.grey,
+                          // fixedSize: Size(250, 50),
+                        ),
+                        child: const Text(
+                          "Ignore",
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        });
+  }
+
   @override
   Widget build(BuildContext context) {
     TabController tabController = TabController(length: 4, vsync: this);
@@ -107,6 +195,7 @@ class _SpotifyTabController extends State<SpotifyTabController>
     final sr = context.read<SpotifyRequests>();
 
     final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
     Future<bool> _onWillPop() async {
       fr.getDataFromSharedPreferences();
       if (fr.isEnded == true) {
@@ -114,6 +203,8 @@ class _SpotifyTabController extends State<SpotifyTabController>
       }
       return false; //<-- SEE HERE
     }
+
+    final width = MediaQuery.of(context).size.width;
 
     return WillPopScope(
       onWillPop: _onWillPop,
@@ -136,42 +227,79 @@ class _SpotifyTabController extends State<SpotifyTabController>
               ),
             ),
             centerTitle: true,
-            leading: (sp.uid == fr.admin)
-                ? RoundedLoadingButton(
-                    onPressed: () {
-                      _handleEndParty(context);
-                      pause();
-                    },
-                    controller: partyController,
-                    successColor: const Color.fromRGBO(30, 215, 96, 0.9),
-                    width: 30,
-                    elevation: 0,
-                    borderRadius: 25,
-                    color: const Color.fromRGBO(30, 215, 96, 0.9),
-                    child: Wrap(
-                      //alignment: WrapAlignment.center,
-                      children: const [
-                        SizedBox(
-                          width: 25,
-                        ),
-                        Text("End Party",
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 15,
-                                fontWeight: FontWeight.w500)),
-                      ],
-                    ),
-                  )
-                : GestureDetector(
-                    child: const Icon(
-                      Icons.arrow_back_ios_new,
-                      color: Colors.white,
-                    ),
-                    onTap: () {
-                      _handleStepBack();
-                    },
+            leading: Expanded(
+              child: IconButton(
+                  icon: const Icon(
+                    Icons.arrow_back_ios_new,
+                    color: Colors.white,
                   ),
-            actions: (sp.uid == fr.admin)
+                  onPressed: () {
+                    if (sp.uid! != fr.admin) {
+                      _handleStepBack();
+                    } else {
+                      fr.getDataFromSharedPreferences();
+                      if (fr.isStarted! && (!fr.isEnded! && !ended)) {
+                        showDataAlert(context);
+                      } else {
+                        _handleStepBack();
+                      }
+                    }
+                  }),
+            ),
+            actions: [
+              PopupMenuButton<int>(
+                itemBuilder: (context) => [
+                  // PopupMenuItem 1
+                  (!fr.isStarted!)
+                      ? PopupMenuItem(
+                          value: 1,
+                          // row with 2 children
+                          child: TextButton(
+                            onPressed: () {
+                              nextScreen(context, const PartySettings());
+                            },
+                            child: Row(
+                              children: const [
+                                Icon(Icons.settings),
+                                SizedBox(
+                                  width: 8,
+                                ),
+                                Text(
+                                  "Settings",
+                                  style: TextStyle(color: Colors.black),
+                                )
+                              ],
+                            ),
+                          ))
+                      : PopupMenuItem(
+                          value: 1,
+                          // row with two children
+                          child: TextButton(
+                            onPressed: () {
+                              _handleEndParty(context);
+                            },
+                            child: Row(
+                              children: const [
+                                Icon(Icons.stop),
+                                SizedBox(
+                                  width: 8,
+                                ),
+                                Text(
+                                  "End party",
+                                  style: TextStyle(color: Colors.black),
+                                )
+                              ],
+                            ),
+                          )),
+                ],
+                offset: const Offset(0, 100),
+                color: Colors.white,
+                elevation: 1,
+              ),
+            ],
+          ),
+
+          /*(sp.uid == fr.admin)
                 ? [
                     IconButton(
                       onPressed: () {
@@ -180,10 +308,10 @@ class _SpotifyTabController extends State<SpotifyTabController>
                       icon: const Icon(
                         Icons.settings,
                       ),
-                    )
+                    ),
                   ]
                 : [],
-          ),
+          ),*/
           body: LayoutBuilder(
               builder: (BuildContext context, BoxConstraints constraints) {
             return Column(children: [
@@ -196,7 +324,8 @@ class _SpotifyTabController extends State<SpotifyTabController>
                     labelColor: Colors.white,
                     unselectedLabelColor: Colors.grey,
                     indicator: CircleTabIndicator(
-                        color: Color.fromRGBO(30, 215, 96, 0.9), radius: 4),
+                        color: const Color.fromRGBO(30, 215, 96, 0.9),
+                        radius: 4),
                     tabs: const [
                       Tab(text: "Player"),
                       Tab(text: "Search"),
@@ -332,6 +461,22 @@ class _SpotifyTabController extends State<SpotifyTabController>
     play(trackUri);
   }
 
+  Future _adminEndParty(BuildContext context) async {
+    final CollectionReference partyCollection =
+        FirebaseFirestore.instance.collection("parties");
+
+    await partyCollection.doc(partyID).update({
+      'isEnded': true,
+    }).onError((error, stackTrace) {
+      showInSnackBar(context, error.toString(), Colors.red);
+      return;
+    });
+
+    ended = true;
+
+    displayToastMessage(context, 'Party ended correctly', Colors.green);
+  }
+
   Future _handleEndParty(BuildContext context) async {
     final sp = context.read<SignInProvider>();
     final ip = context.read<InternetProvider>();
@@ -364,6 +509,22 @@ class _SpotifyTabController extends State<SpotifyTabController>
             partyController.reset();
             return;
           }
+          fr.getPartyDataFromFirestore(fr.partyCode!).then((value) {
+            if (sp.hasError == true) {
+              showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+              partyController.reset();
+              return;
+            }
+            fr.saveDataToSharedPreferences().then((value) {
+              if (sp.hasError == true) {
+                showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+                partyController.reset();
+                return;
+              }
+              displayToastMessage(
+                  context, 'Party ended correctly', Colors.green);
+            });
+          });
         });
       }
     });
