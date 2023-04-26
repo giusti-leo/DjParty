@@ -334,7 +334,9 @@ class _SpotifyPlayerState extends State<SpotifyPlayer>
       bottom: 20,
       child: RoundedLoadingButton(
         onPressed: () {
-          _handleStartParty(context);
+          setState(() {
+            _handleStartParty(context);
+          });
         },
         controller: partyController,
         successColor: const Color.fromRGBO(30, 215, 96, 0.9),
@@ -442,21 +444,33 @@ class _SpotifyPlayerState extends State<SpotifyPlayer>
         partyController.reset();
         return;
       }
-      if (value == true) {
-        partyController.success();
-        Future.delayed(const Duration(milliseconds: 1000));
-        fr.getPartyDataFromFirestore(fr.partyCode!).then((value) {
-          fr.saveDataToSharedPreferences().then((value) {
-            fr.setPartyStarted(fr.partyCode!).then((value) {
+      Future.delayed(const Duration(milliseconds: 1000));
+      fr.getPartyDataFromFirestore(fr.partyCode!).then((value) {
+        fr.saveDataToSharedPreferences().then((value) {
+          fr.setPartyStarted(fr.partyCode!).then((value) {
+            if (sp.hasError == true) {
+              showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+              partyController.reset();
+              return;
+            }
+            fr.getPartyDataFromFirestore(fr.partyCode!).then((value) {
               if (sp.hasError == true) {
                 showInSnackBar(context, sp.errorCode.toString(), Colors.red);
                 partyController.reset();
                 return;
               }
+              fr.saveDataToSharedPreferences().then((value) {
+                if (sp.hasError == true) {
+                  showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+                  partyController.reset();
+                  return;
+                }
+                partyController.success();
+              });
             });
           });
         });
-      }
+      });
     });
   }
 

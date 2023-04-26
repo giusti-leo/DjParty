@@ -110,8 +110,6 @@ class _SearchItemScreen extends State<SearchItemScreen> {
     //   isCalled = true;
     // }
 
-    print(_tracks);
-
     final sp = context.read<SignInProvider>();
     final sr = context.read<SpotifyRequests>();
 
