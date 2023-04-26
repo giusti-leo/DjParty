@@ -204,8 +204,6 @@ class _SpotifyTabController extends State<SpotifyTabController>
       return false; //<-- SEE HERE
     }
 
-    final width = MediaQuery.of(context).size.width;
-
     return WillPopScope(
       onWillPop: _onWillPop,
       child: MaterialApp(
@@ -356,6 +354,14 @@ class _SpotifyTabController extends State<SpotifyTabController>
                         .doc(fr.partyCode)
                         .snapshots(),
                     builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(
+                            child: CircularProgressIndicator(
+                          color: Color.fromARGB(158, 61, 219, 71),
+                          backgroundColor: Color.fromARGB(128, 52, 74, 61),
+                          strokeWidth: 10,
+                        ));
+                      }
                       final partySnap = snapshot.data!.data();
                       Party party;
                       party = Party.getPartyFromFirestore(partySnap);
