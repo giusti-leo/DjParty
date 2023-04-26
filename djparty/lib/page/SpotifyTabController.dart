@@ -72,6 +72,7 @@ class _SpotifyTabController extends State<SpotifyTabController>
 
     sp.getDataFromSharedPreferences();
     fr.getDataFromSharedPreferences();
+    sr.getUserId();
 
     if (sp.uid == fr.admin) {
       sr.connectToSpotify();
@@ -106,155 +107,166 @@ class _SpotifyTabController extends State<SpotifyTabController>
     final sr = context.read<SpotifyRequests>();
 
     final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+    Future<bool> _onWillPop() async {
+      fr.getDataFromSharedPreferences();
+      if (fr.isEnded == true) {
+        return true;
+      }
+      return false; //<-- SEE HERE
+    }
 
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      navigatorKey: navigatorKey,
-      theme: ThemeData(
-          colorScheme: ColorScheme.fromSwatch().copyWith(
-              primary: const Color.fromARGB(228, 53, 191, 101),
-              secondary: const Color.fromARGB(255, 35, 34, 34))),
-      home: Scaffold(
-        backgroundColor: const Color.fromARGB(255, 35, 34, 34),
-        appBar: AppBar(
-          elevation: 0,
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        navigatorKey: navigatorKey,
+        theme: ThemeData(
+            colorScheme: ColorScheme.fromSwatch().copyWith(
+                primary: const Color.fromARGB(228, 53, 191, 101),
+                secondary: const Color.fromARGB(255, 35, 34, 34))),
+        home: Scaffold(
           backgroundColor: const Color.fromARGB(255, 35, 34, 34),
-          title: Text(
-            fr.partyName!,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          centerTitle: true,
-          leading: (sp.uid == fr.admin)
-              ? RoundedLoadingButton(
-                  onPressed: () {
-                    _handleEndParty(context);
-                    pause();
-                  },
-                  controller: partyController,
-                  successColor: const Color.fromRGBO(30, 215, 96, 0.9),
-                  width: 30,
-                  elevation: 0,
-                  borderRadius: 25,
-                  color: const Color.fromRGBO(30, 215, 96, 0.9),
-                  child: Wrap(
-                    //alignment: WrapAlignment.center,
-                    children: const [
-                      SizedBox(
-                        width: 25,
-                      ),
-                      Text("End Party",
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w500)),
-                    ],
-                  ),
-                )
-              : GestureDetector(
-                  child: const Icon(
-                    Icons.arrow_back_ios_new,
-                    color: Colors.white,
-                  ),
-                  onTap: () {
-                    _handleStepBack();
-                  },
-                ),
-          actions: (sp.uid == fr.admin)
-              ? [
-                  IconButton(
-                    onPressed: () {
-                      nextScreen(context, const PartySettings());
-                    },
-                    icon: const Icon(
-                      Icons.settings,
-                    ),
-                  )
-                ]
-              : [],
-        ),
-        body: LayoutBuilder(
-            builder: (BuildContext context, BoxConstraints constraints) {
-          return Column(children: [
-            Align(
-              alignment: Alignment.center,
-              child: TabBar(
-                  controller: tabController,
-                  isScrollable: true,
-                  labelPadding: const EdgeInsets.only(left: 20, right: 20),
-                  labelColor: Colors.white,
-                  unselectedLabelColor: Colors.grey,
-                  indicator: CircleTabIndicator(
-                      color: Color.fromRGBO(30, 215, 96, 0.9), radius: 4),
-                  tabs: const [
-                    Tab(text: "Player"),
-                    Tab(text: "Search"),
-                    Tab(text: "Queue"),
-                    Tab(text: "Ranking"),
-                  ]),
-            ),
-            SizedBox(
-              width: double.maxFinite,
-              height: constraints.maxHeight - 58,
-              child: TabBarView(
-                controller: tabController,
-                children: [
-                  const SpotifyPlayer(),
-                  const SearchItemScreen(),
-                  Queue(
-                    voting: voting,
-                  ),
-                  const RankingPage(),
-                ],
+          appBar: AppBar(
+            elevation: 0,
+            backgroundColor: const Color.fromARGB(255, 35, 34, 34),
+            title: Text(
+              fr.partyName!,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(
-              height: 1,
-              child: StreamBuilder(
-                  stream: FirebaseFirestore.instance
-                      .collection('parties')
-                      .doc(fr.partyCode)
-                      .snapshots(),
-                  builder: (context, snapshot) {
-                    final partySnap = snapshot.data!.data();
-                    Party party;
-                    party = Party.getPartyFromFirestore(partySnap);
+            centerTitle: true,
+            leading: (sp.uid == fr.admin)
+                ? RoundedLoadingButton(
+                    onPressed: () {
+                      _handleEndParty(context);
+                      pause();
+                    },
+                    controller: partyController,
+                    successColor: const Color.fromRGBO(30, 215, 96, 0.9),
+                    width: 30,
+                    elevation: 0,
+                    borderRadius: 25,
+                    color: const Color.fromRGBO(30, 215, 96, 0.9),
+                    child: Wrap(
+                      //alignment: WrapAlignment.center,
+                      children: const [
+                        SizedBox(
+                          width: 25,
+                        ),
+                        Text("End Party",
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w500)),
+                      ],
+                    ),
+                  )
+                : GestureDetector(
+                    child: const Icon(
+                      Icons.arrow_back_ios_new,
+                      color: Colors.white,
+                    ),
+                    onTap: () {
+                      _handleStepBack();
+                    },
+                  ),
+            actions: (sp.uid == fr.admin)
+                ? [
+                    IconButton(
+                      onPressed: () {
+                        nextScreen(context, const PartySettings());
+                      },
+                      icon: const Icon(
+                        Icons.settings,
+                      ),
+                    )
+                  ]
+                : [],
+          ),
+          body: LayoutBuilder(
+              builder: (BuildContext context, BoxConstraints constraints) {
+            return Column(children: [
+              Align(
+                alignment: Alignment.center,
+                child: TabBar(
+                    controller: tabController,
+                    isScrollable: true,
+                    labelPadding: const EdgeInsets.only(left: 20, right: 20),
+                    labelColor: Colors.white,
+                    unselectedLabelColor: Colors.grey,
+                    indicator: CircleTabIndicator(
+                        color: Color.fromRGBO(30, 215, 96, 0.9), radius: 4),
+                    tabs: const [
+                      Tab(text: "Player"),
+                      Tab(text: "Search"),
+                      Tab(text: "Queue"),
+                      Tab(text: "Ranking"),
+                    ]),
+              ),
+              SizedBox(
+                width: double.maxFinite,
+                height: constraints.maxHeight - 58,
+                child: TabBarView(
+                  controller: tabController,
+                  children: [
+                    const SpotifyPlayer(),
+                    const SearchItemScreen(),
+                    Queue(
+                      voting: voting,
+                    ),
+                    const RankingPage(),
+                  ],
+                ),
+              ),
+              SizedBox(
+                height: 1,
+                child: StreamBuilder(
+                    stream: FirebaseFirestore.instance
+                        .collection('parties')
+                        .doc(fr.partyCode)
+                        .snapshots(),
+                    builder: (context, snapshot) {
+                      final partySnap = snapshot.data!.data();
+                      Party party;
+                      party = Party.getPartyFromFirestore(partySnap);
 
-                    if (party.isStarted && !party.isEnded) {
-                      if (party.admin == sp.uid && party.status == 'S') {
-                        return StreamBuilder(
-                            stream: FirebaseFirestore.instance
-                                .collection('parties')
-                                .doc(fr.partyCode)
-                                .collection('queue')
-                                .snapshots(),
-                            builder: (context, snapshot) {
-                              if (snapshot.connectionState ==
-                                  ConnectionState.waiting) {
-                                return const Center(
-                                    child: CircularProgressIndicator(
-                                  color: Color.fromARGB(158, 61, 219, 71),
-                                  backgroundColor:
-                                      Color.fromARGB(128, 52, 74, 61),
-                                  strokeWidth: 10,
-                                ));
-                              }
-                              //ci sono canzoni nella coda
-                              if (snapshot.hasData && snapshot.data!.size > 0) {
-                                // 'If there are songs in the Queue at the end of the Voting phase, Music will start'
-                                _addTrack();
-                              }
-                              return Container();
-                            });
+                      if (party.isStarted && !party.isEnded) {
+                        if (party.admin == sp.uid && party.status == 'S') {
+                          return StreamBuilder(
+                              stream: FirebaseFirestore.instance
+                                  .collection('parties')
+                                  .doc(fr.partyCode)
+                                  .collection('queue')
+                                  .snapshots(),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState ==
+                                    ConnectionState.waiting) {
+                                  return const Center(
+                                      child: CircularProgressIndicator(
+                                    color: Color.fromARGB(158, 61, 219, 71),
+                                    backgroundColor:
+                                        Color.fromARGB(128, 52, 74, 61),
+                                    strokeWidth: 10,
+                                  ));
+                                }
+                                //ci sono canzoni nella coda
+                                if (snapshot.hasData &&
+                                    snapshot.data!.size > 0) {
+                                  // 'If there are songs in the Queue at the end of the Voting phase, Music will start'
+                                  _addTrack();
+                                }
+                                return Container();
+                              });
+                        }
                       }
-                    }
-                    return Container();
-                  }),
-            ),
-          ]);
-        }),
-        bottomNavigationBar: _buildBottomBar(context),
+                      return Container();
+                    }),
+              ),
+            ]);
+          }),
+          bottomNavigationBar: _buildBottomBar(context),
+        ),
       ),
     );
   }

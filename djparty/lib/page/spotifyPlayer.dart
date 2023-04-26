@@ -56,8 +56,10 @@ class _SpotifyPlayerState extends State<SpotifyPlayer>
   Future getData() async {
     final sp = context.read<SignInProvider>();
     final fr = context.read<FirebaseRequests>();
+    final sr = context.read<SpotifyRequests>();
     sp.getDataFromSharedPreferences();
     fr.getDataFromSharedPreferences();
+    sr.getUserId();
   }
 
   @override
@@ -715,10 +717,9 @@ void _handleCreatePlaylist(BuildContext context) {
   final sr = context.read<SpotifyRequests>();
   final fr = context.read<FirebaseRequests>();
   sr.createPlaylist(fr.partyName!, sr.userId!);
-  Future.delayed(const Duration(milliseconds: 2000), () {
-    sr.getPlaylistId(sr.userId!, fr.partyName!);
-  });
-  Future.delayed(const Duration(milliseconds: 2000), () {
+  //sr.getPlaylistId(sr.userId!, fr.partyName!);
+
+  Future.delayed(const Duration(seconds: 1), () {
     sr.addSongsToPlaylist(fr.partyCode!);
   });
 }

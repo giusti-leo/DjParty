@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+//import 'dart:html';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:djparty/entities/Track.dart';
@@ -92,7 +93,7 @@ class SpotifyRequests extends ChangeNotifier {
 
   Future<http.Response> addItemToPlaylist(String uri) async {
     return http.post(
-      Uri.parse(addEndpoint + playlistId! + "/tracks" + "?uris=" + uri),
+      Uri.parse(addEndpoint + _playlistId! + "/tracks" + "?uris=" + uri),
       headers: <String, String>{
         'Content-Type': 'application/json',
         'Authorization': "Bearer " + myToken!
@@ -100,7 +101,7 @@ class SpotifyRequests extends ChangeNotifier {
     );
   }
 
-  Future<void> getUserId() async {
+  Future<void> getUserIdFromSpotify() async {
     var response = await http.get(
       Uri.parse(getUserIdEndpoint),
       headers: <String, String>{
@@ -110,6 +111,24 @@ class SpotifyRequests extends ChangeNotifier {
     );
     final responseJson = json.decode(response.body);
     _userId = "${responseJson["id"]}";
+  }
+
+  Future saveDataToSharedPreferences() async {
+    final SharedPreferences s = await SharedPreferences.getInstance();
+    await s.setString('spotifyUserId', _userId!);
+    notifyListeners();
+  }
+
+  Future getDataFromSharedPreferences() async {
+    final SharedPreferences s = await SharedPreferences.getInstance();
+    _userId = s.getString('spotifyUserId');
+    notifyListeners();
+  }
+
+  Future<void> getUserId() async {
+    getUserIdFromSpotify();
+    saveDataToSharedPreferences();
+    getDataFromSharedPreferences();
   }
 
   Future<void> getPlaylistId(String id, String title) async {
@@ -130,8 +149,8 @@ class SpotifyRequests extends ChangeNotifier {
     }
   }
 
-  Future<http.Response> createPlaylist(String title, String id) async {
-    return http.post(
+  Future<void> createPlaylist(String title, String id) async {
+    await http.post(
         Uri.parse(
             createPlaylistEndpoint + id + "/playlists" + "?name=" + title),
         headers: <String, String>{
@@ -139,6 +158,8 @@ class SpotifyRequests extends ChangeNotifier {
           'Authorization': "Bearer " + myToken!
         },
         body: jsonEncode(<String, String>{'name': title}));
+
+    getPlaylistId(id, title);
   }
 
   Future<http.Response> addItemToSpotifyQueue(String uri) async {
@@ -152,20 +173,22 @@ class SpotifyRequests extends ChangeNotifier {
   }
 
   Future<void> addSongsToPlaylist(String code) async {
-    int index = 0;
     var db = FirebaseFirestore.instance.collection('parties').doc(code);
     var queue = db.collection('queue').orderBy("timestamp");
 
     QuerySnapshot productCollection = await queue.get();
     int productCount = productCollection.size;
 
-    while (index <= productCount) {
-      await queue.get().then(((snapshot) {
-        var SnapDoc = snapshot.docs[index];
-        addItemToPlaylist(SnapDoc["uri"]);
-      }));
-      index++;
-    }
+    await queue.snapshots().listen((snapshot) {
+      snapshot.docs.forEach((doc) => addItemToPlaylist(doc['uri']));
+    });
+
+    // for (int index = 0; index <= productCount; index++) {
+    //   await queue.get().then(((snapshot) {
+    //     var SnapDoc = snapshot.docs[index];
+    //     addItemToPlaylist(SnapDoc["uri"]);
+    //   }));
+    // }
   }
 
   void setStatus(String code, {String? message}) {
