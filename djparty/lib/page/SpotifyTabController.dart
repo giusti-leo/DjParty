@@ -274,6 +274,7 @@ class _SpotifyTabController extends State<SpotifyTabController>
                           // row with two children
                           child: TextButton(
                             onPressed: () {
+                              pause();
                               _handleEndParty(context);
                             },
                             child: Row(
