@@ -322,6 +322,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
                                 context,
                                 'You are already part of the party',
                                 Colors.green);
+                            handleAfterSubmit();
                             return;
                           }
                           fp
@@ -335,12 +336,19 @@ class _ScannerScreenState extends State<ScannerScreen> {
                             }
                             displayToastMessage(
                                 context, 'You join the party', Colors.green);
+                            handleAfterSubmit();
                             return;
                           });
                         })));
           });
         });
       });
+    });
+  }
+
+  handleAfterSubmit() {
+    Future.delayed(const Duration(milliseconds: 1000)).then((value) {
+      nextScreenReplace(context, const HomePage());
     });
   }
 

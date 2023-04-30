@@ -418,52 +418,55 @@ class _SpotifyTabController extends State<SpotifyTabController>
         .collection('parties')
         .doc(fr.partyCode)
         .collection('queue')
-        .orderBy('votes', descending: true)
+        .where('inQueue', isEqualTo: true)
+        .orderBy('likes', descending: true)
+        .limit(1)
         .get()
-        .then((snapshot) async {
-      if (snapshot.size > 0) {
-        for (var el in snapshot.docs) {
-          Track track = Track.getTrackFromFirestore(el);
-          if (track.inQueue && !done) {
-            trackUri = track.uri;
-            await db.update({
-              "status": 'R',
-              "songCurrentlyPlayed": track.uri,
-            });
-            await db.collection('queue').doc(track.uri).update(
-                {'inQueue': false, 'Streamings': FieldValue.increment(1)});
-            await db.collection('members').doc(track.admin).update({
+        .then((value) {
+      if (value.size > 0) {
+        var el = value.docs[0];
+        Track track = Track.getTrackFromFirestore(el);
+        trackUri = track.uri;
+        db.update({
+          "status": 'R',
+          "songCurrentlyPlayed": track.uri,
+        }).then((value) {
+          db.collection('queue').doc(track.uri).update({
+            'inQueue': false,
+            'Streamings': FieldValue.increment(1)
+          }).then((value) {
+            db.collection('members').doc(track.admin).update({
               'points': FieldValue.increment(2),
+            }).then((value) {
+              for (var element in track.likes) {
+                db.collection('members').doc(element).update({
+                  'points': FieldValue.increment(1),
+                });
+              }
             });
-
-            for (var element in track.likes) {
-              await db.collection('members').doc(element).update({
-                'points': FieldValue.increment(1),
-              });
-            }
-
-            done = true;
-          }
-        }
-
-        if (!done) {
+          });
+        });
+      } else {
+        FirebaseFirestore.instance
+            .collection('parties')
+            .doc(fr.partyCode)
+            .collection('queue')
+            .get()
+            .then((snapshot) {
           Random random = Random();
           int randomNumber = random.nextInt(snapshot.size);
           var snapDoc = snapshot.docs[randomNumber];
           Track track = Track.getTrackFromFirestore(snapDoc);
-          await db
+          db
               .collection('queue')
               .doc(track.uri)
-              .update({'Streamings': FieldValue.increment(1)});
-          await db.update({
-            "status": 'R',
-            "songCurrentlyPlayed": track.uri,
+              .update({'Streamings': FieldValue.increment(1)}).then((value) {
+            db.update({
+              "status": 'R',
+              "songCurrentlyPlayed": track.uri,
+            }).then((value) => trackUri = track.uri);
           });
-          trackUri = track.uri;
-          done = true;
-        }
-      } else {
-        return;
+        });
       }
     });
 
