@@ -459,7 +459,6 @@ class _LoginState extends State<Login> {
         return;
       } else if (sp.errorCode == 'Stop') {
         googleController.reset();
-
         return;
       } else {
         // checking whether user exists or not
@@ -475,12 +474,15 @@ class _LoginState extends State<Login> {
                         })));
           } else {
             // user does not exist
-            sp.saveDataToFirestore().then((value) => sp
-                .saveDataToSharedPreferences()
-                .then((value) => sp.setSignIn().then((value) {
-                      googleController.success();
-                      handleAfterSignIn();
-                    })));
+            sp.saveDataToFirestore().then((value) async {
+              await sp.getUserDataFromFirestore(sp.uid.toString()).then(
+                  (value) => sp
+                      .saveDataToSharedPreferences()
+                      .then((value) => sp.setSignIn().then((value) {
+                            googleController.success();
+                            handleAfterSignIn();
+                          })));
+            });
           }
         });
       }
