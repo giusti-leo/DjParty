@@ -173,7 +173,7 @@ class _SpotifyPlayerState extends State<SpotifyPlayer>
                       Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text(
+                            const Text(
                               'No Music in reprodution',
                               style: TextStyle(
                                 color: Colors.white,
@@ -292,18 +292,32 @@ class _SpotifyPlayerState extends State<SpotifyPlayer>
   Widget _EndParty(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     final sr = context.read<SpotifyRequests>();
+    final fr = context.read<FirebaseRequests>();
+    bool pressed = false;
 
     return Column(
       children: [
+        const SizedBox(
+          height: 30,
+        ),
         const Text(
           "The current party is ended!",
           style: TextStyle(
             color: Colors.white,
           ),
         ),
+        const SizedBox(
+          height: 30,
+        ),
         ElevatedButton(
           onPressed: () {
-            _handleCreatePlaylist(context);
+            if (pressed) {
+              displayToastMessage(context,
+                  'Playlist ${fr.partyName} already added!', Colors.green);
+            } else {
+              _handleCreatePlaylist(context);
+              pressed = true;
+            }
           },
           child: Wrap(
             children: const [
@@ -736,4 +750,7 @@ void _handleCreatePlaylist(BuildContext context) {
   Future.delayed(const Duration(seconds: 1), () {
     sr.addSongsToPlaylist(fr.partyCode!);
   });
+
+  displayToastMessage(
+      context, 'Playlist ${fr.partyName} created!', Colors.green);
 }
