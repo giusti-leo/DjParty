@@ -393,31 +393,16 @@ class _SpotifyPlayerState extends State<SpotifyPlayer>
         var snapDoc = snapshot.docs[0];
         Track track = Track.getTrackFromFirestore(snapDoc);
 
-        db.update({
+        await db.update({
           "status": 'R',
           "songCurrentlyPlayed": track.uri,
           "songsReproduced": FieldValue.increment(1)
         });
-        db.collection('queue').doc(track.uri).update({'inQueue': false});
-        db.collection('members').doc(track.admin).update({
+        await db.collection('queue').doc(track.uri).update({'inQueue': false});
+        await db.collection('members').doc(track.admin).update({
           'points': 2,
         });
-        /*
-        for (var element in track.likes) {
-          await db.collection('members').doc(element).update({
-            'points': 1,
-          });
-        }
-        */
       } else {
-        /*
-        QuickAlert.show(
-            context: context,
-            type: QuickAlertType.info,
-            text:
-                'If You want to listen different songs add them.\nAll the songs in the Queue has been already reproduced ...but Music never stops!',
-            autoCloseDuration: const Duration(seconds: 3));
-        */
         await FirebaseFirestore.instance
             .collection('parties')
             .doc(fr.partyCode)

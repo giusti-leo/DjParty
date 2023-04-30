@@ -185,6 +185,7 @@ class _InsertCodeState extends State<InsertCode> {
                           }
                           displayToastMessage(
                               context, 'You join the party', Colors.green);
+                          handleAfterSubmit();
                           return;
                         });
                       })));
@@ -192,6 +193,12 @@ class _InsertCodeState extends State<InsertCode> {
           });
         });
       });
+    });
+  }
+
+  handleAfterSubmit() {
+    Future.delayed(const Duration(milliseconds: 1000)).then((value) {
+      nextScreenReplace(context, const HomePage());
     });
   }
 

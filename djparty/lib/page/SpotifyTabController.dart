@@ -244,58 +244,60 @@ class _SpotifyTabController extends State<SpotifyTabController>
                     }
                   }),
             ),
-            actions: [
-              PopupMenuButton<int>(
-                itemBuilder: (context) => [
-                  // PopupMenuItem 1
-                  (!fr.isStarted!)
-                      ? PopupMenuItem(
-                          value: 1,
-                          // row with 2 children
-                          child: TextButton(
-                            onPressed: () {
-                              nextScreen(context, const PartySettings());
-                            },
-                            child: Row(
-                              children: const [
-                                Icon(Icons.settings),
-                                SizedBox(
-                                  width: 8,
-                                ),
-                                Text(
-                                  "Settings",
-                                  style: TextStyle(color: Colors.black),
-                                )
-                              ],
-                            ),
-                          ))
-                      : PopupMenuItem(
-                          value: 1,
-                          // row with two children
-                          child: TextButton(
-                            onPressed: () {
-                              pause();
-                              _handleEndParty(context);
-                            },
-                            child: Row(
-                              children: const [
-                                Icon(Icons.stop),
-                                SizedBox(
-                                  width: 8,
-                                ),
-                                Text(
-                                  "End party",
-                                  style: TextStyle(color: Colors.black),
-                                )
-                              ],
-                            ),
-                          )),
-                ],
-                offset: const Offset(0, 100),
-                color: Colors.white,
-                elevation: 1,
-              ),
-            ],
+            actions: (fr.admin == sp.uid)
+                ? [
+                    PopupMenuButton<int>(
+                      itemBuilder: (context) => [
+                        // PopupMenuItem 1
+                        (!fr.isStarted!)
+                            ? PopupMenuItem(
+                                value: 1,
+                                // row with 2 children
+                                child: TextButton(
+                                  onPressed: () {
+                                    nextScreen(context, const PartySettings());
+                                  },
+                                  child: Row(
+                                    children: const [
+                                      Icon(Icons.settings),
+                                      SizedBox(
+                                        width: 8,
+                                      ),
+                                      Text(
+                                        "Settings",
+                                        style: TextStyle(color: Colors.black),
+                                      )
+                                    ],
+                                  ),
+                                ))
+                            : PopupMenuItem(
+                                value: 1,
+                                // row with two children
+                                child: TextButton(
+                                  onPressed: () {
+                                    pause();
+                                    _handleEndParty(context);
+                                  },
+                                  child: Row(
+                                    children: const [
+                                      Icon(Icons.stop),
+                                      SizedBox(
+                                        width: 8,
+                                      ),
+                                      Text(
+                                        "End party",
+                                        style: TextStyle(color: Colors.black),
+                                      )
+                                    ],
+                                  ),
+                                )),
+                      ],
+                      offset: const Offset(0, 100),
+                      color: Colors.white,
+                      elevation: 1,
+                    ),
+                  ]
+                : [],
           ),
 
           /*(sp.uid == fr.admin)
@@ -424,13 +426,13 @@ class _SpotifyTabController extends State<SpotifyTabController>
           Track track = Track.getTrackFromFirestore(el);
           if (track.inQueue && !done) {
             trackUri = track.uri;
-            db.update({
+            await db.update({
               "status": 'R',
               "songCurrentlyPlayed": track.uri,
             });
-            db.collection('queue').doc(track.uri).update(
+            await db.collection('queue').doc(track.uri).update(
                 {'inQueue': false, 'Streamings': FieldValue.increment(1)});
-            db.collection('members').doc(track.admin).update({
+            await db.collection('members').doc(track.admin).update({
               'points': FieldValue.increment(2),
             });
 

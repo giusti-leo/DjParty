@@ -286,11 +286,12 @@ class SignInProvider extends ChangeNotifier {
       _image = 0;
       _init = userDetails.email![0];
       _initColor = const Color.fromARGB(255, 0, 0, 0).value;
+
       notifyListeners();
     } on FirebaseAuthException catch (e) {
       switch (e.code) {
         default:
-          _errorCode = e.toString();
+          _errorCode = 'Stop';
           _hasError = true;
           notifyListeners();
       }
