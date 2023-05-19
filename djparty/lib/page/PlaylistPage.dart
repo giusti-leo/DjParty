@@ -24,6 +24,10 @@ class _PlaylistPage extends State<PlaylistPage> {
   String input = "";
   List _tracks = [];
 
+  Color mainGreen = const Color.fromARGB(228, 53, 191, 101);
+  Color backGround = const Color.fromARGB(255, 35, 34, 34);
+  Color alertColor = Colors.red;
+
   Future<List<dynamic>> GetTracks() async {
     var response = await http.get(Uri.parse(endpoint),
         headers: <String, String>{
@@ -32,7 +36,6 @@ class _PlaylistPage extends State<PlaylistPage> {
         });
     final tracksJson = json.decode(response.body);
     var trackList = tracksJson['items'].toList();
-    print(trackList);
     _tracks = trackList;
 
     return trackList;
@@ -48,9 +51,9 @@ class _PlaylistPage extends State<PlaylistPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: Color.fromARGB(159, 46, 46, 46),
+        backgroundColor: backGround,
         appBar: AppBar(
-          backgroundColor: Color.fromARGB(228, 53, 191, 101),
+          backgroundColor: mainGreen,
           title: const Text(
             'Party Playlist',
             style: TextStyle(fontWeight: FontWeight.bold),
@@ -59,9 +62,9 @@ class _PlaylistPage extends State<PlaylistPage> {
         ),
         body: Column(children: [
           IconButton(
-            icon: const Icon(
+            icon: Icon(
               Spotify.spotify,
-              color: Color.fromARGB(228, 53, 191, 101),
+              color: mainGreen,
             ),
             onPressed: (getAuthToken),
           ),

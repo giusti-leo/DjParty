@@ -1,5 +1,3 @@
-//import 'dart:html';
-
 import 'package:djparty/Icons/c_d_icons.dart';
 import 'dart:math';
 import 'package:djparty/entities/Track.dart';
@@ -22,7 +20,6 @@ import 'package:spotify_sdk/models/connection_status.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:djparty/services/SignInProvider.dart';
 import 'package:provider/provider.dart';
-//import 'package:linear_timer/linear_timer.dart';
 import 'package:http/http.dart' as http;
 import 'dart:async';
 import 'package:spotify_sdk/models/image_uri.dart';
@@ -32,7 +29,6 @@ import 'package:djparty/page/SearchItemScreen.dart';
 import 'package:djparty/page/PartyPlaylist.dart';
 import 'package:djparty/page/Home.dart';
 import 'package:update_notification/screens/update_notification.dart';
-//import 'package:linear_timer/linear_timer.dart';
 import 'package:quickalert/quickalert.dart';
 
 class SpotifyPlayer extends StatefulWidget {
@@ -46,11 +42,9 @@ class SpotifyPlayer extends StatefulWidget {
 
 class _SpotifyPlayerState extends State<SpotifyPlayer>
     with TickerProviderStateMixin {
-  //late LinearTimerController timerController1 = LinearTimerController(this);
   bool nextSong = false;
   final RoundedLoadingButtonController partyController =
       RoundedLoadingButtonController();
-  //late LinearTimerController timerController = LinearTimerController(this);
   bool timerRunning = false;
 
   Future getData() async {
@@ -92,6 +86,10 @@ class _SpotifyPlayerState extends State<SpotifyPlayer>
     ),
   );
 
+  Color mainGreen = const Color.fromARGB(228, 53, 191, 101);
+  Color backGround = const Color.fromARGB(255, 35, 34, 34);
+  Color alertColor = Colors.red;
+
   late ImageUri? currentTrackImageUri;
   late ImageUri? image;
 
@@ -107,10 +105,10 @@ class _SpotifyPlayerState extends State<SpotifyPlayer>
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
+            return Center(
                 child: CircularProgressIndicator(
-              color: Color.fromARGB(158, 61, 219, 71),
-              backgroundColor: Color.fromARGB(128, 52, 74, 61),
+              color: mainGreen,
+              backgroundColor: backGround,
               strokeWidth: 10,
             ));
           }
@@ -144,14 +142,14 @@ class _SpotifyPlayerState extends State<SpotifyPlayer>
                     }
 
                     return Scaffold(
-                      backgroundColor: const Color.fromARGB(255, 35, 34, 34),
+                      backgroundColor: backGround,
                       body: _playerWidget(context),
                     );
                   },
                 );
               } else {
                 return Scaffold(
-                  backgroundColor: const Color.fromARGB(255, 35, 34, 34),
+                  backgroundColor: backGround,
                   body: Center(
                       child: Column(
                     children: [
@@ -172,8 +170,8 @@ class _SpotifyPlayerState extends State<SpotifyPlayer>
                       ),
                       Column(
                           mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Text(
+                          children: const [
+                            Text(
                               'No Music in reprodution',
                               style: TextStyle(
                                 color: Colors.white,
@@ -199,70 +197,6 @@ class _SpotifyPlayerState extends State<SpotifyPlayer>
             }
           }
         });
-
-    /*
-            QuickAlert.show(
-                context: context,
-                type: QuickAlertType.info,
-                text: 'It is Voting Time!',
-                autoCloseDuration: const Duration(seconds: 3));
-                */
-/*
-            if (party.songsReproduced == 0) {
-              return FutureBuilder(
-                future: FirebaseFirestore.instance
-                    .collection('parties')
-                    .doc(fr.partyCode)
-                    .collection('queue')
-                    .where('admin', isEqualTo: sp.uid!)
-                    .count()
-                    .get(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(
-                        child: CircularProgressIndicator(
-                      color: Color.fromARGB(158, 61, 219, 71),
-                      backgroundColor: Color.fromARGB(128, 52, 74, 61),
-                      strokeWidth: 10,
-                    ));
-                  }
-                  //ci sono canzoni nella coda che sono state aggiunte dall'utente
-                  if (snapshot.data!.count > 0) {
-                    /*
-                    QuickAlert.show(
-                          context: context,
-                          type: QuickAlertType.info,
-                          text: 'Music will start when Voting ends',
-                          autoCloseDuration: const Duration(seconds: 3));
-                          */
-
-                    return Container();
-                  }
-                  
-                  //non ci sono canzoni nella coda che sono state aggiunte dall'utente
-                  /*
-                    QuickAlert.show(
-                        context: context,
-                        type: QuickAlertType.info,
-                        text:
-                            'Now you can vote songs in the Queue!\nYou can also add more!',
-                        autoCloseDuration: const Duration(seconds: 3));*/
-                  return Container();
-                },
-              );
-            }
-          }
-           else {
-                  //non ci sono canzoni nella coda
-                  /*
-                  QuickAlert.show(
-                    context: context,
-                    type: QuickAlertType.info,
-                    text:
-                        'No songs in the Queue.\nPlease add your songs to the Queue',
-                  );*/
-                  return Container();
-                }*/
   }
 
   Widget _regularUserLobby(BuildContext context, int n) {
@@ -313,7 +247,7 @@ class _SpotifyPlayerState extends State<SpotifyPlayer>
           onPressed: () {
             if (pressed) {
               displayToastMessage(context,
-                  'Playlist ${fr.partyName} already added!', Colors.green);
+                  'Playlist ${fr.partyName} already added!', mainGreen);
             } else {
               _handleCreatePlaylist(context);
               pressed = true;
@@ -353,11 +287,11 @@ class _SpotifyPlayerState extends State<SpotifyPlayer>
           });
         },
         controller: partyController,
-        successColor: const Color.fromRGBO(30, 215, 96, 0.9),
+        successColor: mainGreen,
         width: width * 0.80,
         elevation: 0,
         borderRadius: 25,
-        color: const Color.fromRGBO(30, 215, 96, 0.9),
+        color: mainGreen,
         child: Wrap(
           children: const [
             Icon(
@@ -432,14 +366,15 @@ class _SpotifyPlayerState extends State<SpotifyPlayer>
     await ip.checkInternetConnection();
 
     if (ip.hasInternet == false) {
-      showInSnackBar(context, "Check your Internet connection", Colors.red);
+      displayToastMessage(
+          context, "Check your Internet connection", alertColor);
       partyController.reset();
       return;
     }
 
     fr.checkPartyExists(code: fr.partyCode!).then((value) async {
       if (sp.hasError == true) {
-        showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+        displayToastMessage(context, sp.errorCode.toString(), alertColor);
         partyController.reset();
         return;
       }
@@ -448,19 +383,21 @@ class _SpotifyPlayerState extends State<SpotifyPlayer>
         fr.saveDataToSharedPreferences().then((value) {
           fr.setPartyStarted(fr.partyCode!).then((value) {
             if (sp.hasError == true) {
-              showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+              displayToastMessage(context, sp.errorCode.toString(), alertColor);
               partyController.reset();
               return;
             }
             fr.getPartyDataFromFirestore(fr.partyCode!).then((value) {
               if (sp.hasError == true) {
-                showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+                displayToastMessage(
+                    context, sp.errorCode.toString(), alertColor);
                 partyController.reset();
                 return;
               }
               fr.saveDataToSharedPreferences().then((value) {
                 if (sp.hasError == true) {
-                  showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+                  displayToastMessage(
+                      context, sp.errorCode.toString(), alertColor);
                   partyController.reset();
                   return;
                 }
@@ -483,10 +420,10 @@ class _SpotifyPlayerState extends State<SpotifyPlayer>
             .snapshots(),
         builder: (context, AsyncSnapshot snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
+            return Center(
                 child: CircularProgressIndicator(
-              color: Color.fromARGB(158, 61, 219, 71),
-              backgroundColor: Color.fromARGB(128, 52, 74, 61),
+              color: mainGreen,
+              backgroundColor: backGround,
               strokeWidth: 10,
             ));
           }
@@ -508,16 +445,16 @@ class _SpotifyPlayerState extends State<SpotifyPlayer>
                 .get(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(
+                return Center(
                     child: CircularProgressIndicator(
-                  color: Color.fromARGB(158, 61, 219, 71),
-                  backgroundColor: Color.fromARGB(128, 52, 74, 61),
+                  color: mainGreen,
+                  backgroundColor: backGround,
                   strokeWidth: 10,
                 ));
               }
               Track track = Track.getTrackFromFirestore(snapshot.data!.data());
               return Scaffold(
-                backgroundColor: const Color.fromARGB(255, 35, 34, 34),
+                backgroundColor: backGround,
                 body: Center(
                     child: Column(
                   children: [
@@ -632,37 +569,6 @@ class _SpotifyPlayerState extends State<SpotifyPlayer>
     }
   }
 
-  // Future<void> resume() async {
-  //   isPaused = false;
-  //   try {
-  //     await SpotifySdk.resume();
-  //   } on PlatformException catch (e) {
-  //     setStatus(e.code, message: e.message);
-  //   } on MissingPluginException {
-  //     setStatus('not implemented');
-  //   }
-  // }
-
-  // Future<void> skipNext() async {
-  //   try {
-  //     await SpotifySdk.skipNext();
-  //   } on PlatformException catch (e) {
-  //     setStatus(e.code, message: e.message);
-  //   } on MissingPluginException {
-  //     setStatus('not implemented');
-  //   }
-  // }
-
-  // Future<void> skipPrevious() async {
-  //   try {
-  //     await SpotifySdk.skipPrevious();
-  //   } on PlatformException catch (e) {
-  //     setStatus(e.code, message: e.message);
-  //   } on MissingPluginException {
-  //     setStatus('not implemented');
-  //   }
-  // }
-
   Future getPlayerState() async {
     try {
       return await SpotifySdk.getPlayerState();
@@ -730,7 +636,6 @@ void _handleCreatePlaylist(BuildContext context) {
   final sr = context.read<SpotifyRequests>();
   final fr = context.read<FirebaseRequests>();
   sr.createPlaylist(fr.partyName!, sr.userId!);
-  //sr.getPlaylistId(sr.userId!, fr.partyName!);
 
   Future.delayed(const Duration(seconds: 1), () {
     sr.addSongsToPlaylist(fr.partyCode!);

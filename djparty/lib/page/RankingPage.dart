@@ -17,6 +17,10 @@ class RankingPage extends StatefulWidget {
 }
 
 class _RankingPageState extends State<RankingPage> {
+  Color mainGreen = const Color.fromARGB(228, 53, 191, 101);
+  Color backGround = const Color.fromARGB(255, 35, 34, 34);
+  Color alertColor = Colors.red;
+
   Future getData() async {
     final sp = context.read<SignInProvider>();
     final fr = context.read<FirebaseRequests>();
@@ -45,10 +49,10 @@ class _RankingPageState extends State<RankingPage> {
         builder: (context, AsyncSnapshot snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting ||
               !snapshot.hasData) {
-            return const Center(
+            return Center(
                 child: CircularProgressIndicator(
-              color: Color.fromARGB(158, 61, 219, 71),
-              backgroundColor: Color.fromARGB(128, 52, 74, 61),
+              color: mainGreen,
+              backgroundColor: backGround,
               strokeWidth: 10,
             ));
           }
@@ -99,7 +103,7 @@ class _RankingPageState extends State<RankingPage> {
                                           ))),
                               const Text(
                                 '   ',
-                                style: const TextStyle(color: Colors.black),
+                                style: TextStyle(color: Colors.black),
                               ),
                               Text(
                                 currentUser.username.toString(),
@@ -114,7 +118,7 @@ class _RankingPageState extends State<RankingPage> {
                               ),
                               const Text(
                                 '   ',
-                                style: const TextStyle(color: Colors.black),
+                                style: TextStyle(color: Colors.black),
                               ),
                               SizedBox(
                                 width: width * 0.02,

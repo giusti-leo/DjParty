@@ -39,6 +39,10 @@ class _UserProfileState extends State<UserProfile> {
   String imageUrl = '';
   int initColor = 0;
 
+  Color mainGreen = const Color.fromARGB(228, 53, 191, 101);
+  Color backGround = const Color.fromARGB(255, 35, 34, 34);
+  Color alertColor = Colors.red;
+
   @override
   void initState() {
     super.initState();
@@ -52,17 +56,6 @@ class _UserProfileState extends State<UserProfile> {
 
     sp.getDataFromSharedPreferences();
 
-    /*    
-      setState(() {
-      name = sp.name.toString();
-      description = sp.description.toString();
-      image = sp.image!;
-      initColor = sp.initColor!;
-      imageUrl = sp.imageUrl.toString();
-      _isLoading = false;
-    });
-
-    */
     _isLoading = false;
   }
 
@@ -75,13 +68,12 @@ class _UserProfileState extends State<UserProfile> {
     return MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
-            colorScheme: ColorScheme.fromSwatch().copyWith(
-                primary: const Color.fromARGB(228, 53, 191, 101),
-                secondary: const Color.fromARGB(255, 35, 34, 34))),
+            colorScheme: ColorScheme.fromSwatch()
+                .copyWith(primary: mainGreen, secondary: backGround)),
         home: Scaffold(
-            backgroundColor: const Color.fromARGB(255, 35, 34, 34),
+            backgroundColor: backGround,
             appBar: AppBar(
-              backgroundColor: const Color.fromARGB(255, 35, 34, 34),
+              backgroundColor: backGround,
               title: const Text(
                 'Profile',
                 style: TextStyle(
@@ -96,10 +88,10 @@ class _UserProfileState extends State<UserProfile> {
                   child: const Icon(Icons.menu)),
             ),
             body: _isLoading
-                ? const Center(
+                ? Center(
                     child: CircularProgressIndicator(
-                    color: Color.fromARGB(228, 53, 191, 101),
-                    backgroundColor: Color.fromARGB(255, 35, 34, 34),
+                    color: mainGreen,
+                    backgroundColor: backGround,
                     strokeWidth: 10,
                   ))
                 : SingleChildScrollView(
@@ -132,8 +124,8 @@ class _UserProfileState extends State<UserProfile> {
                                           child: Text(
                                             sp.init.toString().toUpperCase(),
                                             textAlign: TextAlign.center,
-                                            style: const TextStyle(
-                                                color: Colors.greenAccent,
+                                            style: TextStyle(
+                                                color: mainGreen,
                                                 fontSize: 40,
                                                 fontStyle: FontStyle.normal),
                                           ))),
@@ -227,11 +219,11 @@ class _UserProfileState extends State<UserProfile> {
                             saveChanges();
                           },
                           controller: updateController,
-                          successColor: const Color.fromRGBO(30, 215, 96, 0.9),
+                          successColor: mainGreen,
                           width: MediaQuery.of(context).size.width * 0.80,
                           elevation: 0,
                           borderRadius: 25,
-                          color: const Color.fromRGBO(30, 215, 96, 0.9),
+                          color: mainGreen,
                           child: Wrap(
                             children: const [
                               Icon(
@@ -265,7 +257,8 @@ class _UserProfileState extends State<UserProfile> {
     await ip.checkInternetConnection();
 
     if (ip.hasInternet == false) {
-      showInSnackBar(context, "Check your Internet connection", Colors.red);
+      displayToastMessage(
+          context, "Check your Internet connection", alertColor);
       updateController.reset();
       return;
     }
@@ -277,26 +270,24 @@ class _UserProfileState extends State<UserProfile> {
 
     if (_description.text.isEmpty) {
       description = sp.description.toString();
-      print('1');
     } else {
       description = _description.text;
     }
     if (_username.text.isEmpty) {
       name = sp.name.toString();
-      print('2');
     } else {
       name = _username.text;
     }
 
     sp.checkUserExists().then((value) async {
       if (sp.hasError == true) {
-        showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+        displayToastMessage(context, sp.errorCode.toString(), alertColor);
         updateController.reset();
         return;
       }
       await sp.update(name, description).then((value) async {
         if (sp.hasError == true) {
-          showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+          displayToastMessage(context, sp.errorCode.toString(), alertColor);
           updateController.reset();
           return;
         }
@@ -307,13 +298,13 @@ class _UserProfileState extends State<UserProfile> {
         print(sp.description);
 
         if (sp.hasError == true) {
-          showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+          displayToastMessage(context, sp.errorCode.toString(), alertColor);
           updateController.reset();
           return;
         }
         await sp.saveDataToSharedPreferences().then((value) async {
           await Future.delayed(const Duration(milliseconds: 800));
-          displayToastMessage(context, 'Changes saved', Colors.green);
+          displayToastMessage(context, 'Changes saved', mainGreen);
           updateController.reset();
         });
       });
@@ -323,12 +314,12 @@ class _UserProfileState extends State<UserProfile> {
   bool validity() {
     if (_description.text.length > 100) {
       displayToastMessage(context,
-          'Description must be less than 100 characters long', Colors.red);
+          'Description must be less than 100 characters long', alertColor);
       return false;
     }
     if (_username.text.length > 10) {
       displayToastMessage(
-          context, 'Name must be less than 50 characters long', Colors.red);
+          context, 'Name must be less than 50 characters long', alertColor);
       return false;
     }
     return true;

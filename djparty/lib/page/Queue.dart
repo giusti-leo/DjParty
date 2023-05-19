@@ -45,6 +45,10 @@ class _Queue extends State<Queue> {
   List<String>? newDeletedSongs = [];
   List<String>? newLikedSongs = [];
 
+  Color mainGreen = const Color.fromARGB(228, 53, 191, 101);
+  Color backGround = const Color.fromARGB(255, 35, 34, 34);
+  Color alertColor = Colors.red;
+
   Future<List<dynamic>> GetTracks() async {
     var response = await http.get(Uri.parse(endpoint),
         headers: <String, String>{
@@ -53,7 +57,6 @@ class _Queue extends State<Queue> {
         });
     final tracksJson = json.decode(response.body);
     var trackList = tracksJson['queue'].toList();
-    //print(trackList);
     _tracks = trackList;
 
     return trackList;
@@ -93,202 +96,366 @@ class _Queue extends State<Queue> {
     return MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
-            colorScheme: ColorScheme.fromSwatch().copyWith(
-                primary: const Color.fromARGB(228, 53, 191, 101),
-                secondary: const Color.fromARGB(228, 53, 191, 101))),
+            colorScheme: ColorScheme.fromSwatch()
+                .copyWith(primary: mainGreen, secondary: mainGreen)),
         home: SizedBox(
           height: 5,
           child: StreamBuilder(
-              stream: FirebaseFirestore.instance
-                  .collection('parties')
-                  .doc(fr.partyCode)
-                  .collection('queue')
-                  .where('inQueue', isEqualTo: true)
-                  .orderBy('likes', descending: true)
-                  .limit(30)
-                  .snapshots(),
-              builder: (context, AsyncSnapshot snap1) {
-                bool empty = true;
-                if (snap1.connectionState == ConnectionState.waiting) {
-                  return const Center(
-                      child: CircularProgressIndicator(
-                    color: Color.fromARGB(158, 61, 219, 71),
-                    backgroundColor: Color.fromARGB(128, 52, 74, 61),
-                    strokeWidth: 10,
-                  ));
-                }
-                if (!snap1.hasData) {
-                  return const Center(
-                      child: Text(
-                    'No data found',
-                    style: TextStyle(fontSize: 20, color: Colors.white),
-                  ));
-                }
-                if (snap1.data.docs.toString() == '[]') {
-                  return Center(
-                      child: RichText(
-                    text: TextSpan(
-                      text: 'Hello ',
-                      style: const TextStyle(
-                          fontWeight: FontWeight.normal, color: Colors.white),
-                      children: <TextSpan>[
-                        TextSpan(
-                            text: '${sp.name}',
-                            style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white)),
-                        const TextSpan(
-                            text: '. Add some new songs!',
-                            style: TextStyle(
-                                fontWeight: FontWeight.normal,
-                                color: Colors.white)),
-                      ],
-                    ),
-                  ));
+            stream: FirebaseFirestore.instance
+                .collection('parties')
+                .doc(fr.partyCode!)
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.hasData) {
+                Party party =
+                    Party.getPartyFromFirestore(snapshot.data!.data());
+                if (party.isEnded) {
+                  return fullSongList(context);
                 } else {
-                  return StreamBuilder(
-                      stream: FirebaseFirestore.instance
-                          .collection('parties')
-                          .doc(fr.partyCode)
-                          .snapshots(),
-                      builder: (context, AsyncSnapshot snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const Center(
+                  return FutureBuilder(
+                      future: Future.delayed(const Duration(milliseconds: 500)),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.done) {
+                          return queueListSong(context);
+                        } else {
+                          return Center(
                               child: CircularProgressIndicator(
-                            color: Color.fromARGB(158, 61, 219, 71),
-                            backgroundColor: Color.fromARGB(128, 52, 74, 61),
+                            color: mainGreen,
+                            backgroundColor: backGround,
                             strokeWidth: 10,
                           ));
                         }
-                        if (!snapshot.hasData) {
-                          return const Center(
-                              child: Text(
-                            'No data found',
-                            selectionColor: Colors.white,
-                            strutStyle: StrutStyle(
-                              fontSize: 20,
-                            ),
-                          ));
-                        }
-
-                        final partySnap = snapshot.data!.data();
-                        Party party;
-                        party = Party.getPartyFromFirestore(partySnap);
-
-                        return Scaffold(
-                            backgroundColor:
-                                const Color.fromARGB(255, 35, 34, 34),
-                            body: Column(children: [
-                              Expanded(
-                                flex: 1,
-                                child: ListView.builder(
-                                    shrinkWrap: false,
-                                    itemCount: snap1.data.docs.length,
-                                    itemBuilder:
-                                        (BuildContext context, int index) {
-                                      final track = snap1.data.docs[index];
-                                      Track currentTrack =
-                                          Track.getTrackFromFirestore(track);
-                                      //if (currentTrack.inQueue) empty = false;
-                                      if (party.votingStatus) {
-                                        return Column(
-                                          children: [
-                                            ListTile(
-                                              tileColor: const Color.fromARGB(
-                                                  255, 35, 34, 34),
-                                              contentPadding:
-                                                  const EdgeInsets.all(10.0),
-                                              title: Text(currentTrack.name,
-                                                  style: const TextStyle(
-                                                    fontSize: 20,
-                                                    fontWeight: FontWeight.w800,
-                                                    color: Colors.white,
-                                                  )),
-                                              subtitle: Text(
-                                                  currentTrack.artists[0],
-                                                  style: const TextStyle(
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.w800,
-                                                    color: Color.fromARGB(
-                                                        255, 134, 132, 132),
-                                                  )),
-                                              leading: Image.network(
-                                                currentTrack.images,
-                                                fit: BoxFit.cover,
-                                                height: 60,
-                                                width: 60,
-                                              ),
-                                              trailing: Icon(
-                                                  userLikeSong(currentTrack)
-                                                      ? Icons.favorite
-                                                      : Icons.favorite_border,
-                                                  color: userLikeSong(
-                                                          currentTrack)
-                                                      ? const Color.fromRGBO(
-                                                          30, 215, 96, 0.9)
-                                                      : Colors.white),
-                                              onTap: () {
-                                                _handleLikeLogic(currentTrack);
-                                              },
-                                            ),
-                                            Text(
-                                              'Like: ${currentTrack.likes.length}',
-                                              style: const TextStyle(
-                                                  color: Colors.white),
-                                            ),
-                                            const Divider(
-                                              color: Colors.white24,
-                                              height: 1,
-                                            ),
-                                          ],
-                                        );
-                                      } else {
-                                        return Column(
-                                          children: [
-                                            ListTile(
-                                              contentPadding:
-                                                  const EdgeInsets.all(10.0),
-                                              title: Text(currentTrack.name!,
-                                                  style: const TextStyle(
-                                                    fontSize: 20,
-                                                    fontWeight: FontWeight.w800,
-                                                    color: Colors.white,
-                                                  )),
-                                              subtitle: Text(
-                                                  currentTrack.artists![0],
-                                                  style: const TextStyle(
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.w800,
-                                                    color: Color.fromARGB(
-                                                        255, 134, 132, 132),
-                                                  )),
-                                              leading: Image.network(
-                                                currentTrack.images,
-                                                fit: BoxFit.cover,
-                                                height: 60,
-                                                width: 60,
-                                              ),
-                                            ),
-                                            Text(
-                                              'votes: ${currentTrack.likes.length}',
-                                              style: const TextStyle(
-                                                  color: Colors.white),
-                                            ),
-                                            const Divider(
-                                              color: Colors.white24,
-                                              height: 1,
-                                            )
-                                          ],
-                                        );
-                                      }
-                                    }),
-                              )
-                            ]));
+                        // Return empty container to avoid build errors
                       });
                 }
-              }),
+              } else {
+                return Center(
+                    child: CircularProgressIndicator(
+                  color: mainGreen,
+                  backgroundColor: backGround,
+                  strokeWidth: 10,
+                ));
+              }
+            },
+          ),
         ));
+  }
+
+  Widget fullSongList(BuildContext context) {
+    final fr = context.read<FirebaseRequests>();
+    final sp = context.read<SignInProvider>();
+
+    return FutureBuilder(
+        future: FirebaseFirestore.instance
+            .collection('parties')
+            .doc(fr.partyCode)
+            .collection('queue')
+            .orderBy('lastStreaming')
+            .limit(50)
+            .get(),
+        builder: (context, AsyncSnapshot snap1) {
+          bool empty = true;
+          if (snap1.connectionState == ConnectionState.waiting) {
+            return Center(
+                child: CircularProgressIndicator(
+              color: mainGreen,
+              backgroundColor: backGround,
+              strokeWidth: 10,
+            ));
+          }
+          if (!snap1.hasData) {
+            return const Center(
+                child: Text(
+              'No data found',
+              style: TextStyle(fontSize: 20, color: Colors.white),
+            ));
+          }
+          if (snap1.data.docs.toString() == '[]') {
+            return Center(
+                child: RichText(
+              text: TextSpan(
+                text: 'Hello ',
+                style: const TextStyle(
+                    fontWeight: FontWeight.normal, color: Colors.white),
+                children: <TextSpan>[
+                  TextSpan(
+                      text: '${sp.name}',
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, color: Colors.white)),
+                  const TextSpan(
+                      text: '. No songs in your Queue!',
+                      style: TextStyle(
+                          fontWeight: FontWeight.normal, color: Colors.white)),
+                ],
+              ),
+            ));
+          } else {
+            return StreamBuilder(
+                stream: FirebaseFirestore.instance
+                    .collection('parties')
+                    .doc(fr.partyCode)
+                    .snapshots(),
+                builder: (context, AsyncSnapshot snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(
+                        child: CircularProgressIndicator(
+                      color: mainGreen,
+                      backgroundColor: backGround,
+                      strokeWidth: 10,
+                    ));
+                  }
+                  if (!snapshot.hasData) {
+                    return const Center(
+                        child: Text(
+                      'No data found',
+                      selectionColor: Colors.white,
+                      strutStyle: StrutStyle(
+                        fontSize: 20,
+                      ),
+                    ));
+                  }
+
+                  final partySnap = snapshot.data!.data();
+                  Party party;
+                  party = Party.getPartyFromFirestore(partySnap);
+
+                  return Scaffold(
+                      backgroundColor: backGround,
+                      body: Column(children: [
+                        Expanded(
+                          flex: 1,
+                          child: ListView.builder(
+                              shrinkWrap: false,
+                              itemCount: snap1.data.docs.length,
+                              itemBuilder: (BuildContext context, int index) {
+                                final track = snap1.data.docs[index];
+                                Track currentTrack =
+                                    Track.getTrackFromFirestore(track);
+                                return Column(
+                                  children: [
+                                    ListTile(
+                                      tileColor:
+                                          const Color.fromARGB(255, 35, 34, 34),
+                                      contentPadding:
+                                          const EdgeInsets.all(10.0),
+                                      title: Text(currentTrack.name,
+                                          style: const TextStyle(
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.w800,
+                                            color: Colors.white,
+                                          )),
+                                      subtitle: Text(currentTrack.artists[0],
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w800,
+                                            color: Color.fromARGB(
+                                                255, 134, 132, 132),
+                                          )),
+                                      leading: Image.network(
+                                        currentTrack.images,
+                                        fit: BoxFit.cover,
+                                        height: 60,
+                                        width: 60,
+                                      ),
+                                    ),
+                                    const Divider(
+                                      color: Colors.white24,
+                                      height: 1,
+                                    ),
+                                  ],
+                                );
+                              }),
+                        )
+                      ]));
+                });
+          }
+        });
+  }
+
+  Widget queueListSong(BuildContext context) {
+    final fr = context.read<FirebaseRequests>();
+    final sp = context.read<SignInProvider>();
+
+    return StreamBuilder(
+        stream: FirebaseFirestore.instance
+            .collection('parties')
+            .doc(fr.partyCode)
+            .collection('queue')
+            .where('inQueue', isEqualTo: true)
+            .orderBy('likes', descending: true)
+            .limit(50)
+            .snapshots(),
+        builder: (context, AsyncSnapshot snap1) {
+          bool empty = true;
+          if (snap1.connectionState == ConnectionState.waiting) {
+            return Center(
+                child: CircularProgressIndicator(
+              color: mainGreen,
+              backgroundColor: backGround,
+              strokeWidth: 10,
+            ));
+          }
+          if (!snap1.hasData) {
+            return const Center(
+                child: Text(
+              'No data found',
+              style: TextStyle(fontSize: 20, color: Colors.white),
+            ));
+          }
+          if (snap1.data.docs.toString() == '[]') {
+            return Center(
+                child: RichText(
+              text: TextSpan(
+                text: 'Hello ',
+                style: const TextStyle(
+                    fontWeight: FontWeight.normal, color: Colors.white),
+                children: <TextSpan>[
+                  TextSpan(
+                      text: '${sp.name}',
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, color: Colors.white)),
+                  const TextSpan(
+                      text: '. Add some new songs!',
+                      style: TextStyle(
+                          fontWeight: FontWeight.normal, color: Colors.white)),
+                ],
+              ),
+            ));
+          } else {
+            return StreamBuilder(
+                stream: FirebaseFirestore.instance
+                    .collection('parties')
+                    .doc(fr.partyCode)
+                    .snapshots(),
+                builder: (context, AsyncSnapshot snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(
+                        child: CircularProgressIndicator(
+                      color: mainGreen,
+                      backgroundColor: backGround,
+                      strokeWidth: 10,
+                    ));
+                  }
+                  if (!snapshot.hasData) {
+                    return const Center(
+                        child: Text(
+                      'No data found',
+                      selectionColor: Colors.white,
+                      strutStyle: StrutStyle(
+                        fontSize: 20,
+                      ),
+                    ));
+                  }
+
+                  final partySnap = snapshot.data!.data();
+                  Party party;
+                  party = Party.getPartyFromFirestore(partySnap);
+
+                  return Scaffold(
+                      backgroundColor: backGround,
+                      body: Column(children: [
+                        Expanded(
+                          flex: 1,
+                          child: ListView.builder(
+                              shrinkWrap: false,
+                              itemCount: snap1.data.docs.length,
+                              itemBuilder: (BuildContext context, int index) {
+                                final track = snap1.data.docs[index];
+                                Track currentTrack =
+                                    Track.getTrackFromFirestore(track);
+                                //if (currentTrack.inQueue) empty = false;
+                                if (party.votingStatus) {
+                                  return Column(
+                                    children: [
+                                      ListTile(
+                                        tileColor: backGround,
+                                        contentPadding:
+                                            const EdgeInsets.all(10.0),
+                                        title: Text(currentTrack.name,
+                                            style: const TextStyle(
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.w800,
+                                              color: Colors.white,
+                                            )),
+                                        subtitle: Text(currentTrack.artists[0],
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w800,
+                                              color: Color.fromARGB(
+                                                  255, 134, 132, 132),
+                                            )),
+                                        leading: Image.network(
+                                          currentTrack.images,
+                                          fit: BoxFit.cover,
+                                          height: 60,
+                                          width: 60,
+                                        ),
+                                        trailing: Icon(
+                                            userLikeSong(currentTrack)
+                                                ? Icons.favorite
+                                                : Icons.favorite_border,
+                                            color: userLikeSong(currentTrack)
+                                                ? mainGreen
+                                                : Colors.white),
+                                        onTap: () {
+                                          _handleLikeLogic(currentTrack);
+                                        },
+                                      ),
+                                      Text(
+                                        'Like: ${currentTrack.likes.length}',
+                                        style: const TextStyle(
+                                            color: Colors.white),
+                                      ),
+                                      const Divider(
+                                        color: Colors.white24,
+                                        height: 1,
+                                      ),
+                                    ],
+                                  );
+                                } else {
+                                  return Column(
+                                    children: [
+                                      ListTile(
+                                        contentPadding:
+                                            const EdgeInsets.all(10.0),
+                                        title: Text(currentTrack.name!,
+                                            style: const TextStyle(
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.w800,
+                                              color: Colors.white,
+                                            )),
+                                        subtitle: Text(currentTrack.artists![0],
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w800,
+                                              color: Color.fromARGB(
+                                                  255, 134, 132, 132),
+                                            )),
+                                        leading: Image.network(
+                                          currentTrack.images,
+                                          fit: BoxFit.cover,
+                                          height: 60,
+                                          width: 60,
+                                        ),
+                                      ),
+                                      Text(
+                                        'votes: ${currentTrack.likes.length}',
+                                        style: const TextStyle(
+                                            color: Colors.white),
+                                      ),
+                                      const Divider(
+                                        color: Colors.white24,
+                                        height: 1,
+                                      )
+                                    ],
+                                  );
+                                }
+                              }),
+                        )
+                      ]));
+                });
+          }
+        });
   }
 
   Future<String> getAuthToken() async {
@@ -340,7 +507,7 @@ class _Queue extends State<Queue> {
 
     fr.userLikesSong(track.uri!, sp.uid!).then((value) {
       if (fr.hasError) {
-        showInSnackBar(context, fr.errorCode.toString(), Colors.red);
+        showInSnackBar(context, fr.errorCode.toString(), alertColor);
         return;
       }
     });
@@ -359,7 +526,7 @@ class _Queue extends State<Queue> {
 
     fr.userDoesNotLikeSong(track.uri!, sp.uid!).then((value) {
       if (fr.hasError) {
-        showInSnackBar(context, fr.errorCode.toString(), Colors.red);
+        showInSnackBar(context, fr.errorCode.toString(), alertColor);
         return;
       }
     });

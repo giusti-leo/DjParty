@@ -34,16 +34,16 @@ class _SearchItemScreen extends State<SearchItemScreen> {
   Offset _tapPosition = Offset.zero;
   int selectedIndex = 100;
   List<Track> _tracks = [];
-  //String myToken = "";
   String input = "";
-
   bool _insert = false;
-
   var myColor = Colors.white;
   bool isCalled = false;
-  //List<bool> isSelected = [];
+
+  Color mainGreen = const Color.fromARGB(228, 53, 191, 101);
+  Color backGround = const Color.fromARGB(255, 35, 34, 34);
+  Color alertColor = Colors.red;
+
   final Logger _logger = Logger(
-    //filter: CustomLogFilter(), // custom logfilter can be used to have logs in release mode
     printer: PrettyPrinter(
       methodCount: 2, // number of method calls to be displayed
       errorMethodCount: 8, // number of method calls if stacktrace is provided
@@ -70,12 +70,8 @@ class _SearchItemScreen extends State<SearchItemScreen> {
   }
 
   Future<List<dynamic>> GetTracks(String input, String? myToken) async {
-    var response = await http.get(Uri.parse(endpoint +
-        "?q=" +
-        input +
-        "&type=track" +
-        "&access_token=" +
-        myToken!));
+    var response = await http.get(
+        Uri.parse("$endpoint?q=$input&type=track&access_token=${myToken!}"));
     final tracksJson = json.decode(response.body)['tracks'];
     var trackList = tracksJson['items'].toList();
 
@@ -103,25 +99,17 @@ class _SearchItemScreen extends State<SearchItemScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // if (isCalled == false) {
-    //   setState(() {
-    //     getAuthToken();
-    //   });
-    //   isCalled = true;
-    // }
-
     final sp = context.read<SignInProvider>();
     final sr = context.read<SpotifyRequests>();
 
     return MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
-            colorScheme: ColorScheme.fromSwatch().copyWith(
-                primary: const Color.fromARGB(228, 53, 191, 101),
-                secondary: const Color.fromARGB(228, 53, 191, 101))),
+            colorScheme: ColorScheme.fromSwatch()
+                .copyWith(primary: mainGreen, secondary: mainGreen)),
         home: Scaffold(
             resizeToAvoidBottomInset: false,
-            backgroundColor: const Color.fromARGB(255, 35, 34, 34),
+            backgroundColor: backGround,
             body: Column(
               children: [
                 TextField(
@@ -182,8 +170,7 @@ class _SearchItemScreen extends State<SearchItemScreen> {
                                             color: myColor,
                                           )),
                                       tileColor: selectedIndex == index
-                                          ? const Color.fromARGB(
-                                              228, 53, 191, 101)
+                                          ? mainGreen
                                           : null,
                                       subtitle:
                                           Text(printArtists(track.artists!),
@@ -225,35 +212,13 @@ class _SearchItemScreen extends State<SearchItemScreen> {
     return result;
   }
 
-  // Future<String> getAuthToken() async {
-  //   var authenticationToken = await SpotifySdk.getAccessToken(
-  //       clientId: 'a502045e3c4b47d6b9bcfded418afd32',
-  //       redirectUrl: 'test-1-login://callback',
-  //       scope: 'app-remote-control, '
-  //           'user-modify-playback-state, '
-  //           'playlist-read-private, '
-  //           'playlist-modify-public,user-read-currently-playing,'
-  //           'playlist-modify-private,'
-  //           'user-read-playback-state');
-  //   setStatus('Got a token: $authenticationToken');
-  //   myToken = '$authenticationToken';
-  //   return authenticationToken;
-  // }
-
-/*
-  void setStatus(String code, {String? message}) {
-    var text = message ?? '';
-    _logger.i('$code$text');
-  }
-  */
-
   bool toggleSelection(bool selected) {
     setState(() {
       if (selected) {
         myColor = Colors.white;
         selected = false;
       } else {
-        myColor = Color.fromARGB(228, 53, 191, 101);
+        myColor = mainGreen;
         selected = true;
       }
     });
@@ -294,91 +259,59 @@ class _SearchItemScreen extends State<SearchItemScreen> {
     await ip.checkInternetConnection();
 
     if (ip.hasInternet == false) {
-      showInSnackBar(context, "Check your Internet connection", Colors.red);
+      displayToastMessage(
+          context, "Check your Internet connection", alertColor);
       return;
     }
 
     fr.checkPartyExists(code: fr.partyCode!).then((value) async {
       if (value == false) {
-        showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+        displayToastMessage(context, sp.errorCode.toString(), alertColor);
         return;
       } else {
-        fr.isPartyEnded().then((value) {
+        fr.getPartyDataFromFirestore(fr.partyCode!).then((value) {
           if (value == true) {
-            showInSnackBar(
+            displayToastMessage(
                 context,
                 'You cannot add a new song when the Party is not on',
-                Colors.red);
+                alertColor);
             return;
-          } else {
+          }
+          fr.saveDataToSharedPreferences().then((value) {
             fr.songExists(currentTrack).then(
               (value) {
                 if (fr.hasError) {
-                  showInSnackBar(context, fr.errorCode.toString(), Colors.red);
+                  displayToastMessage(
+                      context, fr.errorCode.toString(), alertColor);
                   return;
                 } else {
-                  if (value == false) {
-                    fr.addSongToFirebase(currentTrack).then(
-                      (value) {
-                        if (fr.hasError) {
-                          showInSnackBar(
-                              context, fr.errorCode.toString(), Colors.red);
-                        } else {
-                          displayToastMessage(
-                              context, 'Song Added', Colors.green);
-                        }
-                      },
-                    );
-                  } else {
+                  if (fr.isEnded!) {
                     displayToastMessage(
-                        context, 'Song already present!', Colors.green);
+                        context, 'Sorry, the party is ended!', alertColor);
+                  } else {
+                    if (value == false) {
+                      fr.addSongToFirebase(currentTrack).then(
+                        (value) {
+                          if (fr.hasError) {
+                            displayToastMessage(
+                                context, fr.errorCode.toString(), alertColor);
+                          } else {
+                            displayToastMessage(
+                                context, 'Song added', mainGreen);
+                          }
+                        },
+                      );
+                    } else {
+                      displayToastMessage(
+                          context, 'Song already present!', mainGreen);
+                    }
                   }
                 }
               },
             );
-          }
+          });
         });
       }
     });
   }
-
-/*
-  Future<http.Response> _addItemToPlaylist() async {
-    return http.post(
-      Uri.parse(addEndpoint + "?uris=" + currentTrack.uri!),
-      headers: <String, String>{
-        'Content-Type': 'application/json',
-        'Authorization': "Bearer " + myToken
-      },
-    );
-  }
-
-  Future<http.Response> _addItemToSpotifyQueue() async {
-    return http.post(
-      Uri.parse(queueEndpoint + "?uri=" + currentTrack.uri!),
-      headers: <String, String>{
-        'Content-Type': 'application/json',
-        'Authorization': "Bearer " + myToken
-      },
-    );
-  }*/
-
-  // Future<void> checkDiffMs() async {
-  //   var response = await http.get(
-  //     Uri.parse(checkEndpoint),
-  //     headers: <String, String>{
-  //       'Content-Type': 'application/json',
-  //       'Authorization': "Bearer " + myToken
-  //     },
-  //   );
-  //   final playerJson = json.decode(response.body);
-  //   //var playerList = playerJson.toList();
-  //   if (playerJson["item"]["duration_ms"] - playerJson["progress_ms"] <=
-  //       10000) {
-  //     //currentUri = "spotify:track:2qSAO6IlPb5HpoySjTJsn7";
-  //     //_addItemToQueue();
-  //   } else {
-  //     checkDiffMs();
-  //   }
-  // }
 }

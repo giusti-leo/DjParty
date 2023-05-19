@@ -1,5 +1,8 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
+import 'dart:ui';
+
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:djparty/entities/Party.dart';
 import 'package:djparty/entities/Track.dart';
@@ -13,11 +16,13 @@ import 'package:djparty/services/SignInProvider.dart';
 import 'package:djparty/page/SearchItemScreen.dart';
 import 'package:djparty/page/spotifyPlayer.dart';
 import 'package:djparty/page/Queue.dart';
-import 'package:djparty/page/VotingPage.dart';
 import 'package:djparty/utils/nextScreen.dart';
 import 'package:djparty/Icons/c_d_icons.dart';
 import 'package:linear_timer/linear_timer.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:qr_flutter/qr_flutter.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:spotify_sdk/models/player_state.dart';
 import 'package:spotify_sdk/spotify_sdk.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -40,7 +45,7 @@ class SpotifyTabController extends StatefulWidget {
 }
 
 class _SpotifyTabController extends State<SpotifyTabController>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   dynamic isPaused = true;
   bool error = false;
   bool voting = false;
@@ -51,10 +56,15 @@ class _SpotifyTabController extends State<SpotifyTabController>
 
   late DateTime _nextVotingPhase;
 
+  final key = GlobalKey();
+  File? file;
+
   int nextTrackIndex = 1;
   String nextTrackUri = "";
   String partyID = '';
   bool ended = false;
+
+  bool spotifyAlert = false;
 
   int _interval = 0;
   int _votingTime = 0;
@@ -63,6 +73,10 @@ class _SpotifyTabController extends State<SpotifyTabController>
   late LinearTimerController timerController1 = LinearTimerController(this);
   final RoundedLoadingButtonController exitController =
       RoundedLoadingButtonController();
+
+  Color mainGreen = const Color.fromARGB(228, 53, 191, 101);
+  Color backGround = const Color.fromARGB(255, 35, 34, 34);
+  Color alertColor = Colors.red;
 
   int _computeCountdown() {
     DateTime tmpNow = DateTime.now();
@@ -100,10 +114,99 @@ class _SpotifyTabController extends State<SpotifyTabController>
 
   @override
   void initState() {
+    WidgetsBinding.instance.addObserver(this);
+
     voting = false;
     changed = false;
     getData();
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    final isBackground = state == AppLifecycleState.paused;
+    final isDetached = state == AppLifecycleState.detached;
+    final isInactive = state == AppLifecycleState.inactive;
+    final isResumed = state == AppLifecycleState.resumed;
+
+    if (isBackground || isDetached || isInactive) {
+      pause();
+      timerController1.stop();
+    }
+    if (isResumed) {
+      resume();
+      timerController1.start();
+    }
+  }
+
+  void showSpotifyAlert(BuildContext context) {
+    showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(
+                Radius.circular(
+                  20.0,
+                ),
+              ),
+            ),
+            contentPadding: const EdgeInsets.only(
+              top: 10.0,
+            ),
+            title: const Text(
+              "Warning",
+              style: TextStyle(fontSize: 24.0),
+              textAlign: TextAlign.center,
+            ),
+            content: SizedBox(
+              height: 250,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    const Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Text(
+                        "DJParty can not work while Spotify app is opened. Please close it!",
+                        style: TextStyle(fontSize: 17),
+                      ),
+                    ),
+                    Container(
+                      width: double.infinity,
+                      height: 60,
+                      padding: const EdgeInsets.all(8.0),
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          spotifyAlert = true;
+                        },
+                        style: ElevatedButton.styleFrom(
+                          primary: Colors.grey,
+                        ),
+                        child: const Text(
+                          "Close",
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        });
   }
 
   void showDataAlert(BuildContext context) {
@@ -126,7 +229,7 @@ class _SpotifyTabController extends State<SpotifyTabController>
               style: TextStyle(fontSize: 24.0),
               textAlign: TextAlign.center,
             ),
-            content: Container(
+            content: SizedBox(
               height: 250,
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(8.0),
@@ -155,7 +258,6 @@ class _SpotifyTabController extends State<SpotifyTabController>
                         },
                         style: ElevatedButton.styleFrom(
                           primary: Colors.black,
-                          // fixedSize: Size(250, 50),
                         ),
                         child: const Text(
                           "End the party",
@@ -172,7 +274,6 @@ class _SpotifyTabController extends State<SpotifyTabController>
                         },
                         style: ElevatedButton.styleFrom(
                           primary: Colors.grey,
-                          // fixedSize: Size(250, 50),
                         ),
                         child: const Text(
                           "Ignore",
@@ -210,14 +311,13 @@ class _SpotifyTabController extends State<SpotifyTabController>
         debugShowCheckedModeBanner: false,
         navigatorKey: navigatorKey,
         theme: ThemeData(
-            colorScheme: ColorScheme.fromSwatch().copyWith(
-                primary: const Color.fromARGB(228, 53, 191, 101),
-                secondary: const Color.fromARGB(255, 35, 34, 34))),
+            colorScheme: ColorScheme.fromSwatch()
+                .copyWith(primary: mainGreen, secondary: backGround)),
         home: Scaffold(
-          backgroundColor: const Color.fromARGB(255, 35, 34, 34),
+          backgroundColor: backGround,
           appBar: AppBar(
             elevation: 0,
-            backgroundColor: const Color.fromARGB(255, 35, 34, 34),
+            backgroundColor: backGround,
             title: Text(
               fr.partyName!,
               style: const TextStyle(
@@ -249,9 +349,31 @@ class _SpotifyTabController extends State<SpotifyTabController>
                     PopupMenuButton<int>(
                       itemBuilder: (context) => [
                         // PopupMenuItem 1
+                        PopupMenuItem(
+                            value: 1,
+                            // row with 2 children
+                            child: TextButton(
+                              onPressed: () {
+                                handleShare(fr.partyCode!);
+
+                                Navigator.of(context).pop();
+                              },
+                              child: Row(
+                                children: const [
+                                  Icon(Icons.share),
+                                  SizedBox(
+                                    width: 8,
+                                  ),
+                                  Text(
+                                    "Share",
+                                    style: TextStyle(color: Colors.black),
+                                  )
+                                ],
+                              ),
+                            )),
                         (!fr.isStarted!)
                             ? PopupMenuItem(
-                                value: 1,
+                                value: 2,
                                 // row with 2 children
                                 child: TextButton(
                                   onPressed: () {
@@ -271,12 +393,13 @@ class _SpotifyTabController extends State<SpotifyTabController>
                                   ),
                                 ))
                             : PopupMenuItem(
-                                value: 1,
+                                value: 2,
                                 // row with two children
                                 child: TextButton(
                                   onPressed: () {
                                     pause();
                                     _handleEndParty(context);
+                                    Navigator.of(context).pop();
                                   },
                                   child: Row(
                                     children: const [
@@ -297,22 +420,34 @@ class _SpotifyTabController extends State<SpotifyTabController>
                       elevation: 1,
                     ),
                   ]
-                : [],
+                : [
+                    PopupMenuButton<int>(
+                        itemBuilder: (context) => [
+                              // PopupMenuItem 1
+                              PopupMenuItem(
+                                  value: 1,
+                                  // row with 2 children
+                                  child: TextButton(
+                                    onPressed: () {
+                                      handleShare(fr.partyCode!);
+                                      Navigator.of(context).pop();
+                                    },
+                                    child: Row(
+                                      children: const [
+                                        Icon(Icons.settings),
+                                        SizedBox(
+                                          width: 8,
+                                        ),
+                                        Text(
+                                          "Share",
+                                          style: TextStyle(color: Colors.black),
+                                        )
+                                      ],
+                                    ),
+                                  )),
+                            ])
+                  ],
           ),
-
-          /*(sp.uid == fr.admin)
-                ? [
-                    IconButton(
-                      onPressed: () {
-                        nextScreen(context, const PartySettings());
-                      },
-                      icon: const Icon(
-                        Icons.settings,
-                      ),
-                    ),
-                  ]
-                : [],
-          ),*/
           body: LayoutBuilder(
               builder: (BuildContext context, BoxConstraints constraints) {
             return Column(children: [
@@ -324,9 +459,7 @@ class _SpotifyTabController extends State<SpotifyTabController>
                     labelPadding: const EdgeInsets.only(left: 20, right: 20),
                     labelColor: Colors.white,
                     unselectedLabelColor: Colors.grey,
-                    indicator: CircleTabIndicator(
-                        color: const Color.fromRGBO(30, 215, 96, 0.9),
-                        radius: 4),
+                    indicator: CircleTabIndicator(color: mainGreen, radius: 4),
                     tabs: const [
                       Tab(text: "Player"),
                       Tab(text: "Search"),
@@ -358,10 +491,10 @@ class _SpotifyTabController extends State<SpotifyTabController>
                         .snapshots(),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(
+                        return Center(
                             child: CircularProgressIndicator(
-                          color: Color.fromARGB(158, 61, 219, 71),
-                          backgroundColor: Color.fromARGB(128, 52, 74, 61),
+                          color: mainGreen,
+                          backgroundColor: backGround,
                           strokeWidth: 10,
                         ));
                       }
@@ -380,18 +513,15 @@ class _SpotifyTabController extends State<SpotifyTabController>
                               builder: (context, snapshot) {
                                 if (snapshot.connectionState ==
                                     ConnectionState.waiting) {
-                                  return const Center(
+                                  return Center(
                                       child: CircularProgressIndicator(
-                                    color: Color.fromARGB(158, 61, 219, 71),
-                                    backgroundColor:
-                                        Color.fromARGB(128, 52, 74, 61),
+                                    color: mainGreen,
+                                    backgroundColor: backGround,
                                     strokeWidth: 10,
                                   ));
                                 }
-                                //ci sono canzoni nella coda
                                 if (snapshot.hasData &&
                                     snapshot.data!.size > 0) {
-                                  // 'If there are songs in the Queue at the end of the Voting phase, Music will start'
                                   _addTrack();
                                 }
                                 return Container();
@@ -409,11 +539,43 @@ class _SpotifyTabController extends State<SpotifyTabController>
     );
   }
 
+  Future handleShare(String string) async {
+    try {
+      var image = await QrPainter(
+        data: string,
+        version: 1,
+        gapless: false,
+        color: const Color(0x00000000),
+        emptyColor: const Color(0xFFFFFFFF),
+      ).toImage(300);
+      ByteData? byteData = await image.toByteData(format: ImageByteFormat.png);
+      Uint8List pngBytes = byteData!.buffer.asUint8List();
+      final appDir = await getApplicationDocumentsDirectory();
+      var datetime = DateTime.now();
+      file = await File('${appDir.path}/$datetime.png').create();
+      await file?.writeAsBytes(pngBytes);
+
+      await Share.shareFiles(
+        [file!.path],
+        mimeTypes: ["image/png"],
+        text: "Scan this Qr-Code to join my SpotiParty!" +
+            " Or insert this code: $string",
+      );
+
+      Future.delayed(const Duration(milliseconds: 1000));
+    } catch (e) {
+      displayToastMessage(context, e.toString(), alertColor);
+      return;
+    }
+  }
+
   Future _addTrack() async {
     final fr = context.read<FirebaseRequests>();
+    final sr = context.read<SpotifyRequests>();
+
     var db = FirebaseFirestore.instance.collection('parties').doc(fr.partyCode);
     String trackUri = '';
-    bool done = false;
+
     await FirebaseFirestore.instance
         .collection('parties')
         .doc(fr.partyCode)
@@ -422,17 +584,18 @@ class _SpotifyTabController extends State<SpotifyTabController>
         .orderBy('likes', descending: true)
         .limit(1)
         .get()
-        .then((value) {
+        .then((value) async {
       if (value.size > 0) {
         var el = value.docs[0];
         Track track = Track.getTrackFromFirestore(el);
         trackUri = track.uri;
-        db.update({
+        await db.update({
           "status": 'R',
           "songCurrentlyPlayed": track.uri,
-        }).then((value) {
-          db.collection('queue').doc(track.uri).update({
+        }).then((value) async {
+          await db.collection('queue').doc(track.uri).update({
             'inQueue': false,
+            'lastStreaming': Timestamp.now(),
             'Streamings': FieldValue.increment(1)
           }).then((value) {
             db.collection('members').doc(track.admin).update({
@@ -452,25 +615,28 @@ class _SpotifyTabController extends State<SpotifyTabController>
             .doc(fr.partyCode)
             .collection('queue')
             .get()
-            .then((snapshot) {
+            .then((snapshot) async {
           Random random = Random();
           int randomNumber = random.nextInt(snapshot.size);
           var snapDoc = snapshot.docs[randomNumber];
           Track track = Track.getTrackFromFirestore(snapDoc);
-          db
-              .collection('queue')
-              .doc(track.uri)
-              .update({'Streamings': FieldValue.increment(1)}).then((value) {
-            db.update({
+          trackUri = track.uri;
+          await db.collection('queue').doc(track.uri).update({
+            'Streamings': FieldValue.increment(1),
+            'lastStreaming': Timestamp.now(),
+            'inQueue': false,
+          }).then((value) async {
+            await db.update({
               "status": 'R',
               "songCurrentlyPlayed": track.uri,
-            }).then((value) => trackUri = track.uri);
+            });
           });
         });
       }
     });
 
-    play(trackUri);
+    Future.delayed(const Duration(milliseconds: 1000))
+        .then((value) => play(trackUri));
   }
 
   Future _adminEndParty(BuildContext context) async {
@@ -480,13 +646,11 @@ class _SpotifyTabController extends State<SpotifyTabController>
     await partyCollection.doc(partyID).update({
       'isEnded': true,
     }).onError((error, stackTrace) {
-      showInSnackBar(context, error.toString(), Colors.red);
+      displayToastMessage(context, error.toString(), alertColor);
       return;
     });
-
     ended = true;
-
-    displayToastMessage(context, 'Party ended correctly', Colors.green);
+    displayToastMessage(context, 'Party ended correctly', mainGreen);
   }
 
   Future _handleEndParty(BuildContext context) async {
@@ -501,14 +665,15 @@ class _SpotifyTabController extends State<SpotifyTabController>
         .orderBy("Timestamp");
 
     if (ip.hasInternet == false) {
-      showInSnackBar(context, "Check your Internet connection", Colors.red);
+      displayToastMessage(
+          context, "Check your Internet connection", alertColor);
       partyController.reset();
       return;
     }
 
     fr.checkPartyExists(code: fr.partyCode!).then((value) async {
       if (sp.hasError == true) {
-        showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+        displayToastMessage(context, sp.errorCode.toString(), alertColor);
         partyController.reset();
         return;
       }
@@ -517,24 +682,24 @@ class _SpotifyTabController extends State<SpotifyTabController>
         Future.delayed(const Duration(milliseconds: 1000));
         fr.setPartyEnded(fr.partyCode!).then((value) {
           if (sp.hasError == true) {
-            showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+            displayToastMessage(context, sp.errorCode.toString(), alertColor);
             partyController.reset();
             return;
           }
           fr.getPartyDataFromFirestore(fr.partyCode!).then((value) {
             if (sp.hasError == true) {
-              showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+              displayToastMessage(context, sp.errorCode.toString(), alertColor);
               partyController.reset();
               return;
             }
             fr.saveDataToSharedPreferences().then((value) {
               if (sp.hasError == true) {
-                showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+                displayToastMessage(
+                    context, sp.errorCode.toString(), alertColor);
                 partyController.reset();
                 return;
               }
-              displayToastMessage(
-                  context, 'Party ended correctly', Colors.green);
+              displayToastMessage(context, 'Party ended correctly', mainGreen);
             });
           });
         });
@@ -598,7 +763,7 @@ class _SpotifyTabController extends State<SpotifyTabController>
       child: BottomAppBar(
         elevation: 8.0,
         notchMargin: 8.0,
-        color: const Color.fromARGB(255, 45, 44, 44),
+        color: backGround,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -660,13 +825,12 @@ class _SpotifyTabController extends State<SpotifyTabController>
 
           return LinearTimer(
             duration: Duration(milliseconds: trackDuration - 2000),
-            color: Colors.green,
+            color: mainGreen,
             backgroundColor: Colors.grey[200],
             controller: timerController1,
             onTimerEnd: () {
               _setSelection();
               Future.delayed(const Duration(milliseconds: 1000));
-              //_playNextTrack();
               timerController1.reset();
             },
           );
@@ -695,13 +859,41 @@ class _SpotifyTabController extends State<SpotifyTabController>
     nextTrackIndex++;
   }
 
-  Future<void> play(String uri) async {
+  Future<void> resume() async {
+    final sr = context.read<SpotifyRequests>();
     try {
-      await SpotifySdk.play(spotifyUri: uri);
+      await SpotifySdk.resume().onError((error, stackTrace) {
+        print(error.toString());
+
+        if (error.toString() == '_logException') {
+          sr.connectToSpotify();
+          sr.getAuthToken();
+          resume();
+        }
+      });
     } on PlatformException catch (e) {
-      showInSnackBar(context, e.message!, Colors.red);
+      displayToastMessage(context, e.message!, alertColor);
     } on MissingPluginException {
-      showInSnackBar(context, 'not implemented', Colors.red);
+      displayToastMessage(context, 'not implemented', alertColor);
+    }
+  }
+
+  Future<void> play(String uri) async {
+    final sr = context.read<SpotifyRequests>();
+    try {
+      await SpotifySdk.play(spotifyUri: uri).onError((error, stackTrace) {
+        print(error.toString());
+
+        if (error.toString() == '_logException') {
+          sr.connectToSpotify();
+          sr.getAuthToken();
+          play(uri);
+        }
+      });
+    } on PlatformException catch (e) {
+      displayToastMessage(context, e.message!, alertColor);
+    } on MissingPluginException {
+      displayToastMessage(context, 'not implemented', alertColor);
     }
   }
 
@@ -716,81 +908,81 @@ class _SpotifyTabController extends State<SpotifyTabController>
           if (time.min != null && time.min! / 10 < 1) {
             if (time.sec! / 10 < 1) {
               return Text("00:0${time.min}:0${time.sec}",
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 25,
                     fontWeight: FontWeight.w700,
-                    color: Color.fromRGBO(30, 215, 96, 0.9),
+                    color: mainGreen,
                   ));
             }
             return Text("00:0${time.min}:${time.sec}",
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 25,
                   fontWeight: FontWeight.w700,
-                  color: Color.fromRGBO(30, 215, 96, 0.9),
+                  color: mainGreen,
                 ));
           }
 
           if (time.min == null) {
             if (time.sec! / 10 < 1) {
               return Text("00:00:0${time.sec}",
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 25,
                     fontWeight: FontWeight.w700,
-                    color: Color.fromRGBO(30, 215, 96, 0.9),
+                    color: mainGreen,
                   ));
             }
             return Text("00:00:${time.sec}",
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 25,
                   fontWeight: FontWeight.w700,
-                  color: Color.fromRGBO(30, 215, 96, 0.9),
+                  color: mainGreen,
                 ));
           }
           if (time.sec! / 10 < 1) {
             return Text("00:${time.min}:0${time.sec}",
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 25,
                   fontWeight: FontWeight.w700,
-                  color: Color.fromRGBO(30, 215, 96, 0.9),
+                  color: mainGreen,
                 ));
           }
           return Text("00:${time.min}:${time.sec}",
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 25,
                 fontWeight: FontWeight.w700,
-                color: Color.fromRGBO(30, 215, 96, 0.9),
+                color: mainGreen,
               ));
         }
         if (time.hours! / 10 < 1) {
           if (time.min! / 10 < 1) {
             if (time.sec! / 10 < 1) {
               return Text("0${time.hours}:${time.min}:0${time.sec}",
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 25,
                     fontWeight: FontWeight.w700,
-                    color: Color.fromRGBO(30, 215, 96, 0.9),
+                    color: mainGreen,
                   ));
             }
             return Text("0${time.hours}:0${time.min}:${time.sec}",
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 25,
                   fontWeight: FontWeight.w700,
-                  color: Color.fromRGBO(30, 215, 96, 0.9),
+                  color: mainGreen,
                 ));
           }
           return Text("0${time.hours}:${time.min}:${time.sec}",
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 25,
                 fontWeight: FontWeight.w700,
-                color: Color.fromRGBO(30, 215, 96, 0.9),
+                color: mainGreen,
               ));
         }
 
         return Text("${time.hours}:${time.min}:${time.sec}",
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 25,
               fontWeight: FontWeight.w700,
-              color: Color.fromRGBO(30, 215, 96, 0.9),
+              color: mainGreen,
             ));
       },
       onEnd: () async {
@@ -811,7 +1003,8 @@ class _SpotifyTabController extends State<SpotifyTabController>
     await ip.checkInternetConnection();
 
     if (ip.hasInternet == false) {
-      showInSnackBar(context, "Check your Internet connection", Colors.red);
+      displayToastMessage(
+          context, "Check your Internet connection", alertColor);
       return;
     }
 
@@ -823,7 +1016,7 @@ class _SpotifyTabController extends State<SpotifyTabController>
 
     await fr.changeStatus(tmpStatus, _newNextVotingPhase).then((value) {
       if (fr.hasError) {
-        showInSnackBar(context, fr.errorCode.toString(), Colors.red);
+        displayToastMessage(context, fr.errorCode.toString(), alertColor);
         return;
       }
     });
