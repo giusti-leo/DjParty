@@ -92,7 +92,7 @@ class SpotifyRequests extends ChangeNotifier {
   }
 
   Future<http.Response> addItemToPlaylist(String uri) async {
-    return http.post(
+    return await http.post(
       Uri.parse(addEndpoint + _playlistId! + "/tracks" + "?uris=" + uri),
       headers: <String, String>{
         'Content-Type': 'application/json',

@@ -22,12 +22,17 @@ class _PartyPlaylist extends State<PartyPlaylist> {
   String myToken = "";
   String input = "";
   bool isCreated = false;
+
+  Color mainGreen = const Color.fromARGB(228, 53, 191, 101);
+  Color backGround = const Color.fromARGB(255, 35, 34, 34);
+  Color alertColor = Colors.red;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: Color.fromARGB(159, 46, 46, 46),
+        backgroundColor: backGround,
         appBar: AppBar(
-          backgroundColor: Color.fromARGB(228, 53, 191, 101),
+          backgroundColor: mainGreen,
           title: const Text(
             'Party Playlist',
             style: TextStyle(fontWeight: FontWeight.bold),
@@ -40,9 +45,9 @@ class _PartyPlaylist extends State<PartyPlaylist> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             IconButton(
-              icon: const Icon(
+              icon: Icon(
                 Spotify.spotify,
-                color: Color.fromARGB(228, 53, 191, 101),
+                color: mainGreen,
               ),
               onPressed: (getAuthToken),
             ),
@@ -65,12 +70,12 @@ class _PartyPlaylist extends State<PartyPlaylist> {
           hintStyle: const TextStyle(color: Colors.grey),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(18),
-            borderSide: const BorderSide(
-              color: Color.fromRGBO(30, 215, 96, 0.9),
+            borderSide: BorderSide(
+              color: mainGreen,
             ),
           ),
           suffixIcon: IconButton(
-              color: const Color.fromRGBO(30, 215, 96, 0.9),
+              color: mainGreen,
               icon: const Icon(Icons.done, size: 30),
               onPressed: () {
                 input = textController.text;
@@ -84,6 +89,7 @@ class _PartyPlaylist extends State<PartyPlaylist> {
               }),
         ),
       ));
+
   Future<String> getAuthToken() async {
     var authenticationToken = await SpotifySdk.getAccessToken(
         clientId: 'a502045e3c4b47d6b9bcfded418afd32',

@@ -29,6 +29,10 @@ class _InsertCodeState extends State<InsertCode> {
   bool err = false;
   String uid = FirebaseAuth.instance.currentUser!.uid;
 
+  Color mainGreen = const Color.fromARGB(228, 53, 191, 101);
+  Color backGround = const Color.fromARGB(255, 35, 34, 34);
+  Color alertColor = Colors.red;
+
   @override
   void dispose() {
     textController.dispose();
@@ -60,7 +64,7 @@ class _InsertCodeState extends State<InsertCode> {
             Navigator.pop(context);
           },
         ),
-        backgroundColor: const Color.fromARGB(255, 35, 34, 34),
+        backgroundColor: backGround,
         title: const Text(
           'Join Party',
           style: TextStyle(
@@ -68,7 +72,7 @@ class _InsertCodeState extends State<InsertCode> {
         ),
         centerTitle: true,
       ),
-      backgroundColor: const Color.fromARGB(255, 35, 34, 34),
+      backgroundColor: backGround,
       body: SingleChildScrollView(
           child: Center(
         child: Column(
@@ -108,12 +112,12 @@ class _InsertCodeState extends State<InsertCode> {
           hintStyle: const TextStyle(color: Colors.grey),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(18),
-            borderSide: const BorderSide(
-              color: Color.fromRGBO(30, 215, 96, 0.9),
+            borderSide: BorderSide(
+              color: mainGreen,
             ),
           ),
           suffixIcon: IconButton(
-              color: const Color.fromRGBO(30, 215, 96, 0.9),
+              color: mainGreen,
               icon: const Icon(Icons.done, size: 30),
               onPressed: () {
                 handleInsert();
@@ -129,7 +133,7 @@ class _InsertCodeState extends State<InsertCode> {
     await ip.checkInternetConnection();
 
     if (ip.hasInternet == false) {
-      showInSnackBar(context, "Check your Internet connection", Colors.red);
+      showInSnackBar(context, "Check your Internet connection", alertColor);
       return;
     }
 
@@ -139,38 +143,36 @@ class _InsertCodeState extends State<InsertCode> {
 
     await sp.checkUserExists().then((value) async {
       if (sp.hasError == true) {
-        showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+        showInSnackBar(context, sp.errorCode.toString(), alertColor);
         return;
       }
       if (value == false) {
-        showInSnackBar(context, 'The user data does not exists', Colors.red);
+        showInSnackBar(context, 'The user data does not exists', alertColor);
         return;
       }
 
       await sp.getUserDataFromFirestore(sp.uid!).then((value) {
         if (sp.hasError == true) {
-          showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+          showInSnackBar(context, sp.errorCode.toString(), alertColor);
           return;
         }
         sp.saveDataToSharedPreferences().then((value) async {
           await fp.checkPartyExists(code: textController.text).then((value) {
             if (fp.hasError == true) {
-              showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+              showInSnackBar(context, sp.errorCode.toString(), alertColor);
               return;
             }
             if (value == false) {
               showInSnackBar(context,
-                  'This code does not correspond to any party', Colors.red);
+                  'This code does not correspond to any party', alertColor);
               return;
             } else {
               fp.getPartyDataFromFirestore(textController.text).then((value) =>
                   fp.saveDataToSharedPreferences().then((value) =>
                       fp.isUserInsideParty(sp.uid!).then((value) {
                         if (value == true) {
-                          displayToastMessage(
-                              context,
-                              'You are already part of the party',
-                              Colors.green);
+                          displayToastMessage(context,
+                              'You are already part of the party', mainGreen);
                           return;
                         }
 
@@ -180,11 +182,11 @@ class _InsertCodeState extends State<InsertCode> {
                             .then((value) {
                           if (fp.hasError) {
                             showInSnackBar(
-                                context, sp.errorCode.toString(), Colors.red);
+                                context, sp.errorCode.toString(), alertColor);
                             return;
                           }
                           displayToastMessage(
-                              context, 'You join the party', Colors.green);
+                              context, 'You join the party', mainGreen);
                           handleAfterSubmit();
                           return;
                         });
@@ -205,7 +207,7 @@ class _InsertCodeState extends State<InsertCode> {
   bool validityCode() {
     if (textController.text.length != 5) {
       displayToastMessage(
-          context, 'Party Code is 5 characters long', Colors.red);
+          context, 'Party Code is 5 characters long', alertColor);
       return false;
     } else {
       return true;
@@ -227,6 +229,10 @@ class _ScannerScreenState extends State<ScannerScreen> {
 
   String error = '';
   String newError = '';
+
+  Color mainGreen = const Color.fromARGB(228, 53, 191, 101);
+  Color backGround = const Color.fromARGB(255, 35, 34, 34);
+  Color alertColor = Colors.red;
 
   void qr(QRViewController controller) {
     if (Platform.isAndroid) {
@@ -266,13 +272,14 @@ class _ScannerScreenState extends State<ScannerScreen> {
     await ip.checkInternetConnection();
 
     if (ip.hasInternet == false) {
-      showInSnackBar(context, "Check your Internet connection", Colors.red);
+      displayToastMessage(
+          context, "Check your Internet connection", alertColor);
       return;
     }
 
     if (!validityCode()) {
       if (isErrorNew()) {
-        displayToastMessage(context, error, Colors.red);
+        displayToastMessage(context, error, alertColor);
       }
       setState(() {
         controller!.pauseCamera();
@@ -283,17 +290,18 @@ class _ScannerScreenState extends State<ScannerScreen> {
 
     await sp.checkUserExists().then((value) async {
       if (sp.hasError == true) {
-        showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+        displayToastMessage(context, sp.errorCode.toString(), alertColor);
         return;
       }
       if (value == false) {
-        showInSnackBar(context, 'The user data does not exists', Colors.red);
+        displayToastMessage(
+            context, 'The user data does not exists', alertColor);
         return;
       }
 
       await sp.getUserDataFromFirestore(sp.uid!).then((value) {
         if (sp.hasError == true) {
-          showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+          displayToastMessage(context, sp.errorCode.toString(), alertColor);
           return;
         }
         sp.saveDataToSharedPreferences().then((value) async {
@@ -301,14 +309,14 @@ class _ScannerScreenState extends State<ScannerScreen> {
               .checkPartyExists(code: result!.code.toString())
               .then((value) {
             if (fp.hasError == true) {
-              showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+              displayToastMessage(context, sp.errorCode.toString(), alertColor);
               controller!.pauseCamera();
               handleStepBack();
               return;
             }
             if (value == false) {
-              showInSnackBar(context,
-                  'This code does not correspond to any party', Colors.red);
+              displayToastMessage(context,
+                  'This code does not correspond to any party', alertColor);
               controller!.pauseCamera();
               handleStepBack();
 
@@ -318,10 +326,8 @@ class _ScannerScreenState extends State<ScannerScreen> {
                 (value) => fp.saveDataToSharedPreferences().then(
                     (value) => fp.isUserInsideParty(sp.uid!).then((value) {
                           if (value == true) {
-                            displayToastMessage(
-                                context,
-                                'You are already part of the party',
-                                Colors.green);
+                            displayToastMessage(context,
+                                'You are already part of the party', mainGreen);
                             handleAfterSubmit();
                             return;
                           }
@@ -330,12 +336,12 @@ class _ScannerScreenState extends State<ScannerScreen> {
                                   sp.name!, sp.imageUrl!, sp.image!)
                               .then((value) {
                             if (fp.hasError) {
-                              showInSnackBar(
-                                  context, sp.errorCode.toString(), Colors.red);
+                              displayToastMessage(
+                                  context, sp.errorCode.toString(), alertColor);
                               return;
                             }
                             displayToastMessage(
-                                context, 'You join the party', Colors.green);
+                                context, 'You join the party', mainGreen);
                             handleAfterSubmit();
                             return;
                           });
@@ -374,10 +380,11 @@ class _ScannerScreenState extends State<ScannerScreen> {
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
     double heigth = MediaQuery.of(context).size.height;
+
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 35, 34, 34),
+      backgroundColor: backGround,
       appBar: AppBar(
-        backgroundColor: const Color.fromARGB(255, 35, 34, 34),
+        backgroundColor: backGround,
         centerTitle: true,
         title: const Text(
           'Qr Scanner',
@@ -406,7 +413,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
               key: _gLobalkey,
               onQRViewCreated: qr,
               overlay: QrScannerOverlayShape(
-                  borderColor: const Color.fromRGBO(30, 215, 96, 0.9),
+                  borderColor: mainGreen,
                   borderRadius: 10,
                   borderLength: 20,
                   borderWidth: 10),

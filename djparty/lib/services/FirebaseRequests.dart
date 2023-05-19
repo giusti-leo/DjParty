@@ -528,6 +528,27 @@ class FirebaseRequests extends ChangeNotifier {
     try {
       await userExitFromParty(user, party);
       await removeUserFromPartyList(user, party);
+      await removeUserFromRanking(user, party);
+      await changes(party);
+    } on FirebaseException catch (e) {
+      switch (e.code) {
+        default:
+          _errorCode = e.toString();
+          _hasError = true;
+          notifyListeners();
+      }
+    }
+  }
+
+  Future<void> changes(String party) async {
+    try {
+      var users = await partyCollection.doc(party).collection('members').get();
+      if (users.size > 0) {
+        String user = users.docs[0].get('uid').toString();
+        await partyCollection.doc(party).update({'admin': user});
+      } else {
+        await partyCollection.doc(party).delete();
+      }
     } on FirebaseException catch (e) {
       switch (e.code) {
         default:

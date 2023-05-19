@@ -28,6 +28,10 @@ class _PartySettingsState extends State<PartySettings> {
   int _currentInterval = 0;
   String _partyName = '';
 
+  Color mainGreen = const Color.fromARGB(228, 53, 191, 101);
+  Color backGround = const Color.fromARGB(255, 35, 34, 34);
+  Color alertColor = Colors.red;
+
   Future getData() async {
     final sp = context.read<SignInProvider>();
     final fr = context.read<FirebaseRequests>();
@@ -54,14 +58,13 @@ class _PartySettingsState extends State<PartySettings> {
     return MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
-            colorScheme: ColorScheme.fromSwatch().copyWith(
-                primary: const Color.fromARGB(228, 53, 191, 101),
-                secondary: const Color.fromARGB(228, 53, 191, 101))),
+            colorScheme: ColorScheme.fromSwatch()
+                .copyWith(primary: mainGreen, secondary: mainGreen)),
         home: Scaffold(
-            backgroundColor: const Color.fromARGB(255, 35, 34, 34),
+            backgroundColor: backGround,
             appBar: AppBar(
               elevation: 0,
-              backgroundColor: const Color.fromARGB(255, 35, 34, 34),
+              backgroundColor: backGround,
               title: const Text(
                 'Settings',
                 style: TextStyle(fontWeight: FontWeight.bold),
@@ -73,38 +76,12 @@ class _PartySettingsState extends State<PartySettings> {
                   color: Colors.white,
                 ),
                 onTap: () {
-                  nextScreenReplace(context, SpotifyTabController());
+                  nextScreenReplace(context, const SpotifyTabController());
                 },
               ),
             ),
             body: SingleChildScrollView(
               child: Column(children: [
-                /*
-                const SizedBox(
-                  height: 20,
-                ),
-                SizedBox(
-                  height: MediaQuery.of(context).size.height / 15,
-                  width: MediaQuery.of(context).size.width / 1.2,
-                  child: TextFormField(
-                    controller: controller,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20,
-                    ),
-                    decoration: InputDecoration(
-                      hintText: fr.partyName,
-                      hintStyle: const TextStyle(color: Colors.grey),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(18),
-                        borderSide: const BorderSide(
-                          color: Color.fromRGBO(30, 215, 96, 0.9),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),*/
                 const SizedBox(
                   height: 50,
                 ),
@@ -127,8 +104,8 @@ class _PartySettingsState extends State<PartySettings> {
                       color: Colors.blueGrey,
                       fontSize: 20,
                       fontWeight: FontWeight.w500),
-                  selectedTextStyle: const TextStyle(
-                      color: Color.fromRGBO(30, 215, 96, 0.9),
+                  selectedTextStyle: TextStyle(
+                      color: mainGreen,
                       fontSize: 20,
                       fontWeight: FontWeight.w500),
                   onChanged: (value) => setState(() {
@@ -161,8 +138,8 @@ class _PartySettingsState extends State<PartySettings> {
                       color: Colors.blueGrey,
                       fontSize: 20,
                       fontWeight: FontWeight.w500),
-                  selectedTextStyle: const TextStyle(
-                      color: Color.fromRGBO(30, 215, 96, 0.9),
+                  selectedTextStyle: TextStyle(
+                      color: mainGreen,
                       fontSize: 20,
                       fontWeight: FontWeight.w500),
                   onChanged: (value) => setState(() {
@@ -181,11 +158,11 @@ class _PartySettingsState extends State<PartySettings> {
                     _handleUpdate();
                   },
                   controller: submitController,
-                  successColor: const Color.fromRGBO(30, 215, 96, 0.9),
+                  successColor: mainGreen,
                   width: width * 0.80,
                   elevation: 0,
                   borderRadius: 25,
-                  color: const Color.fromRGBO(30, 215, 96, 0.9),
+                  color: mainGreen,
                   child: Wrap(
                     children: const [
                       Text("Save",
@@ -207,7 +184,7 @@ class _PartySettingsState extends State<PartySettings> {
     await ip.checkInternetConnection();
 
     if (ip.hasInternet == false) {
-      showInSnackBar(context, "Check your Internet connection", Colors.red);
+      showInSnackBar(context, "Check your Internet connection", alertColor);
       submitController.reset();
       return;
     }
@@ -216,13 +193,13 @@ class _PartySettingsState extends State<PartySettings> {
         .updateParty(fr.partyCode!, _currentTimer, _currentInterval)
         .then((value) {
       if (fr.hasError) {
-        showInSnackBar(context, fr.errorCode.toString(), Colors.red);
+        showInSnackBar(context, fr.errorCode.toString(), alertColor);
         submitController.reset();
         return;
       }
       fr.getPartyDataFromFirestore(fr.partyCode!).then((value) {
         if (fr.hasError) {
-          showInSnackBar(context, fr.errorCode.toString(), Colors.red);
+          showInSnackBar(context, fr.errorCode.toString(), alertColor);
           submitController.reset();
           return;
         }

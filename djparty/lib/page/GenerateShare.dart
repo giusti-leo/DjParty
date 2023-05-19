@@ -51,6 +51,10 @@ class _insertPartyName extends State<GeneratorScreen> {
   final RoundedLoadingButtonController submitController =
       RoundedLoadingButtonController();
 
+  Color mainGreen = const Color.fromARGB(228, 53, 191, 101);
+  Color backGround = const Color.fromARGB(255, 35, 34, 34);
+  Color alertColor = Colors.red;
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -65,7 +69,7 @@ class _insertPartyName extends State<GeneratorScreen> {
               Navigator.pop(context);
             },
           ),
-          backgroundColor: const Color.fromARGB(255, 35, 34, 34),
+          backgroundColor: backGround,
           title: const Text(
             'Create Party',
             style: TextStyle(
@@ -73,7 +77,7 @@ class _insertPartyName extends State<GeneratorScreen> {
           ),
           centerTitle: true,
         ),
-        backgroundColor: const Color.fromARGB(255, 35, 34, 34),
+        backgroundColor: backGround,
         body: SingleChildScrollView(
           child: Center(
             child: Column(
@@ -87,7 +91,7 @@ class _insertPartyName extends State<GeneratorScreen> {
                   child: TextFormField(
                     toolbarOptions: const ToolbarOptions(
                         copy: true, paste: true, selectAll: true, cut: true),
-                    cursorColor: const Color.fromRGBO(30, 215, 96, 0.9),
+                    cursorColor: mainGreen,
                     controller: partyName,
                     style: const TextStyle(
                       color: Colors.white,
@@ -97,14 +101,13 @@ class _insertPartyName extends State<GeneratorScreen> {
                     decoration: InputDecoration(
                       hintText: 'Party Name',
                       hintStyle: const TextStyle(color: Colors.grey),
-                      focusedBorder: const UnderlineInputBorder(
-                        borderSide:
-                            BorderSide(color: Color.fromRGBO(30, 215, 96, 0.9)),
+                      focusedBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: mainGreen),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(18),
-                        borderSide: const BorderSide(
-                          color: Color.fromRGBO(30, 215, 96, 0.9),
+                        borderSide: BorderSide(
+                          color: mainGreen,
                         ),
                       ),
                     ),
@@ -113,84 +116,16 @@ class _insertPartyName extends State<GeneratorScreen> {
                 const SizedBox(
                   height: 30,
                 ),
-                /*
-                  SizedBox(
-                    height: MediaQuery.of(context).size.height / 18,
-                    width: MediaQuery.of(context).size.width / 2,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        side: const BorderSide(
-                          color: Color.fromARGB(184, 255, 255, 255),
-                          width: 5,
-                        ),
-                        primary: const Color.fromRGBO(
-                            30, 215, 96, 0.9), // Background color
-                        onPrimary: Colors.white, // Text Color (Foreground color)
-                      ),
-                      onPressed: () {
-                        _selectDate(context);
-                        showDate = true;
-                      },
-                      child: Text(
-                        getDate(),
-                        style: const TextStyle(color: Colors.black, fontSize: 20),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 20,
-                  ),
-                  const Divider(
-                      color: Color.fromRGBO(30, 215, 96, 0.9), height: 64),
-                  const SizedBox(
-                    height: 20,
-                  ),
-                  const SizedBox(
-                    height: 40,
-                    child: Text(
-                      'Optional information',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 20, color: Colors.white),
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 30,
-                  ),
-                  SizedBox(
-                    height: MediaQuery.of(context).size.height / 18,
-                    width: MediaQuery.of(context).size.width / 2,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        side: const BorderSide(
-                          color: Color.fromARGB(184, 255, 255, 255),
-                          width: 5,
-                        ),
-                        primary: const Color.fromRGBO(
-                            30, 215, 96, 0.9), // Background color
-                        onPrimary: Colors.white, // Text Color (Foreground color)
-                      ),
-                      onPressed: () {
-                        _selectTime(context);
-                        showTime = true;
-                      },
-                      child: Text(getTime(selectedTime),
-                          style:
-                              const TextStyle(color: Colors.black, fontSize: 20)),
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 50,
-                  ),*/
                 RoundedLoadingButton(
                   onPressed: () {
                     handleCreation();
                   },
                   controller: submitController,
-                  successColor: const Color.fromRGBO(30, 215, 96, 0.9),
+                  successColor: mainGreen,
                   width: MediaQuery.of(context).size.width * 0.80,
                   elevation: 0,
                   borderRadius: 25,
-                  color: const Color.fromRGBO(30, 215, 96, 0.9),
+                  color: mainGreen,
                   child: Wrap(
                     children: const [
                       Text(
@@ -228,7 +163,8 @@ class _insertPartyName extends State<GeneratorScreen> {
     await ip.checkInternetConnection();
 
     if (ip.hasInternet == false) {
-      showInSnackBar(context, "Check your Internet connection", Colors.red);
+      displayToastMessage(
+          context, "Check your Internet connection", alertColor);
       submitController.reset();
       return;
     }
@@ -250,17 +186,18 @@ class _insertPartyName extends State<GeneratorScreen> {
 
     await sp.checkUserExists().then((value) async {
       if (sp.hasError == true) {
-        showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+        displayToastMessage(context, sp.errorCode.toString(), alertColor);
         return;
       }
       if (value == false) {
-        showInSnackBar(context, 'The user data does not exists', Colors.red);
+        displayToastMessage(
+            context, 'The user data does not exists', alertColor);
         return;
       }
 
       await sp.getUserDataFromFirestore(sp.uid!).then((value) {
         if (sp.hasError == true) {
-          showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+          displayToastMessage(context, sp.errorCode.toString(), alertColor);
           return;
         }
         sp.saveDataToSharedPreferences().then((value) async {
@@ -269,12 +206,12 @@ class _insertPartyName extends State<GeneratorScreen> {
                   sp.name!, sp.imageUrl!)
               .then((value) {
             if (fp.hasError == true) {
-              showInSnackBar(context, sp.errorCode.toString(), Colors.red);
+              displayToastMessage(context, sp.errorCode.toString(), alertColor);
               submitController.reset();
               return;
             }
             submitController.success();
-            displayToastMessage(context, 'Party Created', Colors.greenAccent);
+            displayToastMessage(context, 'Party Created', mainGreen);
             handleAfterSubmit();
           });
         });
@@ -285,7 +222,7 @@ class _insertPartyName extends State<GeneratorScreen> {
   bool isValid() {
     if (partyName.text.isEmpty) {
       displayToastMessage(
-          context, 'The Party Name cannot be empty', Colors.red);
+          context, 'The Party Name cannot be empty', alertColor);
       return false;
     }
     return true;
@@ -296,172 +233,4 @@ class _insertPartyName extends State<GeneratorScreen> {
       nextScreenReplace(context, const HomePage());
     });
   }
-
-/*
-
-
-
-  Widget _qrScreen(BuildContext context) {
-    final key = GlobalKey();
-    File? file;
-
-    User? currentUser = _auth.currentUser;
-
-    return Scaffold(
-      backgroundColor: const Color.fromRGBO(25, 20, 20, 0.4),
-      appBar: AppBar(
-        backgroundColor: const Color.fromRGBO(30, 215, 96, 0.9),
-        title: const Text('Create your Party'),
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.only(
-            left: 15.0, right: 15.0, top: 10.0, bottom: 30.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const SizedBox(
-              height: 20,
-            ),
-            TextField(
-              controller: partyName,
-              keyboardType: TextInputType.none,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-              ),
-              decoration: const InputDecoration(
-                focusColor: Colors.greenAccent,
-                filled: true,
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.greenAccent, width: 3),
-                ),
-                disabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.greenAccent, width: 3),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.greenAccent, width: 3),
-                ),
-                labelText: 'Party name',
-                labelStyle: TextStyle(color: Colors.greenAccent, fontSize: 16),
-                iconColor: Colors.greenAccent,
-                hintText: '',
-                hintStyle: TextStyle(color: Colors.grey),
-              ),
-            ),
-            const SizedBox(
-              height: 130,
-            ),
-            Center(
-              child: RepaintBoundary(
-                key: key,
-                child: QrImage(
-                  data: controller.text,
-                  size: 200,
-                  backgroundColor: Colors.white,
-                ),
-              ),
-            ),
-            const SizedBox(height: 40),
-            Center(
-                child: Text(
-              'Code: ' + '${controller.text}',
-              style: const TextStyle(
-                color: Colors.white,
-              ),
-            )),
-            const SizedBox(height: 40),
-            const SizedBox(height: 40),
-            SizedBox(
-              height: 40,
-              width: 170,
-              child: ElevatedButton(
-                  style: ButtonStyle(
-                    backgroundColor: const MaterialStatePropertyAll<Color>(
-                        Color.fromRGBO(30, 215, 96, 0.9)),
-                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                      RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20.0),
-                      ),
-                    ),
-                  ),
-                  child: const Text('Confirm', style: TextStyle(fontSize: 17)),
-                  onPressed: () async {
-                    try {
-                      CollectionReference<Map<String, dynamic>> parties =
-                          FirebaseFirestore.instance.collection('parties');
-                      CollectionReference<Map<String, dynamic>> users =
-                          FirebaseFirestore.instance.collection('users');
-
-                      if (currentUser != null) {
-                        Map<String, dynamic> party = {
-                          'admin': currentUser.uid,
-                          'timer': 60,
-                          'partyName': partyName.text,
-                          'code': controller.text,
-                          'creationTime': Timestamp.now()
-                        };
-
-                        await parties
-                            .doc(controller.text)
-                            .set(party)
-                            .then((value) => print('Party added'));
-
-                        final userDoc = FirebaseFirestore.instance
-                            .collection('users')
-                            .doc(currentUser.uid)
-                            .collection('party')
-                            .doc(controller.text);
-
-                        if (userDoc != null) {
-                          userDoc.set({
-                            'PartyName': partyName.text,
-                            'startDate': Timestamp.now(),
-                            'code': controller.text
-                          });
-                        }
-                        displayToastMessage('Party Created', context);
-                      }
-                    } on FirebaseAuthException catch (e) {
-                      displayToastMessage(e.message.toString(), context);
-                    }
-
-                    try {
-                      RenderRepaintBoundary boundary = key.currentContext!
-                          .findRenderObject() as RenderRepaintBoundary;
-                      var image = await boundary.toImage();
-                      ByteData? byteData =
-                          await image.toByteData(format: ImageByteFormat.png);
-                      Uint8List pngBytes = byteData!.buffer.asUint8List();
-                      final appDir = await getApplicationDocumentsDirectory();
-                      var datetime = DateTime.now();
-                      file =
-                          await File('${appDir.path}/$datetime.png').create();
-                      await file?.writeAsBytes(pngBytes);
-
-                      await Share.shareFiles(
-                        [file!.path],
-                        mimeTypes: ["image/png"],
-                        text:
-                            "Scan this Qr-Code to join my SpotiParty! or instert this code: ${controller.text}",
-                      );
-                    } catch (e) {
-                      print(e.toString());
-                    }
-                    partyName.clear();
-
-                    Navigator.pushNamed(context, Home.routeName);
-                  }),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-  
-  
-  
-  */
-
 }
