@@ -78,12 +78,12 @@ class _SpotifyTabController extends State<SpotifyTabController>
     sp.getDataFromSharedPreferences();
     fr.getDataFromSharedPreferences();
     sr.getUserId();
+    sr.getAuthToken();
 
     partyID = fr.partyCode!;
 
     if (sp.uid == fr.admin) {
       sr.connectToSpotify();
-      sr.getAuthToken();
       Wakelock.enable();
     }
 

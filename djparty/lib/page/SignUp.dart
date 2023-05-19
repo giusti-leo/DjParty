@@ -20,6 +20,8 @@ class SignUp extends StatefulWidget {
 }
 
 class _SignUpState extends State<SignUp> {
+  Color mainGreen = const Color.fromARGB(228, 53, 191, 101);
+  Color backGround = const Color.fromARGB(255, 35, 34, 34);
   bool _passwordVisible1 = false;
   bool _passwordVisible2 = false;
   static bool visible = false;
@@ -53,13 +55,11 @@ class _SignUpState extends State<SignUp> {
         backgroundColor: Colors.black,
         appBar: AppBar(
           backgroundColor: Colors.black,
-          shadowColor: Colors.green,
-          title: const Text('Registration',
+          shadowColor: mainGreen,
+          title: Text('Registration',
               textAlign: TextAlign.center,
               style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 24,
-                  color: Colors.greenAccent)),
+                  fontWeight: FontWeight.bold, fontSize: 24, color: mainGreen)),
           centerTitle: true,
           leading: GestureDetector(
             child: const Icon(
@@ -78,11 +78,11 @@ class _SignUpState extends State<SignUp> {
               children: <Widget>[
                 Container(
                   padding: const EdgeInsets.only(top: 150.0, bottom: 50),
-                  child: const Text(
+                  child: Text(
                     'Create Account',
                     style: TextStyle(
                         fontSize: 25,
-                        color: Colors.greenAccent,
+                        color: mainGreen,
                         fontStyle: FontStyle.normal),
                   ),
                 ),
@@ -93,26 +93,23 @@ class _SignUpState extends State<SignUp> {
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     style: const TextStyle(color: Colors.white),
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                         prefixIcon: Icon(
                           // Based on passwordVisible state choose the icon
                           Icons.mail_outline_rounded,
-                          color: Colors.greenAccent,
+                          color: mainGreen,
                         ),
                         filled: true,
                         fillColor: Colors.black12,
                         hintStyle: TextStyle(color: Colors.black),
                         enabledBorder: OutlineInputBorder(
-                          borderSide:
-                              BorderSide(color: Colors.greenAccent, width: 1.5),
+                          borderSide: BorderSide(color: mainGreen, width: 1.5),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderSide:
-                              BorderSide(color: Colors.greenAccent, width: 1.5),
+                          borderSide: BorderSide(color: mainGreen, width: 1.5),
                         ),
                         labelText: 'Email',
-                        labelStyle:
-                            TextStyle(fontSize: 14, color: Colors.greenAccent),
+                        labelStyle: TextStyle(fontSize: 14, color: mainGreen),
                         hintText: ''),
                   ),
                 ),
@@ -123,26 +120,23 @@ class _SignUpState extends State<SignUp> {
                     controller: _usernameController,
                     keyboardType: TextInputType.name,
                     style: const TextStyle(color: Colors.greenAccent),
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                         prefixIcon: Icon(
                           // Based on passwordVisible state choose the icon
                           Icons.account_circle_outlined,
-                          color: Colors.greenAccent,
+                          color: mainGreen,
                         ),
                         filled: true,
                         fillColor: Colors.black12,
-                        hintStyle: TextStyle(color: Colors.greenAccent),
+                        hintStyle: TextStyle(color: mainGreen),
                         enabledBorder: OutlineInputBorder(
-                          borderSide:
-                              BorderSide(color: Colors.greenAccent, width: 1.5),
+                          borderSide: BorderSide(color: mainGreen),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderSide:
-                              BorderSide(color: Colors.greenAccent, width: 1.5),
+                          borderSide: BorderSide(color: mainGreen),
                         ),
                         labelText: 'Full Name',
-                        labelStyle:
-                            TextStyle(fontSize: 16, color: Colors.greenAccent),
+                        labelStyle: TextStyle(fontSize: 16, color: mainGreen),
                         hintText: ''),
                   ),
                 ),
@@ -155,10 +149,10 @@ class _SignUpState extends State<SignUp> {
                     obscureText: !_passwordVisible1,
                     style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
-                        prefixIcon: const Icon(
+                        prefixIcon: Icon(
                           // Based on passwordVisible state choose the icon
                           Icons.lock_outline_rounded,
-                          color: Colors.greenAccent,
+                          color: mainGreen,
                         ),
                         suffixIcon: IconButton(
                             icon: Icon(
@@ -166,7 +160,7 @@ class _SignUpState extends State<SignUp> {
                               _passwordVisible1
                                   ? Icons.visibility
                                   : Icons.visibility_off,
-                              color: Colors.greenAccent,
+                              color: mainGreen,
                             ),
                             onPressed: () {
                               // Update the state i.e. toogle the state of passwordVisible variable
@@ -176,20 +170,19 @@ class _SignUpState extends State<SignUp> {
                             }),
                         filled: true,
                         fillColor: Colors.black12,
-                        hintStyle: const TextStyle(color: Colors.greenAccent),
-                        enabledBorder: const OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(5.0)),
-                          borderSide:
-                              BorderSide(color: Colors.greenAccent, width: 1.5),
+                        hintStyle: TextStyle(color: mainGreen),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius:
+                              const BorderRadius.all(Radius.circular(5.0)),
+                          borderSide: BorderSide(color: mainGreen, width: 1.5),
                         ),
-                        focusedBorder: const OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(5.0)),
-                          borderSide:
-                              BorderSide(color: Colors.greenAccent, width: 1.5),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius:
+                              const BorderRadius.all(Radius.circular(5.0)),
+                          borderSide: BorderSide(color: mainGreen, width: 1.5),
                         ),
                         labelText: 'New Password',
-                        labelStyle: const TextStyle(
-                            fontSize: 16, color: Colors.greenAccent),
+                        labelStyle: TextStyle(fontSize: 16, color: mainGreen),
                         hintText: ''),
                   ),
                 ),
@@ -202,10 +195,10 @@ class _SignUpState extends State<SignUp> {
                     keyboardType: TextInputType.visiblePassword,
                     style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
-                        prefixIcon: const Icon(
+                        prefixIcon: Icon(
                           // Based on passwordVisible state choose the icon
                           Icons.lock_outline_rounded,
-                          color: Colors.greenAccent,
+                          color: mainGreen,
                         ),
                         suffixIcon: IconButton(
                             icon: Icon(
@@ -213,7 +206,7 @@ class _SignUpState extends State<SignUp> {
                                   ? Icons.visibility
                                   : Icons
                                       .visibility_off, // Based on passwordVisible state choose the icon
-                              color: Colors.greenAccent,
+                              color: mainGreen,
                             ),
                             onPressed: () {
                               setState(() {
@@ -224,19 +217,18 @@ class _SignUpState extends State<SignUp> {
                         filled: true,
                         fillColor: Colors.black12,
                         hintStyle: const TextStyle(color: Colors.white54),
-                        enabledBorder: const OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(5.0)),
-                          borderSide:
-                              BorderSide(color: Colors.greenAccent, width: 1.5),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius:
+                              const BorderRadius.all(Radius.circular(5.0)),
+                          borderSide: BorderSide(color: mainGreen, width: 1.5),
                         ),
-                        focusedBorder: const OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(5.0)),
-                          borderSide:
-                              BorderSide(color: Colors.greenAccent, width: 1.5),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius:
+                              const BorderRadius.all(Radius.circular(5.0)),
+                          borderSide: BorderSide(color: mainGreen, width: 1.5),
                         ),
                         labelText: 'Confirm New Password',
-                        labelStyle:
-                            TextStyle(fontSize: 16, color: Colors.greenAccent),
+                        labelStyle: TextStyle(fontSize: 16, color: mainGreen),
                         hintText: ''),
                   ),
                 ),
@@ -279,22 +271,22 @@ class _SignUpState extends State<SignUp> {
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.black,
-                      surfaceTintColor: Colors.greenAccent,
-                      foregroundColor: Colors.greenAccent,
-                      shadowColor: Colors.greenAccent,
+                      surfaceTintColor: mainGreen,
+                      foregroundColor: mainGreen,
+                      shadowColor: mainGreen,
                       elevation: 8,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(15.0),
-                        side: const BorderSide(
-                          color: Colors.greenAccent,
+                        side: BorderSide(
+                          color: mainGreen,
                           width: 5,
                         ),
                       ),
                     ),
-                    child: const Text(
+                    child: Text(
                       'Register',
-                      selectionColor: Colors.greenAccent,
-                      style: TextStyle(fontSize: 20),
+                      selectionColor: mainGreen,
+                      style: const TextStyle(fontSize: 20),
                     ),
                   ),
                 ),
