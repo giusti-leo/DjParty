@@ -47,6 +47,8 @@ class _LoginState extends State<Login> {
   bool _passwordVisible2 = false;
   bool visible = false;
   bool err = false;
+  Color mainGreen = const Color.fromARGB(228, 53, 191, 101);
+  Color backGround = const Color.fromARGB(255, 35, 34, 34);
 
   @override
   void initState() {
@@ -65,10 +67,10 @@ class _LoginState extends State<Login> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color.fromARGB(128, 83, 99, 90),
+      backgroundColor: backGround,
       appBar: AppBar(
-        backgroundColor: Color.fromARGB(128, 38, 40, 39),
-        shadowColor: Color.fromARGB(128, 102, 128, 114),
+        backgroundColor: backGround,
+        shadowColor: const Color.fromARGB(128, 102, 128, 114),
         title: const Text('Create Dj Party account',
             textAlign: TextAlign.center,
             style: TextStyle(
@@ -94,29 +96,23 @@ class _LoginState extends State<Login> {
                     style: const TextStyle(color: Colors.white),
                     toolbarOptions: const ToolbarOptions(
                         copy: true, paste: true, selectAll: true, cut: true),
-                    cursorColor: const Color.fromRGBO(30, 215, 96, 0.9),
-                    decoration: const InputDecoration(
+                    cursorColor: mainGreen,
+                    decoration: InputDecoration(
                         prefixIcon: Icon(
                           Icons.mail_outline_rounded,
-                          color: Color.fromRGBO(30, 215, 96, 0.9),
+                          color: mainGreen,
                         ),
                         filled: true,
-                        fillColor: Color.fromARGB(128, 53, 74, 62),
-                        hintStyle: TextStyle(color: Colors.black),
+                        fillColor: const Color.fromARGB(128, 53, 74, 62),
+                        hintStyle: const TextStyle(color: Colors.black),
                         enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                              color: Color.fromRGBO(30, 215, 96, 0.9),
-                              width: 1),
+                          borderSide: BorderSide(color: mainGreen, width: 1),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                              color: Color.fromRGBO(30, 215, 96, 0.9),
-                              width: 1),
+                          borderSide: BorderSide(color: mainGreen, width: 1),
                         ),
                         labelText: 'Email',
-                        labelStyle: TextStyle(
-                            fontSize: 14,
-                            color: Color.fromRGBO(30, 215, 96, 0.9)),
+                        labelStyle: TextStyle(fontSize: 14, color: mainGreen),
                         hintText: ''),
                   ),
                 ),
@@ -130,18 +126,18 @@ class _LoginState extends State<Login> {
                     style: const TextStyle(color: Colors.white),
                     toolbarOptions: const ToolbarOptions(
                         copy: true, paste: true, selectAll: true, cut: true),
-                    cursorColor: const Color.fromRGBO(30, 215, 96, 0.9),
+                    cursorColor: mainGreen,
                     decoration: InputDecoration(
                         prefixIcon: const Icon(
                           Icons.lock_outline_rounded,
-                          color: Color.fromRGBO(30, 215, 96, 0.9),
+                          color: Color.fromARGB(228, 53, 191, 101),
                         ),
                         suffixIcon: IconButton(
                             icon: Icon(
                               _passwordVisible1
                                   ? Icons.visibility
                                   : Icons.visibility_off,
-                              color: const Color.fromRGBO(30, 215, 96, 0.9),
+                              color: mainGreen,
                             ),
                             onPressed: () async {
                               setState(() {
@@ -154,24 +150,21 @@ class _LoginState extends State<Login> {
                             }),
                         filled: true,
                         fillColor: const Color.fromARGB(128, 53, 74, 62),
-                        hintStyle: const TextStyle(
-                            color: Color.fromRGBO(30, 215, 96, 0.9)),
-                        enabledBorder: const OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(5.0)),
-                          borderSide: BorderSide(
-                              color: Color.fromRGBO(30, 215, 96, 0.9),
-                              width: 1),
+                        hintStyle: TextStyle(color: mainGreen),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius:
+                              const BorderRadius.all(Radius.circular(5.0)),
+                          borderSide: BorderSide(color: mainGreen, width: 1),
                         ),
-                        focusedBorder: const OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(5.0)),
-                          borderSide: BorderSide(
-                              color: Color.fromRGBO(30, 215, 96, 0.9),
-                              width: 1),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius:
+                              const BorderRadius.all(Radius.circular(5.0)),
+                          borderSide: BorderSide(color: mainGreen, width: 1),
                         ),
                         labelText: 'New Password',
                         labelStyle: const TextStyle(
                             fontSize: 16,
-                            color: Color.fromRGBO(30, 215, 96, 0.9)),
+                            color: Color.fromARGB(228, 53, 191, 101)),
                         hintText: ''),
                   ),
                 ),
@@ -185,18 +178,18 @@ class _LoginState extends State<Login> {
                     style: const TextStyle(color: Colors.white),
                     toolbarOptions: const ToolbarOptions(
                         copy: true, paste: true, selectAll: true, cut: true),
-                    cursorColor: const Color.fromRGBO(30, 215, 96, 0.9),
+                    cursorColor: mainGreen,
                     decoration: InputDecoration(
-                        prefixIcon: const Icon(
+                        prefixIcon: Icon(
                           Icons.lock_outline_rounded,
-                          color: Color.fromRGBO(30, 215, 96, 0.9),
+                          color: mainGreen,
                         ),
                         suffixIcon: IconButton(
                             icon: Icon(
                               _passwordVisible2
                                   ? Icons.visibility
                                   : Icons.visibility_off,
-                              color: const Color.fromRGBO(30, 215, 96, 0.9),
+                              color: mainGreen,
                             ),
                             onPressed: () async {
                               setState(() {
@@ -210,22 +203,18 @@ class _LoginState extends State<Login> {
                         filled: true,
                         fillColor: const Color.fromARGB(128, 53, 74, 62),
                         hintStyle: const TextStyle(color: Colors.white54),
-                        enabledBorder: const OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(5.0)),
-                          borderSide: BorderSide(
-                              color: Color.fromRGBO(30, 215, 96, 0.9),
-                              width: 1),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius:
+                              const BorderRadius.all(Radius.circular(5.0)),
+                          borderSide: BorderSide(color: mainGreen, width: 1),
                         ),
-                        focusedBorder: const OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(5.0)),
-                          borderSide: BorderSide(
-                              color: Color.fromRGBO(30, 215, 96, 0.9),
-                              width: 1),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius:
+                              const BorderRadius.all(Radius.circular(5.0)),
+                          borderSide: BorderSide(color: mainGreen, width: 1),
                         ),
                         labelText: 'Confirm New Password',
-                        labelStyle: const TextStyle(
-                            fontSize: 16,
-                            color: Color.fromRGBO(30, 215, 96, 0.9)),
+                        labelStyle: TextStyle(fontSize: 16, color: mainGreen),
                         hintText: ''),
                   ),
                 ),
@@ -234,11 +223,11 @@ class _LoginState extends State<Login> {
                     signup();
                   },
                   controller: registrationController,
-                  successColor: const Color.fromRGBO(30, 215, 96, 0.9),
+                  successColor: mainGreen,
                   width: MediaQuery.of(context).size.width * 0.80,
                   elevation: 0,
                   borderRadius: 25,
-                  color: const Color.fromRGBO(30, 215, 96, 0.9),
+                  color: mainGreen,
                   child: Wrap(
                     children: const [
                       Icon(
@@ -271,7 +260,7 @@ class _LoginState extends State<Login> {
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                        padding: EdgeInsets.symmetric(horizontal: 10.0),
                         child: Text(
                           'Or continue with',
                           style: TextStyle(color: Colors.white),
@@ -366,11 +355,11 @@ class _LoginState extends State<Login> {
                       onPressed: () {
                         handleToSignIn();
                       },
-                      child: const Text(
+                      child: Text(
                         ' Log in ',
                         style: TextStyle(
                           fontSize: 14,
-                          color: Color.fromRGBO(30, 215, 96, 0.9),
+                          color: mainGreen,
                         ),
                       ),
                     ),

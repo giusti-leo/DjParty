@@ -30,6 +30,9 @@ class _SignInState extends State<SignIn> {
   static bool visible = false;
   static bool gvisible = false;
 
+  Color mainGreen = const Color.fromARGB(228, 53, 191, 101);
+  Color backGround = const Color.fromARGB(255, 35, 34, 34);
+
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final TextEditingController _emailidController = TextEditingController();
@@ -56,7 +59,7 @@ class _SignInState extends State<SignIn> {
       debugShowCheckedModeBanner: false,
       home: Scaffold(
         key: _scaffoldKey,
-        backgroundColor: const Color.fromARGB(128, 53, 74, 62),
+        backgroundColor: backGround,
         appBar: AppBar(
           backgroundColor: const Color.fromARGB(128, 53, 74, 62),
           title: const Text('Login',
@@ -92,29 +95,23 @@ class _SignInState extends State<SignIn> {
                     style: const TextStyle(color: Colors.white),
                     toolbarOptions: const ToolbarOptions(
                         copy: true, paste: true, selectAll: true, cut: true),
-                    cursorColor: const Color.fromRGBO(30, 215, 96, 0.9),
-                    decoration: const InputDecoration(
-                        focusColor: Color.fromRGBO(30, 215, 96, 0.9),
+                    cursorColor: mainGreen,
+                    decoration: InputDecoration(
+                        focusColor: mainGreen,
                         prefixIcon: Icon(
                           Icons.mail_outline_rounded,
-                          color: Color.fromRGBO(30, 215, 96, 0.9),
+                          color: mainGreen,
                         ),
                         //filled: true,
                         enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                              color: Color.fromRGBO(30, 215, 96, 0.9),
-                              width: 1),
+                          borderSide: BorderSide(color: mainGreen, width: 1),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                              color: Color.fromRGBO(30, 215, 96, 0.9),
-                              width: 1),
+                          borderSide: BorderSide(color: mainGreen, width: 1),
                         ),
                         labelText: 'Email',
-                        labelStyle: TextStyle(
-                            color: Color.fromRGBO(30, 215, 96, 0.9),
-                            fontSize: 16),
-                        iconColor: Color.fromRGBO(30, 215, 96, 0.9),
+                        labelStyle: TextStyle(color: mainGreen, fontSize: 16),
+                        iconColor: mainGreen,
                         hintText: ''),
                   ),
                 ),
@@ -130,16 +127,16 @@ class _SignInState extends State<SignIn> {
                         copy: true, paste: true, selectAll: true, cut: true),
                     cursorColor: const Color.fromRGBO(30, 215, 96, 0.9),
                     decoration: InputDecoration(
-                        prefixIcon: const Icon(
+                        prefixIcon: Icon(
                           Icons.lock_outline_rounded,
-                          color: Color.fromRGBO(30, 215, 96, 0.9),
+                          color: mainGreen,
                         ),
                         suffixIcon: IconButton(
                             icon: Icon(
                               _passwordVisible
                                   ? Icons.visibility
                                   : Icons.visibility_off,
-                              color: const Color.fromRGBO(30, 215, 96, 0.9),
+                              color: mainGreen,
                             ),
                             onPressed: () async {
                               setState(() {
@@ -151,17 +148,17 @@ class _SignInState extends State<SignIn> {
                               });
                             }),
                         //filled: true,
-                        fillColor: const Color.fromARGB(128, 53, 74, 62),
-                        enabledBorder: const OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(5.0)),
-                          borderSide: BorderSide(
-                              color: Color.fromRGBO(30, 215, 96, 0.9),
-                              width: 1),
+                        fillColor: backGround,
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius:
+                              const BorderRadius.all(Radius.circular(5.0)),
+                          borderSide: BorderSide(color: mainGreen, width: 1),
                         ),
-                        focusedBorder: const OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(5.0)),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius:
+                              const BorderRadius.all(Radius.circular(5.0)),
                           borderSide: BorderSide(
-                            color: Color.fromRGBO(30, 215, 96, 0.9),
+                            color: mainGreen,
                             width: 1,
                           ),
                         ),
@@ -178,11 +175,11 @@ class _SignInState extends State<SignIn> {
                         _passwordController.text);
                   },
                   controller: signinController,
-                  successColor: const Color.fromRGBO(30, 215, 96, 0.9),
+                  successColor: mainGreen,
                   width: MediaQuery.of(context).size.width * 0.80,
                   elevation: 0,
                   borderRadius: 25,
-                  color: const Color.fromRGBO(30, 215, 96, 0.9),
+                  color: mainGreen,
                   child: Wrap(
                     children: const [
                       Icon(
@@ -213,10 +210,11 @@ class _SignInState extends State<SignIn> {
                             color: Colors.greenAccent,
                             width: 320,
                             margin: const EdgeInsets.only(),
-                            child: const LinearProgressIndicator(
+                            child: LinearProgressIndicator(
                               minHeight: 2,
-                              backgroundColor: Color.fromARGB(128, 53, 74, 62),
-                              valueColor: AlwaysStoppedAnimation(Colors.white),
+                              backgroundColor: backGround,
+                              valueColor:
+                                  const AlwaysStoppedAnimation(Colors.white),
                             )))),
                 SizedBox(
                   height: 70,
@@ -225,10 +223,10 @@ class _SignInState extends State<SignIn> {
                     onPressed: () {
                       nextScreen(context, const ResetPassword());
                     },
-                    child: const Text(
+                    child: Text(
                       'Forgot Password?',
-                      selectionColor: Color.fromRGBO(30, 215, 96, 0.9),
-                      style: TextStyle(fontSize: 14, color: Colors.white),
+                      selectionColor: mainGreen,
+                      style: const TextStyle(fontSize: 14, color: Colors.white),
                     ),
                   ),
                 ),
