@@ -58,3 +58,67 @@ class Track {
         track["name"], user, track["duration_ms"], Timestamp.now(), false);
   }
 }
+
+class Song {
+  final String uri;
+  final List<String> artists;
+  final String images;
+  final String name;
+  final int duration;
+  final Timestamp? tmp;
+
+  final String previousUri;
+  final List<String> previousArtists;
+  final String previousImages;
+  final String previousName;
+  final int previousDuration;
+  final Timestamp? previousTmp;
+
+  Song(
+      this.artists,
+      this.name,
+      this.images,
+      this.uri,
+      this.duration,
+      this.tmp,
+      this.previousArtists,
+      this.previousUri,
+      this.previousImages,
+      this.previousName,
+      this.previousDuration,
+      this.previousTmp);
+
+  factory Song.getPartyFromFirestore(dynamic song) {
+    List<String> currentArtistList = [];
+    List<String> previousArtistList = [];
+
+    if (song['artist'].toString() != '[]') {
+      List<dynamic> artists = song['artist'];
+      for (var element in artists) {
+        currentArtistList.add(element.toString());
+      }
+    }
+
+    if (song['previousArtist'].toString() != '[]') {
+      List<dynamic> previousArtists = song['previousArtist'];
+
+      for (var element in previousArtists) {
+        previousArtistList.add(element.toString());
+      }
+    }
+
+    return Song(
+        currentArtistList,
+        song["name"],
+        song["image"],
+        song["songCurrentlyPlayed"],
+        song["trackDuration"],
+        song["recs"],
+        previousArtistList,
+        song["previousSong"],
+        song["previousImage"],
+        song["previousName"],
+        song["previousTrackDuration"],
+        song["previousRecs"]);
+  }
+}

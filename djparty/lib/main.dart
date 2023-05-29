@@ -18,7 +18,6 @@ import 'package:djparty/services/SpotifyRequests.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:djparty/page/PartyPage.dart';
 import 'package:djparty/page/PlaylistPage.dart';
 import 'package:djparty/page/PartyPlaylist.dart';
 

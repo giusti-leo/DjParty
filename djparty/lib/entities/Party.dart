@@ -1,58 +1,56 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class Party {
-  final List<String> partecipantList;
-  final String partyName;
-  final String admin;
-  final String code;
-  final Timestamp creationTime;
-  final Timestamp nextVotingPhase;
-  final Timestamp startParty;
-  final int timer;
-  final int votingTime;
-  final bool votingStatus;
-  final bool isEnded;
-  final bool isStarted;
-  final int songsReproduced;
-  final String status;
+class PartyStatus {
+  bool? isStarted;
+  bool? isEnded;
+  bool? isBackgrounded;
 
-  Party(
-      this.partecipantList,
-      this.partyName,
-      this.admin,
-      this.code,
-      this.timer,
-      this.songsReproduced,
-      this.votingTime,
-      this.creationTime,
-      this.nextVotingPhase,
-      this.startParty,
-      this.votingStatus,
-      this.isEnded,
-      this.isStarted,
-      this.status);
+  PartyStatus(this.isStarted, this.isEnded, this.isBackgrounded);
 
-  factory Party.getPartyFromFirestore(dynamic party) {
-    List<dynamic> partecipants = party['partecipant_list'];
-    List<String> partecipantList = [];
+  factory PartyStatus.getPartyFromFirestore(dynamic party) {
+    return PartyStatus(
+        party["isStarted"], party["isEnded"], party["isBackgrounded"]);
+  }
+}
 
-    for (var element in partecipants) {
-      partecipantList.add(element.toString());
-    }
-    return Party(
-        partecipantList,
-        party["partyName"],
-        party["admin"],
-        party["code"],
-        party["timer"],
+class VotingStatus {
+  int? timer;
+  int? votingTime;
+  Timestamp? nextVotingPhase;
+  bool? voting;
+  bool? countdown;
+
+  VotingStatus(this.timer, this.votingTime, this.nextVotingPhase, this.voting,
+      this.countdown);
+
+  factory VotingStatus.getPartyFromFirestore(dynamic party) {
+    return VotingStatus(party["timer"], party["votingTime"],
+        party["nextVotingPhase"], party["votingStatus"], party["countdown"]);
+  }
+}
+
+class MusicStatus {
+  bool? selected;
+  bool? firstVoting;
+  int? times;
+  bool? songs;
+  bool? running;
+  bool? pause;
+  bool? resume;
+  bool? backSkip;
+
+  MusicStatus(this.selected, this.firstVoting, this.times, this.songs,
+      this.running, this.pause, this.resume, this.backSkip);
+
+  factory MusicStatus.getPartyFromFirestore(dynamic party) {
+    return MusicStatus(
+        party["selected"],
+        party["firstVoting"],
         party["songsReproduced"],
-        party["votingTime"],
-        party["creationTime"],
-        party["nextVotingPhase"],
-        party["startParty"],
-        party["votingStatus"],
-        party["isEnded"],
-        party["isStarted"],
-        party["status"]);
+        party["songs"],
+        party['running'],
+        party['pause'],
+        party['resume'],
+        party["backSkip"]);
   }
 }

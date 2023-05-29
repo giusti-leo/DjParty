@@ -34,20 +34,20 @@ class SpotifyRequests extends ChangeNotifier {
     ),
   );
 
-  String? _myToken;
-  String? get myToken => _myToken;
+  String _myToken = '';
+  String get myToken => _myToken;
 
-  String? _userId;
-  String? get userId => _userId;
+  String _userId = '';
+  String get userId => _userId;
 
-  String? _playlistId;
-  String? get playlistId => _playlistId;
+  String _playlistId = '';
+  String get playlistId => _playlistId;
 
-  bool? _loading;
-  bool? get loading => _loading;
+  bool _loading = true;
+  bool get loading => _loading;
 
-  bool? _connected;
-  bool? get connected => _connected;
+  bool _connected = true;
+  bool get connected => _connected;
 
   Future<String> getAuthToken() async {
     var authenticationToken = await SpotifySdk.getAccessToken(
@@ -106,7 +106,7 @@ class SpotifyRequests extends ChangeNotifier {
       Uri.parse(getUserIdEndpoint),
       headers: <String, String>{
         'Content-Type': 'application/json',
-        'Authorization': "Bearer " + myToken!
+        'Authorization': "Bearer " + myToken
       },
     );
     final responseJson = json.decode(response.body);
@@ -115,13 +115,13 @@ class SpotifyRequests extends ChangeNotifier {
 
   Future saveDataToSharedPreferences() async {
     final SharedPreferences s = await SharedPreferences.getInstance();
-    await s.setString('spotifyUserId', _userId!);
+    await s.setString('spotifyUserId', _userId);
     notifyListeners();
   }
 
   Future getDataFromSharedPreferences() async {
     final SharedPreferences s = await SharedPreferences.getInstance();
-    _userId = s.getString('spotifyUserId');
+    _userId = s.getString('spotifyUserId')!;
     notifyListeners();
   }
 

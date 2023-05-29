@@ -11,6 +11,8 @@ import 'package:djparty/page/InsertCode.dart';
 import 'package:djparty/page/Login.dart';
 import 'package:djparty/page/GenerateShare.dart';
 import 'package:djparty/page/SpotifyTabController.dart';
+import 'package:djparty/page/admin/AdminTabPage.dart';
+import 'package:djparty/page/guest/GuestTabPage.dart';
 import 'package:djparty/page/spotifyPlayer.dart';
 import 'package:djparty/services/FirebaseRequests.dart';
 import 'package:djparty/services/InternetProvider.dart';
@@ -608,15 +610,30 @@ class _HomeState extends State<Home> {
         }
         fp.saveDataToSharedPreferences().then((value) {
           partyController.success();
-          handlePassToLobby();
+
+          if (fp.admin! == sp.uid) {
+            handlePassToAdminLobby();
+          } else {
+            handlePassToGuestLobby();
+          }
         });
       });
     });
   }
 
-  handlePassToLobby() {
+  handlePassToAdminLobby() {
     Future.delayed(const Duration(milliseconds: 200)).then((value) {
-      nextScreen(context, const SpotifyTabController());
+      nextScreen(
+          context,
+          AdminTabPage(
+            homeHeigth: MediaQuery.of(context).size.height,
+          ));
+    });
+  }
+
+  handlePassToGuestLobby() {
+    Future.delayed(const Duration(milliseconds: 200)).then((value) {
+      nextScreen(context, const GuestTabPage());
     });
   }
 
