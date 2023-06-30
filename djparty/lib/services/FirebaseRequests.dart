@@ -367,10 +367,14 @@ class FirebaseRequests extends ChangeNotifier {
       await organizeParty(uid, partyName, partyCode);
       await createPartyForAUser(uid, uid, partyName, partyCode);
       await addUserToRanking(uid, username, imageUrl, image, partyCode);
+      // add Party Status
       await createPartyStatus(partyCode);
-      await createMusicStatus(partyCode);
+      // add Song Status
+      await createSongParty(partyCode);
+      // add party Voting
       await createPartyVoting(partyCode);
-      await createStatus(partyCode);
+      // add Song Selection Status
+      await createSelectionStatus(partyCode);
     } on FirebaseException catch (e) {
       switch (e.code) {
         default:
@@ -403,7 +407,7 @@ class FirebaseRequests extends ChangeNotifier {
     }
   }
 
-  Future createStatus(
+  Future createSelectionStatus(
     String code,
   ) async {
     try {
@@ -412,14 +416,14 @@ class FirebaseRequests extends ChangeNotifier {
           .collection('Party')
           .doc('MusicStatus')
           .set({
-        'selected': false,
         'songs': false,
         'firstVoting': false,
-        'songsReproduced': 0,
+        'selected': false,
         'running': false,
-        "pause": false,
-        "resume": false,
-        "backSkip": false
+        'backSkip': false,
+        'pause': false,
+        'resume': false,
+        'songsReproduced': 0
       }).then((value) => print('Music added'));
       notifyListeners();
     } on FirebaseException catch (e) {
@@ -432,7 +436,7 @@ class FirebaseRequests extends ChangeNotifier {
     }
   }
 
-  Future createMusicStatus(
+  Future createSongParty(
     String code,
   ) async {
     try {
@@ -530,6 +534,8 @@ class FirebaseRequests extends ChangeNotifier {
         'partyName': partyName,
         'code': code,
         'creationTime': DateTime.now(),
+        'ping': Timestamp.now(),
+        'offline': false
       }).then((value) => print('Party added'));
       notifyListeners();
     } on FirebaseException catch (e) {
@@ -685,6 +691,31 @@ class FirebaseRequests extends ChangeNotifier {
     });
   }
 
+  Future setRunning(String code) async {
+    var db = FirebaseFirestore.instance
+        .collection('parties')
+        .doc(code)
+        .collection('Party')
+        .doc('MusicStatus');
+    await db.update({
+      "selected": false,
+      "running": true,
+      "resume": false,
+      "pause": false,
+      "backSkip": false
+    });
+  }
+
+  Future setPartyOffline(String code) async {
+    var db = FirebaseFirestore.instance.collection('parties').doc(code);
+    await db.update({"offline": true});
+  }
+
+  Future setPartyOnline(String code) async {
+    var db = FirebaseFirestore.instance.collection('parties').doc(code);
+    await db.update({"offline": false});
+  }
+
   Future setBackSkip(String code) async {
     var db = FirebaseFirestore.instance
         .collection('parties')
@@ -697,6 +728,13 @@ class FirebaseRequests extends ChangeNotifier {
       "resume": false,
       "pause": false,
       "backSkip": true
+    });
+  }
+
+  Future setPing(String code) async {
+    var db = FirebaseFirestore.instance.collection('parties').doc(code);
+    await db.update({
+      "ping": Timestamp.now(),
     });
   }
 
@@ -1007,6 +1045,7 @@ class FirebaseRequests extends ChangeNotifier {
   Future<void> changeVoting(String code, bool val) async {
     try {
       var batch = FirebaseFirestore.instance.batch();
+
       var pathVoting =
           partyCollection.doc(code).collection('Party').doc('MusicStatus');
       batch.update(pathVoting, {

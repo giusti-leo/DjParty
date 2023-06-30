@@ -13,6 +13,7 @@ import 'package:djparty/page/RankingPage.dart';
 import 'package:djparty/page/admin/AdminPlayer.dart';
 import 'package:djparty/page/admin/AdminRanking.dart';
 import 'package:djparty/page/guest/GuestTabPage.dart';
+import 'package:djparty/services/Connectivity.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_countdown_timer/flutter_countdown_timer.dart';
@@ -77,12 +78,16 @@ class _AdminTabPage extends State<AdminTabPage>
   int _currentInterval = 1;
 
   final key = GlobalKey();
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
   File? file;
 
   int nextTrackIndex = 1;
   String nextTrackUri = "";
   bool ended = false;
   bool stopped = true;
+  bool offline = false;
 
   bool spotifyAlert = false;
   bool updateDone = true;
@@ -91,7 +96,7 @@ class _AdminTabPage extends State<AdminTabPage>
   late TabController tabController;
   final RoundedLoadingButtonController exitController =
       RoundedLoadingButtonController();
-  late LinearTimerController timerController1 = LinearTimerController(this);
+  late LinearTimerController timerController1;
 
   final TextEditingController controllerVotingTimer = TextEditingController();
 
@@ -107,7 +112,10 @@ class _AdminTabPage extends State<AdminTabPage>
     final sr = context.read<SpotifyRequests>();
 
     sp.getDataFromSharedPreferences();
+    fr.getPartyDataFromFirestore(fr.partyCode!);
+    fr.saveDataToSharedPreferences();
     fr.getDataFromSharedPreferences();
+
     sr.getUserId();
     sr.getAuthToken();
     sr.connectToSpotify();
@@ -119,6 +127,7 @@ class _AdminTabPage extends State<AdminTabPage>
   void initState() {
     WidgetsBinding.instance.addObserver(this);
     getData();
+    timerController1 = LinearTimerController(this);
 
     super.initState();
     tabController = TabController(length: 3, vsync: this);
@@ -135,8 +144,6 @@ class _AdminTabPage extends State<AdminTabPage>
 
     timerController1.dispose();
     WidgetsBinding.instance.removeObserver(this);
-
-    super.dispose();
   }
 
   @override
@@ -150,49 +157,41 @@ class _AdminTabPage extends State<AdminTabPage>
 
     SchedulerBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
+        final fr = context.read<FirebaseRequests>();
+
         if (isBackground || isDetached || isInactive) {
           pause();
-        }
 
-        final fr = context.read<FirebaseRequests>();
+          FirebaseFirestore.instance
+              .collection('parties')
+              .doc(fr.partyCode)
+              .collection('Party')
+              .doc('MusicStatus')
+              .get()
+              .then((value) {
+            MusicStatus musicStatus;
+            musicStatus = MusicStatus.getPartyFromFirestore(value.data());
+            if (musicStatus.running!) {
+              fr.setBackgrounded(fr.partyCode!);
+              timerController1.stop();
+            }
+          });
+        }
 
         FirebaseFirestore.instance
             .collection('parties')
             .doc(fr.partyCode)
             .collection('Party')
-            .doc('MusicStatus')
+            .doc('PartyStatus')
             .get()
-            .then((value) {
-          MusicStatus musicStatus;
-          musicStatus = MusicStatus.getPartyFromFirestore(value.data());
-          if (musicStatus.running! || musicStatus.selected!) {
-            if (isBackground || isDetached || isInactive) {
-              pause();
-              fr.setPause(fr.partyCode!);
-              timerController1.stop();
-              fr.setBackgrounded(fr.partyCode!);
-            }
-
-            FirebaseFirestore.instance
-                .collection('parties')
-                .doc(fr.partyCode)
-                .collection('Party')
-                .doc('PartyStatus')
-                .get()
+            .then((value) async {
+          PartyStatus partyStatus =
+              PartyStatus.getPartyFromFirestore(value.data());
+          if (isResumed && partyStatus.isStarted! && !partyStatus.isEnded!) {
+            await Future.delayed(const Duration(milliseconds: 1000))
                 .then((value) async {
-              PartyStatus partyStatus =
-                  PartyStatus.getPartyFromFirestore(value.data());
-              if (isResumed &&
-                  partyStatus.isStarted! &&
-                  !partyStatus.isEnded!) {
-                await Future.delayed(const Duration(milliseconds: 1000))
-                    .then((value) async {
-                  await fr.setRestart(fr.partyCode!).then((value) async {
-                    await restart();
-                    timerController1.start(restart: true);
-                  });
-                });
-              }
+              fr.setSelection(fr.partyCode!);
+              timerController1.reset();
             });
           }
         });
@@ -385,8 +384,6 @@ class _AdminTabPage extends State<AdminTabPage>
   Widget build(BuildContext context) {
     final fr = context.read<FirebaseRequests>();
 
-    final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
-
     return WillPopScope(
         onWillPop: _onWillPop,
         child: MaterialApp(
@@ -396,6 +393,7 @@ class _AdminTabPage extends State<AdminTabPage>
               colorScheme: ColorScheme.fromSwatch()
                   .copyWith(primary: mainGreen, secondary: backGround)),
           home: Scaffold(
+            key: _scaffoldKey,
             resizeToAvoidBottomInset: false,
             backgroundColor: backGround,
             appBar: AppBar(
@@ -654,6 +652,29 @@ class _AdminTabPage extends State<AdminTabPage>
                           }
                         }),
                   ),
+                  // Handle disconnection to Spotify
+                  StreamBuilder(
+                      stream: SpotifySdk.subscribeConnectionStatus(),
+                      builder: (context, snapshot) {
+                        if (!snapshot.hasData) {
+                          return Container();
+                        }
+                        if (snapshot.data!.connected == true) {
+                          return Container();
+                        } else {
+                          final sp = context.read<SignInProvider>();
+                          final fr = context.read<FirebaseRequests>();
+                          final sr = context.read<SpotifyRequests>();
+
+                          sp.getDataFromSharedPreferences();
+                          fr.getDataFromSharedPreferences();
+                          sr.getUserId();
+                          sr.getAuthToken();
+                          sr.connectToSpotify();
+                          return Container();
+                        }
+                      }),
+                  // ROUTINE TO UPDATE SONG WHEN SONG ENDS
                   StreamBuilder(
                       stream: FirebaseFirestore.instance
                           .collection('parties')
@@ -686,36 +707,16 @@ class _AdminTabPage extends State<AdminTabPage>
                                   PartyStatus.getPartyFromFirestore(partySnap);
 
                               if (!partyStatus.isBackgrounded!) {
-                                if (!musicStatus.selected! &&
-                                    musicStatus.firstVoting! &&
-                                    musicStatus.songs! &&
-                                    !musicStatus.running! &&
-                                    !musicStatus.backSkip!) {
+                                if (musicStatus.firstVoting! == true &&
+                                    musicStatus.songs! == true &&
+                                    musicStatus.selected! == false &&
+                                    musicStatus.running! == false &&
+                                    musicStatus.backSkip! == false) {
                                   _addTrack();
                                   return Container();
-                                } else if (!musicStatus.selected! &&
-                                    musicStatus.firstVoting! &&
-                                    musicStatus.songs! &&
-                                    !musicStatus.running! &&
-                                    musicStatus.backSkip!) {
+                                } else if (musicStatus.backSkip! == true) {
                                   _addPreviousTrack();
                                   return Container();
-                                } else if (musicStatus.pause == true &&
-                                    musicStatus.resume! == false) {
-                                  timerController1.stop();
-                                  pause();
-                                } else if (musicStatus.pause == false &&
-                                    musicStatus.resume! == true) {
-                                  timerController1.start();
-                                  resume();
-                                } else if (musicStatus.running == true &&
-                                    !musicStatus.selected! &&
-                                    !musicStatus.resume! &&
-                                    !musicStatus.pause!) {
-                                  Future.delayed(
-                                          const Duration(milliseconds: 1000))
-                                      .then((value) => timerController1.start(
-                                          restart: true));
                                 }
                               } else {
                                 return Container();
@@ -750,7 +751,84 @@ class _AdminTabPage extends State<AdminTabPage>
                           fr.setCountdown(t, fr.partyCode!);
                         }
                         return Container();
-                      })
+                      }),
+                  StreamBuilder(
+                      stream: Stream.periodic(const Duration(seconds: 25)),
+                      builder: (context, snapshot) {
+                        fr.setPing(fr.partyCode!);
+                        return Container();
+                      }),
+                  StreamBuilder(
+                      stream: FirebaseFirestore.instance
+                          .collection('parties')
+                          .doc(fr.partyCode)
+                          .snapshots(),
+                      builder: (context, snapshot) {
+                        if (!snapshot.hasData) {
+                          return Container();
+                        }
+                        if (snapshot.data!.get('offline') != null) {
+                          if (snapshot.data!.get('offline')) {
+                            FirebaseFirestore.instance
+                                .collection('parties')
+                                .doc(fr.partyCode)
+                                .collection('Party')
+                                .doc('Voting')
+                                .get()
+                                .then((value) {
+                              VotingStatus votingStatus =
+                                  VotingStatus.getPartyFromFirestore(
+                                      value.data());
+
+                              if (votingStatus
+                                      .nextVotingPhase!.millisecondsSinceEpoch <
+                                  Timestamp.now().millisecondsSinceEpoch) {
+                                int t = votingStatus.votingTime!;
+                                fr.setCountdown(t, fr.partyCode!);
+                              }
+                            });
+
+                            FirebaseFirestore.instance
+                                .collection('parties')
+                                .doc(fr.partyCode)
+                                .collection('Party')
+                                .doc('Song')
+                                .get()
+                                .then((value) {
+                              MusicStatus song =
+                                  MusicStatus.getPartyFromFirestore(
+                                      value.data());
+
+                              if (song.running == true &&
+                                  timerController1.value == 0) {
+                                fr.setSelection(fr.partyCode!);
+                              }
+                            });
+
+                            fr.setPartyOnline(fr.partyCode!);
+                          }
+                        }
+                        return Container();
+                      }),
+                  StreamProvider<ConnectivityStatus>(
+                    create: (context) =>
+                        ConnectivityService().connectionController.stream,
+                    initialData: ConnectivityStatus.Online,
+                    builder: (context, child) {
+                      var connectionStatus =
+                          Provider.of<ConnectivityStatus>(context);
+                      if (connectionStatus == ConnectivityStatus.Online) {
+                        /// Online logic
+                        if (offline) {
+                          fr.setPartyOffline;
+                        }
+                      } else {
+                        /// Offline logic
+                        offline = true;
+                      }
+                      return Container();
+                    },
+                  ),
                 ],
               ),
             ),
@@ -797,7 +875,7 @@ class _AdminTabPage extends State<AdminTabPage>
     Song previousSong = Song(
         [], '', '', '', 0, Timestamp.now(), [], '', '', '', 0, Timestamp.now());
 
-    await FirebaseFirestore.instance
+    FirebaseFirestore.instance
         .collection('parties')
         .doc(fr.partyCode)
         .collection('Party')
@@ -805,156 +883,163 @@ class _AdminTabPage extends State<AdminTabPage>
         .get()
         .then((value) {
       previousSong = Song.getPartyFromFirestore(value);
-    }).then((value) async => await FirebaseFirestore.instance
-                .collection('parties')
-                .doc(fr.partyCode)
-                .collection('queue')
-                .where('inQueue', isEqualTo: true)
-                .orderBy('likes', descending: true)
-                .limit(1)
-                .get()
-                .then((value) async {
-              if (value.size > 0) {
-                var el = value.docs[0];
-                Track track = Track.getTrackFromFirestore(el);
-                trackUri = track.uri;
-                final batch = FirebaseFirestore.instance.batch();
+    });
 
-                if (previousSong.previousUri == '') {
-                  var pathSong = FirebaseFirestore.instance
-                      .collection('parties')
-                      .doc(fr.partyCode)
-                      .collection('Party')
-                      .doc('Song');
-                  batch.set(pathSong, {
-                    "songCurrentlyPlayed": track.uri,
-                    "image": track.images,
-                    "name": track.name,
-                    "trackDuration": track.duration,
-                    "artist": track.artists,
-                    "recs": FieldValue.serverTimestamp(),
-                    "previousSong": track.uri,
-                    "previousImage": track.images,
-                    "previousName": track.name,
-                    "previousTrackDuration": track.duration,
-                    "previousArtist": track.artists,
-                    "previousRecs": FieldValue.serverTimestamp(),
-                  });
-                } else {
-                  var pathSong = FirebaseFirestore.instance
-                      .collection('parties')
-                      .doc(fr.partyCode)
-                      .collection('Party')
-                      .doc('Song');
-                  batch.update(pathSong, {
-                    "songCurrentlyPlayed": track.uri,
-                    "image": track.images,
-                    "name": track.name,
-                    "trackDuration": track.duration,
-                    "artist": track.artists,
-                    "recs": FieldValue.serverTimestamp(),
-                    "previousSong": previousSong.uri,
-                    "previousImage": previousSong.images,
-                    "previousName": previousSong.name,
-                    "previousTrackDuration": previousSong.duration,
-                    "previousArtist": previousSong.artists,
-                    "previousRecs": FieldValue.serverTimestamp(),
-                  });
-                }
+    FirebaseFirestore.instance
+        .collection('parties')
+        .doc(fr.partyCode)
+        .collection('queue')
+        .where('inQueue', isEqualTo: true)
+        .orderBy('likes', descending: true)
+        .limit(1)
+        .get()
+        .then((value) {
+      if (value.size > 0) {
+        var el = value.docs[0];
+        Track track = Track.getTrackFromFirestore(el);
+        trackUri = track.uri;
+        final batch = FirebaseFirestore.instance.batch();
 
-                var pathMusicStatus = FirebaseFirestore.instance
-                    .collection('parties')
-                    .doc(fr.partyCode)
-                    .collection('Party')
-                    .doc('MusicStatus');
-                batch.update(pathMusicStatus, {
-                  'status': true,
-                  "songsReproduced": FieldValue.increment(1),
-                  'running': true,
-                  'pause': false,
-                  'resume': false
-                });
+        if (previousSong.previousUri == '') {
+          var pathSong = FirebaseFirestore.instance
+              .collection('parties')
+              .doc(fr.partyCode)
+              .collection('Party')
+              .doc('Song');
+          batch.set(pathSong, {
+            "songCurrentlyPlayed": track.uri,
+            "image": track.images,
+            "name": track.name,
+            "trackDuration": track.duration,
+            "artist": track.artists,
+            "recs": FieldValue.serverTimestamp(),
+            "previousSong": track.uri,
+            "previousImage": track.images,
+            "previousName": track.name,
+            "previousTrackDuration": track.duration,
+            "previousArtist": track.artists,
+            "previousRecs": FieldValue.serverTimestamp(),
+          });
+        } else {
+          var pathSong = FirebaseFirestore.instance
+              .collection('parties')
+              .doc(fr.partyCode)
+              .collection('Party')
+              .doc('Song');
+          batch.update(pathSong, {
+            "songCurrentlyPlayed": track.uri,
+            "image": track.images,
+            "name": track.name,
+            "trackDuration": track.duration,
+            "artist": track.artists,
+            "recs": FieldValue.serverTimestamp(),
+            "previousSong": previousSong.uri,
+            "previousImage": previousSong.images,
+            "previousName": previousSong.name,
+            "previousTrackDuration": previousSong.duration,
+            "previousArtist": previousSong.artists,
+            "previousRecs": FieldValue.serverTimestamp(),
+          });
+        }
 
-                var pathParty = FirebaseFirestore.instance
-                    .collection('parties')
-                    .doc(fr.partyCode)
-                    .collection('queue')
-                    .doc(track.uri);
-                batch.update(pathParty, {
-                  'inQueue': false,
-                  'lastStreaming': Timestamp.now(),
-                  'Streamings': FieldValue.increment(1)
-                });
+        var pathMusicStatus = FirebaseFirestore.instance
+            .collection('parties')
+            .doc(fr.partyCode)
+            .collection('Party')
+            .doc('MusicStatus');
+        batch.update(pathMusicStatus, {
+          'selected': true,
+          "songsReproduced": FieldValue.increment(1),
+          'running': false,
+          'pause': false,
+          'resume': false
+        });
 
-                await batch.commit();
+        var pathParty = FirebaseFirestore.instance
+            .collection('parties')
+            .doc(fr.partyCode)
+            .collection('queue')
+            .doc(track.uri);
+        batch.update(pathParty, {
+          'inQueue': false,
+          'lastStreaming': Timestamp.now(),
+          'Streamings': FieldValue.increment(1)
+        });
 
-                for (var element in track.likes) {
-                  db.collection('members').doc(element).update({
-                    'points': FieldValue.increment(1),
-                  });
-                }
-              } else {
-                FirebaseFirestore.instance
-                    .collection('parties')
-                    .doc(fr.partyCode)
-                    .collection('queue')
-                    .get()
-                    .then((snapshot) async {
-                  Random random = Random();
-                  int randomNumber = random.nextInt(snapshot.size);
-                  var snapDoc = snapshot.docs[randomNumber];
-                  Track track = Track.getTrackFromFirestore(snapDoc);
-                  trackUri = track.uri;
-                  final batch = FirebaseFirestore.instance.batch();
+        for (var element in track.likes) {
+          var pathUserPoint = FirebaseFirestore.instance
+              .collection('parties')
+              .doc(fr.partyCode)
+              .collection('members')
+              .doc(element);
+          batch.update(pathUserPoint, {
+            'points': FieldValue.increment(1),
+          });
+        }
 
-                  var pathSong = FirebaseFirestore.instance
-                      .collection('parties')
-                      .doc(fr.partyCode)
-                      .collection('Party')
-                      .doc('Song');
-                  batch.update(pathSong, {
-                    "songCurrentlyPlayed": track.uri,
-                    "image": track.images,
-                    "name": track.name,
-                    "trackDuration": track.duration,
-                    "artist": track.artists,
-                    "recs": FieldValue.serverTimestamp(),
-                    "previousSong": previousSong.uri,
-                    "previousImage": previousSong.images,
-                    "previousName": previousSong.name,
-                    "previousTrackDuration": previousSong.duration,
-                    "previousArtist": previousSong.artists,
-                    "previousRecs": FieldValue.serverTimestamp(),
-                  });
+        batch.commit();
+      } else {
+        FirebaseFirestore.instance
+            .collection('parties')
+            .doc(fr.partyCode)
+            .collection('queue')
+            .get()
+            .then((snapshot) {
+          Random random = Random();
+          int randomNumber = random.nextInt(snapshot.size);
+          var snapDoc = snapshot.docs[randomNumber];
+          Track track = Track.getTrackFromFirestore(snapDoc);
+          trackUri = track.uri;
+          final batch = FirebaseFirestore.instance.batch();
 
-                  var pathMusicStatus = FirebaseFirestore.instance
-                      .collection('parties')
-                      .doc(fr.partyCode)
-                      .collection('Party')
-                      .doc('MusicStatus');
-                  batch.update(pathMusicStatus, {
-                    'status': true,
-                    "songsReproduced": FieldValue.increment(1),
-                    'running': true,
-                    'pause': false,
-                    'resume': false
-                  });
+          var pathSong = FirebaseFirestore.instance
+              .collection('parties')
+              .doc(fr.partyCode)
+              .collection('Party')
+              .doc('Song');
+          batch.update(pathSong, {
+            "songCurrentlyPlayed": track.uri,
+            "image": track.images,
+            "name": track.name,
+            "trackDuration": track.duration,
+            "artist": track.artists,
+            "recs": FieldValue.serverTimestamp(),
+            "previousSong": previousSong.uri,
+            "previousImage": previousSong.images,
+            "previousName": previousSong.name,
+            "previousTrackDuration": previousSong.duration,
+            "previousArtist": previousSong.artists,
+            "previousRecs": FieldValue.serverTimestamp(),
+          });
 
-                  var pathParty = FirebaseFirestore.instance
-                      .collection('parties')
-                      .doc(fr.partyCode)
-                      .collection('queue')
-                      .doc(track.uri);
-                  batch.update(pathParty, {
-                    'inQueue': false,
-                    'lastStreaming': Timestamp.now(),
-                    'Streamings': FieldValue.increment(1)
-                  });
+          var pathMusicStatus = FirebaseFirestore.instance
+              .collection('parties')
+              .doc(fr.partyCode)
+              .collection('Party')
+              .doc('MusicStatus');
+          batch.update(pathMusicStatus, {
+            'selected': true,
+            'songsReproduced': FieldValue.increment(1),
+            'running': false,
+            'pause': false,
+            'resume': false
+          });
 
-                  await batch.commit();
-                });
-              }
-            }));
+          var pathParty = FirebaseFirestore.instance
+              .collection('parties')
+              .doc(fr.partyCode)
+              .collection('queue')
+              .doc(track.uri);
+          batch.update(pathParty, {
+            'inQueue': false,
+            'lastStreaming': Timestamp.now(),
+            'Streamings': FieldValue.increment(1)
+          });
+
+          batch.commit();
+        });
+      }
+    });
 
     Future.delayed(const Duration(milliseconds: 1000))
         .then((value) => play(trackUri));
@@ -1005,12 +1090,12 @@ class _AdminTabPage extends State<AdminTabPage>
           .collection('Party')
           .doc('MusicStatus');
       batch.update(pathMusicStatus, {
-        'status': true,
+        'selected': true,
         "songsReproduced": FieldValue.increment(1),
-        'running': true,
+        'running': false,
+        'backSkip': false,
         'pause': false,
-        'resume': false,
-        'backSkip': false
+        'resume': false
       });
 
       var pathParty = FirebaseFirestore.instance
@@ -1035,201 +1120,212 @@ class _AdminTabPage extends State<AdminTabPage>
     final fr = context.read<FirebaseRequests>();
 
     return SizedBox(
-        height: 70,
-        child: Column(
-          children: [
-            Expanded(
-                child: StreamBuilder(
-                    stream: FirebaseFirestore.instance
-                        .collection('parties')
-                        .doc(fr.partyCode)
-                        .collection('Party')
-                        .doc('MusicStatus')
-                        .snapshots(),
-                    builder: (context, snapshot) {
-                      if (!snapshot.hasData) {
-                        return Container();
-                      }
-                      final partySnap = snapshot.data!.data();
-                      MusicStatus musicStatus =
-                          MusicStatus.getPartyFromFirestore(partySnap);
+      height: 75,
+      child: StreamBuilder(
+          stream: FirebaseFirestore.instance
+              .collection('parties')
+              .doc(fr.partyCode)
+              .collection('Party')
+              .doc('PartyStatus')
+              .snapshots(),
+          builder: (context, AsyncSnapshot snapshot) {
+            if (!snapshot.hasData) {
+              return Container();
+            } else {
+              final partySnap = snapshot.data!.data();
+              PartyStatus party;
 
-                      return StreamBuilder(
-                          stream: FirebaseFirestore.instance
-                              .collection('parties')
-                              .doc(fr.partyCode)
-                              .collection('Party')
-                              .doc('PartyStatus')
-                              .snapshots(),
-                          builder: (context, snapshot) {
-                            if (!snapshot.hasData) {
-                              return Container();
-                            }
-                            final partySnap = snapshot.data!.data();
-                            PartyStatus partyStatus =
-                                PartyStatus.getPartyFromFirestore(partySnap);
+              party = PartyStatus.getPartyFromFirestore(partySnap);
 
-                            if (partyStatus.isStarted! &&
-                                !partyStatus.isEnded!) {
-                              if (musicStatus.running!) {
-                                return _linearTimerWidget(context);
-                              } else if (!musicStatus.pause! &&
-                                  musicStatus.resume!) {
-                                timerController1.stop();
-                                return Container();
-                              } else if (musicStatus.pause! &&
-                                  !musicStatus.resume!) {
-                                timerController1.start();
-                                return Container();
-                              } else if (partyStatus.isBackgrounded!) {
-                                return _linearTimerWidget(context);
-                              }
-                              return Container();
-                            }
-                            if (partyStatus.isEnded!) {
-                              timerController1.reset();
-                            }
-                            return Container();
-                          });
-                    })),
-            /*
-            Expanded(
-                child: StreamBuilder(
-              stream: watchCounter(),
-              builder: (context, snapshot) {
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisAlignment: MainAxisAlignment.center,
+              if (party.isEnded!) {
+                return Column(
                   children: [
-                    Text(
-                        '${DateTime.fromMillisecondsSinceEpoch(snapshot.data?.toInt() ?? 0).minute}:${DateTime.fromMillisecondsSinceEpoch(snapshot.data?.toInt() ?? 0).second}',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.white,
-                        )),
-                    SizedBox(
-                      width: width * 0.8,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: const [
+                        Text('Party status : ended',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500)),
+                        SizedBox(
+                          width: 10,
+                        ),
+                        Icon(
+                          Icons.circle_rounded,
+                          color: Colors.red,
+                        )
+                      ],
                     ),
-                    Text(
-                        '${DateTime.fromMillisecondsSinceEpoch(endingTimer.truncate().toInt() ?? 0).minute}:${DateTime.fromMillisecondsSinceEpoch(endingTimer.truncate().toInt() ?? 0).second}',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.white,
-                        ))
                   ],
                 );
-              },
-            )),*/
-            Expanded(
-              child: StreamBuilder(
-                  stream: FirebaseFirestore.instance
-                      .collection('parties')
-                      .doc(fr.partyCode)
-                      .collection('Party')
-                      .doc('PartyStatus')
-                      .snapshots(),
-                  builder: (context, AsyncSnapshot snapshot) {
-                    if (!snapshot.hasData) {
-                      return Container();
-                    } else {
-                      final partySnap = snapshot.data!.data();
-                      PartyStatus party;
+              } else if (!party.isStarted!) {
+                return Column(children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: const [
+                      Text('Party status : not started',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500)),
+                      SizedBox(
+                        width: 10,
+                      ),
+                      Icon(
+                        Icons.circle_rounded,
+                        color: Colors.red,
+                      )
+                    ],
+                  )
+                ]);
+              } else {
+                return _buildActiveBottomBar(context);
+              }
+            }
+          }),
+    );
+  }
 
-                      party = PartyStatus.getPartyFromFirestore(partySnap);
-                      String status = '';
-                      if (party.isEnded!) {
-                        status = 'ended';
-                      } else {
-                        status = 'not started';
-                      }
-                      if (!(party.isStarted! && !party.isEnded!)) {
-                        return Column(
+  Widget _buildActiveBottomBar(BuildContext context) {
+    final fr = context.read<FirebaseRequests>();
+
+    return Column(children: [
+      Expanded(child: _linearTimerWidget(context)),
+      StreamBuilder(
+          stream: FirebaseFirestore.instance
+              .collection('parties')
+              .doc(fr.partyCode!)
+              .collection('Party')
+              .doc('MusicStatus')
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return Container();
+            }
+
+            MusicStatus musicStatus =
+                MusicStatus.getPartyFromFirestore(snapshot.data!.data());
+
+            //for all users -->
+            if (musicStatus.backSkip! == true) {
+              SchedulerBinding.instance.addPostFrameCallback((_) {
+                if (mounted) {
+                  timerController1.stop();
+                  timerController1.reset();
+                }
+              });
+            } else if (musicStatus.pause! == true) {
+              SchedulerBinding.instance.addPostFrameCallback((_) {
+                if (mounted) {
+                  timerController1.stop();
+                }
+              });
+            } else if (musicStatus.resume! == true) {
+              SchedulerBinding.instance.addPostFrameCallback((_) {
+                if (mounted) {
+                  timerController1.start();
+                }
+              });
+            }
+            return Container();
+          }),
+      StreamBuilder(
+          stream: FirebaseFirestore.instance
+              .collection('parties')
+              .doc(fr.partyCode!)
+              .collection('Party')
+              .doc('Voting')
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return Container();
+            }
+
+            final partySnap = snapshot.data!.data();
+
+            VotingStatus votingStatus;
+
+            votingStatus = VotingStatus.getPartyFromFirestore(partySnap);
+            if (votingStatus.timer != null) {
+              if (votingStatus.countdown == true) {
+                return SizedBox(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Text('Party status : $status',
-                                    style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w500)),
-                                const SizedBox(
-                                  width: 10,
-                                ),
-                                const Icon(
-                                  Icons.circle_rounded,
-                                  color: Colors.red,
-                                )
-                              ],
-                            ),
-                          ],
-                        );
-                      } else {
-                        return StreamBuilder(
-                            stream: FirebaseFirestore.instance
-                                .collection('parties')
-                                .doc(fr.partyCode!)
-                                .collection('Party')
-                                .doc('Voting')
-                                .snapshots(),
-                            builder: (context, snapshot) {
-                              if (!snapshot.hasData) {
-                                return Container();
-                              }
+                            Text(
+                                !votingStatus.voting!
+                                    ? "Next voting in : "
+                                    : "Voting ends in : ",
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                )),
+                            _countdown(votingStatus, context),
+                          ])
+                    ],
+                  ),
+                );
+              }
+              return Container();
+            } else {
+              return Container();
+            }
+          }),
+      Expanded(
+        child: StreamBuilder(
+            stream: FirebaseFirestore.instance
+                .collection('parties')
+                .doc(fr.partyCode!)
+                .collection('Party')
+                .doc('Song')
+                .snapshots(),
+            builder: (context, AsyncSnapshot snapshot) {
+              if (!snapshot.hasData) {
+                return Container();
+              }
+              if (snapshot.data == null) {
+                return Container();
+              }
 
-                              final partySnap = snapshot.data!.data();
+              Song song = Song.getPartyFromFirestore(snapshot.data);
 
-                              VotingStatus votingStatus;
+              if (song.tmp != null) {
+                if ((Timestamp.now().millisecondsSinceEpoch -
+                            song.tmp!.millisecondsSinceEpoch) <
+                        3000 &&
+                    song.name != '') {
+                  SchedulerBinding.instance.addPostFrameCallback((_) {
+                    if (mounted) {
+                      fr.setRunning(fr.partyCode!);
+                      timerController1.reset();
 
-                              votingStatus =
-                                  VotingStatus.getPartyFromFirestore(partySnap);
-
-                              if (votingStatus.countdown == true) {
-                                return SizedBox(
-                                  height: 10,
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.center,
-                                          children: [
-                                            Text(
-                                                !votingStatus.voting!
-                                                    ? "Next voting in : "
-                                                    : "Voting ends in : ",
-                                                textAlign: TextAlign.center,
-                                                style: const TextStyle(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: Colors.white,
-                                                )),
-                                            _countdown(votingStatus, context),
-                                          ])
-                                    ],
-                                  ),
-                                );
-                              } else {
-                                return Container();
-                              }
-                            });
-                      }
+                      timerController1.start();
                     }
-                  }),
-            ),
-          ],
-        ));
+                  });
+                }
+              }
+              return Container();
+            }),
+      ),
+    ]);
   }
 
   Widget _linearTimerWidget(BuildContext context) {
     final fr = context.read<FirebaseRequests>();
     final width = MediaQuery.of(context).size.width;
 
+    int timer = 100000;
+
     return SizedBox(
-        height: 30,
         child: StreamBuilder(
             stream: FirebaseFirestore.instance
                 .collection('parties')
@@ -1242,37 +1338,37 @@ class _AdminTabPage extends State<AdminTabPage>
                 return Container();
               }
 
-              final partySnap = snapshot.data!.data();
+              final partySnap = snapshot.data;
               Song song = Song.getPartyFromFirestore(partySnap);
+              if (song.tmp != null) {
+                if (song.duration! > 5000) {
+                  timer = song.duration!;
+                }
 
-              return Column(children: [
-                SizedBox(
-                  height: 3,
-                  width: width * 0.8,
-                  child: LinearTimer(
-                    duration: Duration(milliseconds: song.duration),
-                    color: mainGreen,
-                    backgroundColor: Colors.grey[800],
-                    controller: timerController1,
-                    onTimerEnd: () {
-                      SchedulerBinding.instance.addPostFrameCallback((_) {
-                        if (mounted) {
-                          pause();
-                          fr.setSelection(fr.partyCode!);
-                          timerController1.reset();
-                        }
-                      });
-                    },
-                    onTimerStart: () {
-                      SchedulerBinding.instance.addPostFrameCallback((_) {
-                        if (mounted) {
-                          fr.setNotSelection(fr.partyCode!);
-                        }
-                      });
-                    },
+                return Column(children: [
+                  SizedBox(
+                    height: 3,
+                    width: width * 0.8,
+                    child: LinearTimer(
+                      duration: Duration(milliseconds: timer),
+                      color: mainGreen,
+                      backgroundColor: Colors.grey[800],
+                      controller: timerController1,
+                      onTimerEnd: () {
+                        SchedulerBinding.instance.addPostFrameCallback((_) {
+                          if (mounted) {
+                            timerController1.reset();
+                            // only if admin
+                            fr.setSelection(fr.partyCode!);
+                            pause();
+                          }
+                        });
+                      },
+                    ),
                   ),
-                ),
-              ]);
+                ]);
+              }
+              return Container();
             }));
   }
 
@@ -1304,23 +1400,9 @@ class _AdminTabPage extends State<AdminTabPage>
   Future<void> play(String uri) async {
     final sr = context.read<SpotifyRequests>();
     try {
-      await SpotifySdk.play(spotifyUri: uri).onError((error, stackTrace) {
-        print(error.toString());
-
-        if (error.toString() == '_logException') {
-          sr.connectToSpotify();
-          sr.getAuthToken();
-          play(uri);
-        }
-      });
+      await SpotifySdk.play(spotifyUri: uri);
     } on PlatformException catch (e) {
       displayToastMessage(context, e.message!, alertColor);
-      print(e.message!);
-      if (e.message == '') {
-        sr.getUserId();
-        sr.getAuthToken();
-        sr.connectToSpotify();
-      }
     } on MissingPluginException {
       displayToastMessage(context, 'not implemented', alertColor);
     }
@@ -1356,10 +1438,11 @@ class _AdminTabPage extends State<AdminTabPage>
     } on PlatformException catch (e) {
       displayToastMessage(context, e.message!, alertColor);
       print(e.message!);
-      if (e.message == '') {
+      if (e.message != '') {
         sr.getUserId();
         sr.getAuthToken();
         sr.connectToSpotify();
+        restart();
       }
     } on MissingPluginException {
       displayToastMessage(context, 'not implemented', alertColor);
@@ -1368,7 +1451,7 @@ class _AdminTabPage extends State<AdminTabPage>
 
   Widget _countdown(VotingStatus votingStatus, BuildContext context) {
     return CountdownTimer(
-      endTime: votingStatus.nextVotingPhase!.millisecondsSinceEpoch,
+      endTime: votingStatus.nextVotingPhase!.millisecondsSinceEpoch - 1000,
       widgetBuilder: (_, time) {
         if (time == null) {
           return const Text('');
@@ -1378,14 +1461,14 @@ class _AdminTabPage extends State<AdminTabPage>
             if (time.sec! / 10 < 1) {
               return Text("00:0${time.min}:0${time.sec}",
                   style: TextStyle(
-                    fontSize: 20,
+                    fontSize: 16,
                     fontWeight: FontWeight.w700,
                     color: mainGreen,
                   ));
             }
             return Text("00:0${time.min}:${time.sec}",
                 style: TextStyle(
-                  fontSize: 20,
+                  fontSize: 16,
                   fontWeight: FontWeight.w700,
                   color: mainGreen,
                 ));
@@ -1395,14 +1478,14 @@ class _AdminTabPage extends State<AdminTabPage>
             if (time.sec! / 10 < 1) {
               return Text("00:00:0${time.sec}",
                   style: TextStyle(
-                    fontSize: 20,
+                    fontSize: 16,
                     fontWeight: FontWeight.w700,
                     color: mainGreen,
                   ));
             }
             return Text("00:00:${time.sec}",
                 style: TextStyle(
-                  fontSize: 20,
+                  fontSize: 16,
                   fontWeight: FontWeight.w700,
                   color: mainGreen,
                 ));
@@ -1410,14 +1493,14 @@ class _AdminTabPage extends State<AdminTabPage>
           if (time.sec! / 10 < 1) {
             return Text("00:${time.min}:0${time.sec}",
                 style: TextStyle(
-                  fontSize: 20,
+                  fontSize: 16,
                   fontWeight: FontWeight.w700,
                   color: mainGreen,
                 ));
           }
           return Text("00:${time.min}:${time.sec}",
               style: TextStyle(
-                fontSize: 20,
+                fontSize: 16,
                 fontWeight: FontWeight.w700,
                 color: mainGreen,
               ));
@@ -1427,21 +1510,21 @@ class _AdminTabPage extends State<AdminTabPage>
             if (time.sec! / 10 < 1) {
               return Text("0${time.hours}:${time.min}:0${time.sec}",
                   style: TextStyle(
-                    fontSize: 20,
+                    fontSize: 16,
                     fontWeight: FontWeight.w700,
                     color: mainGreen,
                   ));
             }
             return Text("0${time.hours}:0${time.min}:${time.sec}",
                 style: TextStyle(
-                  fontSize: 20,
+                  fontSize: 16,
                   fontWeight: FontWeight.w700,
                   color: mainGreen,
                 ));
           }
           return Text("0${time.hours}:${time.min}:${time.sec}",
               style: TextStyle(
-                fontSize: 20,
+                fontSize: 16,
                 fontWeight: FontWeight.w700,
                 color: mainGreen,
               ));
@@ -1449,19 +1532,22 @@ class _AdminTabPage extends State<AdminTabPage>
 
         return Text("${time.hours}:${time.min}:${time.sec}",
             style: TextStyle(
-              fontSize: 20,
+              fontSize: 16,
               fontWeight: FontWeight.w700,
               color: mainGreen,
             ));
       },
-      onEnd: () async {
-        await _handleEndCountdown(votingStatus.voting!);
+      onEnd: () {
+        SchedulerBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            _handleEndCountdown(votingStatus.voting!);
+          }
+        });
       },
     );
   }
 
   Future _handleEndCountdown(bool tmpStatus) async {
-    final sp = context.read<SignInProvider>();
     final ip = context.read<InternetProvider>();
     final fr = context.read<FirebaseRequests>();
 
@@ -1473,7 +1559,7 @@ class _AdminTabPage extends State<AdminTabPage>
       return;
     }
 
-    await fr.changeVoting(fr.partyCode!, !tmpStatus!).then((value) async {
+    await fr.changeVoting(fr.partyCode!, !tmpStatus).then((value) async {
       if (fr.hasError) {
         displayToastMessage(context, fr.errorCode.toString(), alertColor);
         return;
@@ -1486,18 +1572,26 @@ class _AdminTabPage extends State<AdminTabPage>
       nextScreenReplace(context, const HomePage());
     });
   }
-}
 
-Future<void> pause() async {
-  try {
-    SpotifySdk.pause();
-  } on PlatformException catch (e) {
-    setStatus(e.code, message: e.message);
-  } on MissingPluginException {
-    setStatus('not implemented');
-  } on Exception catch (e) {
-    pause();
-    rethrow;
+  Future<void> pause() async {
+    final sr = context.read<SpotifyRequests>();
+
+    try {
+      SpotifySdk.pause();
+    } on PlatformException catch (e) {
+      setStatus(e.code, message: e.message);
+      if (e.message != '') {
+        sr.getUserId();
+        sr.getAuthToken();
+        sr.connectToSpotify();
+        pause();
+      }
+    } on MissingPluginException {
+      setStatus('not implemented');
+    } on Exception catch (e) {
+      pause();
+      rethrow;
+    }
   }
 }
 

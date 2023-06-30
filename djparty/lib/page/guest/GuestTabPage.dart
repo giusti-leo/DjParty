@@ -13,6 +13,7 @@ import 'package:djparty/page/RankingPage.dart';
 import 'package:djparty/page/admin/AdminPlayer.dart';
 import 'package:djparty/page/guest/GuestPlayer.dart';
 import 'package:djparty/page/guest/GuestRanking.dart';
+import 'package:djparty/services/Connectivity.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_countdown_timer/countdown_timer_controller.dart';
@@ -104,6 +105,7 @@ class _GuestTabPage extends State<GuestTabPage>
 
     sp.getDataFromSharedPreferences();
     fr.getDataFromSharedPreferences();
+
     sr.getUserId();
     sr.getAuthToken();
     sr.connectToSpotify();
@@ -288,6 +290,8 @@ class _GuestTabPage extends State<GuestTabPage>
                       ]);
                     });
                   } else {
+                    timerController1.reset();
+
                     return LayoutBuilder(builder:
                         (BuildContext context, BoxConstraints constraints) {
                       return Column(children: [
@@ -324,57 +328,46 @@ class _GuestTabPage extends State<GuestTabPage>
                     });
                   }
                 }),
+
+            // Handle disconnection to Spotify
+            StreamBuilder(
+                stream: SpotifySdk.subscribeConnectionStatus(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return Container();
+                  }
+                  if (snapshot.data!.connected == true) {
+                    return Container();
+                  } else {
+                    final sr = context.read<SpotifyRequests>();
+
+                    sr.getUserId();
+                    sr.getAuthToken();
+                    sr.connectToSpotify();
+                    return Container();
+                  }
+                }),
             StreamBuilder(
                 stream: FirebaseFirestore.instance
                     .collection('parties')
                     .doc(fr.partyCode)
-                    .collection('Party')
-                    .doc('MusicStatus')
                     .snapshots(),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
                     return Container();
                   }
-                  final partySnap = snapshot.data!.data();
-                  MusicStatus musicStatus;
-                  musicStatus = MusicStatus.getPartyFromFirestore(partySnap);
-
-                  return FutureBuilder(
-                      future: FirebaseFirestore.instance
-                          .collection('parties')
-                          .doc(fr.partyCode)
-                          .collection('Party')
-                          .doc('PartyStatus')
-                          .get(),
-                      builder: (context, snapshot) {
-                        if (!snapshot.hasData) {
-                          return Container();
-                        }
-                        final partySnap = snapshot.data!.data();
-                        PartyStatus partyStatus =
-                            PartyStatus.getPartyFromFirestore(partySnap);
-
-                        if (!partyStatus.isBackgrounded!) {
-                          if (musicStatus.pause == true &&
-                              musicStatus.resume! == false) {
-                            timerController1.stop();
-                          } else if (musicStatus.pause == false &&
-                              musicStatus.resume! == true) {
-                            timerController1.start();
-                          } else if (musicStatus.running == true &&
-                              !musicStatus.selected! &&
-                              !musicStatus.resume! &&
-                              !musicStatus.pause!) {
-                            Future.delayed(const Duration(milliseconds: 1000))
-                                .then((value) =>
-                                    timerController1.start(restart: true));
-                          }
-                        } else {
-                          return Container();
-                        }
-                        return Container();
-                      });
-                }),
+                  if (snapshot.data!.get('ping') != null) {
+                    Timestamp tmp = snapshot.data!.get('ping');
+                    Future.delayed(const Duration(minutes: 1)).then((value) {
+                      if ((Timestamp.now().millisecondsSinceEpoch -
+                              tmp.millisecondsSinceEpoch) >=
+                          90000) {
+                        fr.setPartyEnded(fr.partyCode!);
+                      }
+                    });
+                  }
+                  return Container();
+                })
           ],
         ),
         bottomNavigationBar: _buildBottomBar(context),
@@ -416,175 +409,183 @@ class _GuestTabPage extends State<GuestTabPage>
     final fr = context.read<FirebaseRequests>();
 
     return SizedBox(
-        height: 70,
-        child: Column(
-          children: [
-            Expanded(
-                child: StreamBuilder(
-                    stream: FirebaseFirestore.instance
-                        .collection('parties')
-                        .doc(fr.partyCode)
-                        .collection('Party')
-                        .doc('MusicStatus')
-                        .snapshots(),
-                    builder: (context, snapshot) {
-                      if (!snapshot.hasData) {
-                        return Container();
-                      }
-                      final partySnap = snapshot.data!.data();
-                      MusicStatus musicStatus =
-                          MusicStatus.getPartyFromFirestore(partySnap);
+      height: 75,
+      child: StreamBuilder(
+          stream: FirebaseFirestore.instance
+              .collection('parties')
+              .doc(fr.partyCode)
+              .collection('Party')
+              .doc('PartyStatus')
+              .snapshots(),
+          builder: (context, AsyncSnapshot snapshot) {
+            if (!snapshot.hasData) {
+              return Container();
+            } else {
+              final partySnap = snapshot.data!.data();
+              PartyStatus party;
 
-                      return StreamBuilder(
-                          stream: FirebaseFirestore.instance
-                              .collection('parties')
-                              .doc(fr.partyCode)
-                              .collection('Party')
-                              .doc('PartyStatus')
-                              .snapshots(),
-                          builder: (context, snapshot) {
-                            if (!snapshot.hasData) {
-                              return Container();
-                            }
-                            final partySnap = snapshot.data!.data();
-                            PartyStatus partyStatus =
-                                PartyStatus.getPartyFromFirestore(partySnap);
+              party = PartyStatus.getPartyFromFirestore(partySnap);
 
-                            if (partyStatus.isStarted! &&
-                                !partyStatus.isEnded!) {
-                              if (musicStatus.running!) {
-                                return _linearTimerWidget(context);
-                              } else if (!musicStatus.pause! &&
-                                  musicStatus.resume!) {
-                                timerController1.stop();
-                                return Container();
-                              } else if (musicStatus.pause! &&
-                                  !musicStatus.resume!) {
-                                timerController1.start();
-                                return Container();
-                              } else if (partyStatus.isBackgrounded!) {
-                                timerController1.stop();
-                              } else if (!partyStatus.isBackgrounded!) {
-                                timerController1.start(restart: true);
-                              }
-                              return Container();
-                            }
-                            if (partyStatus.isEnded!) {
-                              timerController1.reset();
-                            }
-                            return Container();
-                          });
-                    })),
-            Expanded(
-              child: StreamBuilder(
-                  stream: FirebaseFirestore.instance
-                      .collection('parties')
-                      .doc(fr.partyCode)
-                      .collection('Party')
-                      .doc('PartyStatus')
-                      .snapshots(),
-                  builder: (context, AsyncSnapshot snapshot) {
-                    if (!snapshot.hasData) {
-                      return Container();
-                    } else {
-                      final partySnap = snapshot.data!.data();
-                      PartyStatus party;
+              if (party.isEnded!) {
+                return Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: const [
+                        Text('Party status : ended',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500)),
+                        SizedBox(
+                          width: 10,
+                        ),
+                        Icon(
+                          Icons.circle_rounded,
+                          color: Colors.red,
+                        )
+                      ],
+                    ),
+                  ],
+                );
+              } else if (!party.isStarted!) {
+                return Column(children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: const [
+                      Text('Party status : not started',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500)),
+                      SizedBox(
+                        width: 10,
+                      ),
+                      Icon(
+                        Icons.circle_rounded,
+                        color: Colors.red,
+                      )
+                    ],
+                  )
+                ]);
+              } else {
+                return _buildActiveBottomBar(context);
+              }
+            }
+          }),
+    );
+  }
 
-                      party = PartyStatus.getPartyFromFirestore(partySnap);
-                      String status = '';
-                      if (party.isEnded!) {
-                        status = 'ended';
-                      } else {
-                        status = 'not started';
-                      }
-                      if (!(party.isStarted! && !party.isEnded!)) {
-                        return Column(
+  Widget _buildActiveBottomBar(BuildContext context) {
+    final fr = context.read<FirebaseRequests>();
+
+    return Column(children: [
+      Expanded(child: _linearTimerWidget(context)),
+      StreamBuilder(
+          stream: FirebaseFirestore.instance
+              .collection('parties')
+              .doc(fr.partyCode!)
+              .collection('Party')
+              .doc('MusicStatus')
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return Container();
+            }
+
+            MusicStatus musicStatus =
+                MusicStatus.getPartyFromFirestore(snapshot.data!.data());
+
+            //for all users -->
+            if (musicStatus.backSkip! == true) {
+              SchedulerBinding.instance.addPostFrameCallback((_) {
+                if (mounted) {
+                  timerController1.stop();
+                  timerController1.reset();
+                }
+              });
+            } else if (musicStatus.pause! == true) {
+              SchedulerBinding.instance.addPostFrameCallback((_) {
+                if (mounted) {
+                  timerController1.stop();
+                }
+              });
+            } else if (musicStatus.resume! == true) {
+              SchedulerBinding.instance.addPostFrameCallback((_) {
+                if (mounted) {
+                  timerController1.start();
+                }
+              });
+            } else if (musicStatus.running! == true) {
+              SchedulerBinding.instance.addPostFrameCallback((_) {
+                if (mounted) {
+                  timerController1.reset();
+                  timerController1.start();
+                }
+              });
+            }
+            return Container();
+          }),
+      StreamBuilder(
+          stream: FirebaseFirestore.instance
+              .collection('parties')
+              .doc(fr.partyCode!)
+              .collection('Party')
+              .doc('Voting')
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return Container();
+            }
+
+            final partySnap = snapshot.data!.data();
+
+            VotingStatus votingStatus;
+
+            votingStatus = VotingStatus.getPartyFromFirestore(partySnap);
+            if (votingStatus.timer != null) {
+              if (votingStatus.countdown == true) {
+                return SizedBox(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Text('Party status : $status',
-                                    style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w500)),
-                                const SizedBox(
-                                  width: 10,
-                                ),
-                                const Icon(
-                                  Icons.circle_rounded,
-                                  color: Colors.red,
-                                )
-                              ],
-                            ),
-                          ],
-                        );
-                      } else {
-                        return StreamBuilder(
-                            stream: FirebaseFirestore.instance
-                                .collection('parties')
-                                .doc(fr.partyCode!)
-                                .collection('Party')
-                                .doc('Voting')
-                                .snapshots(),
-                            builder: (context, snapshot) {
-                              if (!snapshot.hasData) {
-                                return Container();
-                              }
-
-                              final partySnap = snapshot.data!.data();
-
-                              VotingStatus votingStatus;
-
-                              votingStatus =
-                                  VotingStatus.getPartyFromFirestore(partySnap);
-
-                              if (votingStatus.countdown == true) {
-                                return SizedBox(
-                                  height: 10,
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.center,
-                                          children: [
-                                            Text(
-                                                !votingStatus.voting!
-                                                    ? "Next voting in : "
-                                                    : "Voting ends in : ",
-                                                textAlign: TextAlign.center,
-                                                style: const TextStyle(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: Colors.white,
-                                                )),
-                                            _countdown(votingStatus, context),
-                                          ])
-                                    ],
-                                  ),
-                                );
-                              } else {
-                                return Container();
-                              }
-                            });
-                      }
-                    }
-                  }),
-            ),
-          ],
-        ));
+                            Text(
+                                !votingStatus.voting!
+                                    ? "Next voting in : "
+                                    : "Voting ends in : ",
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                )),
+                            _countdown(votingStatus, context),
+                          ])
+                    ],
+                  ),
+                );
+              }
+              return Container();
+            } else {
+              return Container();
+            }
+          }),
+    ]);
   }
 
   Widget _linearTimerWidget(BuildContext context) {
     final fr = context.read<FirebaseRequests>();
     final width = MediaQuery.of(context).size.width;
 
+    int timer = 100000;
+
     return SizedBox(
-        height: 30,
         child: StreamBuilder(
             stream: FirebaseFirestore.instance
                 .collection('parties')
@@ -597,28 +598,34 @@ class _GuestTabPage extends State<GuestTabPage>
                 return Container();
               }
 
-              final partySnap = snapshot.data!.data();
+              final partySnap = snapshot.data;
               Song song = Song.getPartyFromFirestore(partySnap);
+              if (song.tmp != null) {
+                if (song.duration! > 5000) {
+                  timer = song.duration!;
+                }
 
-              return Column(children: [
-                SizedBox(
-                  height: 3,
-                  width: width * 0.8,
-                  child: LinearTimer(
-                    duration: Duration(milliseconds: song.duration),
-                    color: mainGreen,
-                    backgroundColor: Colors.grey[800],
-                    controller: timerController1,
-                    onTimerEnd: () {
-                      SchedulerBinding.instance.addPostFrameCallback((_) {
-                        if (mounted) {
-                          timerController1.reset();
-                        }
-                      });
-                    },
+                return Column(children: [
+                  SizedBox(
+                    height: 3,
+                    width: width * 0.8,
+                    child: LinearTimer(
+                      duration: Duration(milliseconds: timer),
+                      color: mainGreen,
+                      backgroundColor: Colors.grey[800],
+                      controller: timerController1,
+                      onTimerEnd: () {
+                        SchedulerBinding.instance.addPostFrameCallback((_) {
+                          if (mounted) {
+                            timerController1.reset();
+                          }
+                        });
+                      },
+                    ),
                   ),
-                ),
-              ]);
+                ]);
+              }
+              return Container();
             }));
   }
 
