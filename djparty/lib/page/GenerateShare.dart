@@ -194,27 +194,18 @@ class _insertPartyName extends State<GeneratorScreen> {
             context, 'The user data does not exists', alertColor);
         return;
       }
-
-      await sp.getUserDataFromFirestore(sp.uid!).then((value) {
-        if (sp.hasError == true) {
+      fp
+          .addParty(sp.uid!, partyName.text, controller.text, sp.image!,
+              sp.name!, sp.imageUrl!)
+          .then((value) {
+        if (fp.hasError == true) {
           displayToastMessage(context, sp.errorCode.toString(), alertColor);
+          submitController.reset();
           return;
         }
-        sp.saveDataToSharedPreferences().then((value) async {
-          fp
-              .addParty(sp.uid!, partyName.text, controller.text, sp.image!,
-                  sp.name!, sp.imageUrl!)
-              .then((value) {
-            if (fp.hasError == true) {
-              displayToastMessage(context, sp.errorCode.toString(), alertColor);
-              submitController.reset();
-              return;
-            }
-            submitController.success();
-            displayToastMessage(context, 'Party Created', mainGreen);
-            handleAfterSubmit();
-          });
-        });
+        submitController.success();
+        displayToastMessage(context, 'Party Created', mainGreen);
+        handleAfterSubmit();
       });
     });
   }

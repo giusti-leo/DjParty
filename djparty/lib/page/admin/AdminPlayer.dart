@@ -297,9 +297,10 @@ class _AdminPlayerSongRunning extends State<AdminPlayerSongRunning>
               height: 20,
             ),
             SizedBox(
-              height: 20,
+              height: 30,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   StreamBuilder(
                       stream: FirebaseFirestore.instance
@@ -335,7 +336,6 @@ class _AdminPlayerSongRunning extends State<AdminPlayerSongRunning>
                                     ),
                                     onPressed: () {
                                       pause();
-
                                       fr.setBackSkip(fr.partyCode!);
                                     },
                                   ),
@@ -413,6 +413,27 @@ class _AdminPlayerSongRunning extends State<AdminPlayerSongRunning>
     );
   }
 
+  Future<void> pause() async {
+    final sr = context.read<SpotifyRequests>();
+
+    try {
+      SpotifySdk.pause();
+    } on PlatformException catch (e) {
+      setStatus(e.code, message: e.message);
+      if (e.message != '') {
+        sr.getUserId();
+        sr.getAuthToken();
+        sr.connectToSpotify();
+        pause();
+      }
+    } on MissingPluginException {
+      setStatus('not implemented');
+    } on Exception catch (e) {
+      pause();
+      rethrow;
+    }
+  }
+
   Future<void> resume() async {
     final sr = context.read<SpotifyRequests>();
     try {
@@ -427,6 +448,12 @@ class _AdminPlayerSongRunning extends State<AdminPlayerSongRunning>
       });
     } on PlatformException catch (e) {
       displayToastMessage(context, e.message!, alertColor);
+      if (e.message != '') {
+        sr.getUserId();
+        sr.getAuthToken();
+        sr.connectToSpotify();
+        pause();
+      }
     } on MissingPluginException {
       displayToastMessage(context, 'not implemented', alertColor);
     }

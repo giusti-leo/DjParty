@@ -141,8 +141,6 @@ class _QueueSearch extends State<QueueSearch> {
     final height = MediaQuery.of(context).size.height;
     final width = MediaQuery.of(context).size.width;
 
-    var keyboard = FocusScope.of(context);
-
     return MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
@@ -152,215 +150,211 @@ class _QueueSearch extends State<QueueSearch> {
             backgroundColor: backGround,
             body: SingleChildScrollView(
               key: key,
-              child: Column(children: [
-                SizedBox(
-                  height: height * 0.052,
-                ),
-                Center(
-                  child: SizedBox(
-                    width: width * 0.8,
-                    child: TextField(
-                        textAlign: TextAlign.start,
-                        controller: textController,
-                        cursorColor: Colors.white,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20,
-                        ),
-                        onChanged: (input) async {
-                          await _updateTracks(input, sr.myToken, sp.uid!);
-                        },
-                        onTap: () async {
-                          setState(() {
-                            _showSearch = true;
-                          });
-                          await _getSongs(fr.partyCode!);
-                        },
-                        onEditingComplete: () async {
-                          await _getSongs(fr.partyCode!);
-                        },
-                        decoration: InputDecoration(
-                          fillColor: Colors.white,
-                          hintText: 'Search and add a track',
-                          hintStyle: const TextStyle(color: Colors.grey),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(18),
-                            borderSide:
-                                const BorderSide(color: Colors.white, width: 2),
-                          ),
-                          disabledBorder: const OutlineInputBorder(
-                            borderSide:
-                                BorderSide(color: Colors.white, width: 2),
-                          ),
-                          suffixIcon: (_showSearch == true)
-                              ? IconButton(
-                                  color: Colors.white,
-                                  icon: const Icon(
-                                    Icons.expand,
-                                    size: 30,
-                                    color: Colors.white,
-                                  ),
-                                  onPressed: () async {
-                                    setState(() {
-                                      _showSearch = false;
-                                      //keyboard.unfocus();
-                                    });
-                                    await _getSongs(fr.partyCode!);
-                                  },
-                                )
-                              : IconButton(
-                                  color: Colors.white,
-                                  icon: const Icon(
-                                    Icons.search,
-                                    size: 30,
-                                    color: Colors.white,
-                                  ),
-                                  onPressed: () => setState(() {
-                                    _showSearch = true;
-
-                                    //keyboard.requestFocus();
-                                  }),
-                                ),
-                        )),
+              child: Column(
+                children: [
+                  SizedBox(
+                    height: height * 0.052,
                   ),
-                ),
-                _showSearch
-                    ? SizedBox(
-                        height: height * 0.5,
-                        child: Column(
-                          children: [
-                            (_tracks.toString() != '[]')
-                                ? Expanded(
-                                    child: ListView.builder(
-                                        itemCount: _tracks.length,
-                                        itemBuilder:
-                                            (BuildContext context, int index) {
-                                          Track track = _tracks[index];
-                                          return GestureDetector(
-                                              onTapDown: (details) {
-                                                _getTapPosition(details);
-                                                setState(() {
-                                                  selectedIndex = 100;
-                                                });
-                                              },
-                                              onPanCancel: () => setState(() {
+                  Center(
+                    child: SizedBox(
+                      width: width * 0.8,
+                      child: TextField(
+                          textAlign: TextAlign.start,
+                          controller: textController,
+                          cursorColor: Colors.white,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20,
+                          ),
+                          onChanged: (input) async {
+                            await _updateTracks(input, sr.myToken, sp.uid!);
+                          },
+                          onTap: () async {
+                            setState(() {
+                              _showSearch = true;
+                            });
+                            await _getSongs(fr.partyCode!);
+                          },
+                          onEditingComplete: () async {
+                            await _getSongs(fr.partyCode!);
+                          },
+                          decoration: InputDecoration(
+                            fillColor: Colors.white,
+                            hintText: 'Search and add a track',
+                            hintStyle: const TextStyle(color: Colors.grey),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(18),
+                              borderSide: const BorderSide(
+                                  color: Colors.white, width: 2),
+                            ),
+                            disabledBorder: const OutlineInputBorder(
+                              borderSide:
+                                  BorderSide(color: Colors.white, width: 2),
+                            ),
+                            suffixIcon: (_showSearch == true)
+                                ? IconButton(
+                                    color: Colors.white,
+                                    icon: const Icon(
+                                      Icons.expand,
+                                      size: 30,
+                                      color: Colors.white,
+                                    ),
+                                    onPressed: () async {
+                                      setState(() {
+                                        _showSearch = false;
+                                        //keyboard.unfocus();
+                                      });
+                                      await _getSongs(fr.partyCode!);
+                                    },
+                                  )
+                                : IconButton(
+                                    color: Colors.white,
+                                    icon: const Icon(
+                                      Icons.search,
+                                      size: 30,
+                                      color: Colors.white,
+                                    ),
+                                    onPressed: () => setState(() {
+                                      _showSearch = true;
+
+                                      //keyboard.requestFocus();
+                                    }),
+                                  ),
+                          )),
+                    ),
+                  ),
+                  _showSearch
+                      ? SizedBox(
+                          height: height * 0.5,
+                          child: Column(
+                            children: [
+                              (_tracks.toString() != '[]')
+                                  ? Expanded(
+                                      child: ListView.builder(
+                                          itemCount: _tracks.length,
+                                          itemBuilder: (BuildContext context,
+                                              int index) {
+                                            Track track = _tracks[index];
+                                            return GestureDetector(
+                                                onTapDown: (details) {
+                                                  _getTapPosition(details);
+                                                  setState(() {
                                                     selectedIndex = 100;
-                                                  }),
-                                              onTap: () {
-                                                setState(() {
-                                                  selectedIndex = index;
-                                                });
-                                                _showContextMenu(
-                                                    context, track);
-                                              },
-                                              child: Column(
-                                                children: [
-                                                  ListTile(
-                                                    contentPadding:
-                                                        const EdgeInsets.all(
-                                                            10.0),
-                                                    title: Text(track.name!,
-                                                        style: TextStyle(
-                                                          fontSize: 16,
-                                                          fontWeight:
-                                                              FontWeight.w800,
-                                                          color: myColor,
-                                                        )),
-                                                    tileColor:
-                                                        selectedIndex == index
-                                                            ? mainGreen
-                                                            : null,
-                                                    subtitle: Text(
-                                                        printArtists(
-                                                            track.artists!),
-                                                        style: const TextStyle(
-                                                          fontSize: 12,
-                                                          fontWeight:
-                                                              FontWeight.w800,
-                                                          color: Color.fromARGB(
-                                                              255,
-                                                              134,
-                                                              132,
-                                                              132),
-                                                        )),
-                                                    leading: Image.network(
-                                                      track.images!,
-                                                      fit: BoxFit.cover,
-                                                      height: 60,
-                                                      width: 60,
+                                                  });
+                                                },
+                                                onPanCancel: () => setState(() {
+                                                      selectedIndex = 100;
+                                                    }),
+                                                onTap: () {
+                                                  setState(() {
+                                                    selectedIndex = index;
+                                                  });
+                                                  _showContextMenu(
+                                                      context, track);
+                                                },
+                                                child: Column(
+                                                  children: [
+                                                    ListTile(
+                                                      contentPadding:
+                                                          const EdgeInsets.all(
+                                                              10.0),
+                                                      title: Text(track.name!,
+                                                          style: TextStyle(
+                                                            fontSize: 16,
+                                                            fontWeight:
+                                                                FontWeight.w800,
+                                                            color: myColor,
+                                                          )),
+                                                      tileColor:
+                                                          selectedIndex == index
+                                                              ? mainGreen
+                                                              : null,
+                                                      subtitle: Text(
+                                                          printArtists(
+                                                              track.artists!),
+                                                          style:
+                                                              const TextStyle(
+                                                            fontSize: 12,
+                                                            fontWeight:
+                                                                FontWeight.w800,
+                                                            color:
+                                                                Color.fromARGB(
+                                                                    255,
+                                                                    134,
+                                                                    132,
+                                                                    132),
+                                                          )),
+                                                      leading: Image.network(
+                                                        track.images!,
+                                                        fit: BoxFit.cover,
+                                                        height: 60,
+                                                        width: 60,
+                                                      ),
                                                     ),
-                                                  ),
-                                                  const Divider(
-                                                    color: Colors.white24,
-                                                    height: 1,
-                                                  )
-                                                ],
-                                              ));
-                                        }))
-                                : Container()
-                          ],
-                        ))
-                    : SizedBox(
-                        height: height * 0.5,
-                        child: Column(
-                          children: [
-                            Expanded(
-                                child: FutureBuilder(
-                                    future: FirebaseFirestore.instance
+                                                    const Divider(
+                                                      color: Colors.white24,
+                                                      height: 1,
+                                                    )
+                                                  ],
+                                                ));
+                                          }))
+                                  : Container()
+                            ],
+                          ))
+                      : SizedBox(
+                          height: height * 0.7,
+                          child: FutureBuilder(
+                              future: FirebaseFirestore.instance
+                                  .collection('parties')
+                                  .doc(fr.partyCode!)
+                                  .collection('queue')
+                                  .where('inQueue', isEqualTo: true)
+                                  .orderBy('votes')
+                                  .limit(100)
+                                  .get(),
+                              builder: (context, snapshot) {
+                                if (!snapshot.hasData) {
+                                  return Container();
+                                }
+                                if (snapshot.data!.docs.isNotEmpty) {
+                                  songs.clear();
+                                  queueLength = 0;
+                                  for (var element
+                                      in snapshot.data!.docs.reversed) {
+                                    Track currentTrack =
+                                        Track.getTrackFromFirestore(element);
+                                    songs.add(currentTrack);
+                                    queueLength = queueLength + 1;
+                                  }
+                                }
+
+                                return StreamBuilder(
+                                    stream: FirebaseFirestore.instance
                                         .collection('parties')
                                         .doc(fr.partyCode!)
-                                        .collection('queue')
-                                        .where('inQueue', isEqualTo: true)
-                                        .orderBy('votes')
-                                        .limit(100)
-                                        .get(),
+                                        .collection('Party')
+                                        .doc('Voting')
+                                        .snapshots(),
                                     builder: (context, snapshot) {
                                       if (!snapshot.hasData) {
                                         return Container();
                                       }
-                                      if (snapshot.data!.docs.isNotEmpty) {
-                                        songs.clear();
-                                        queueLength = 0;
-                                        for (var element
-                                            in snapshot.data!.docs.reversed) {
-                                          Track currentTrack =
-                                              Track.getTrackFromFirestore(
-                                                  element);
-                                          songs.add(currentTrack);
-                                          queueLength = queueLength + 1;
-                                        }
+
+                                      final partySnap = snapshot.data!.data();
+                                      VotingStatus votingStatus;
+                                      votingStatus =
+                                          VotingStatus.getPartyFromFirestore(
+                                              partySnap);
+                                      if (!votingStatus.voting!) {
+                                        return queueListSong(context);
+                                      } else {
+                                        return queueVoteSong(context);
                                       }
-
-                                      return StreamBuilder(
-                                          stream: FirebaseFirestore.instance
-                                              .collection('parties')
-                                              .doc(fr.partyCode!)
-                                              .collection('Party')
-                                              .doc('Voting')
-                                              .snapshots(),
-                                          builder: (context, snapshot) {
-                                            if (!snapshot.hasData) {
-                                              return Container();
-                                            }
-
-                                            final partySnap =
-                                                snapshot.data!.data();
-                                            VotingStatus votingStatus;
-                                            votingStatus = VotingStatus
-                                                .getPartyFromFirestore(
-                                                    partySnap);
-                                            if (!votingStatus.voting!) {
-                                              return queueListSong(context);
-                                            } else {
-                                              return queueVoteSong(context);
-                                            }
-                                          });
-                                    }))
-                          ],
-                        ),
-                      ),
-              ]),
+                                    });
+                              }))
+                ],
+              ),
             )));
   }
 
@@ -375,7 +369,7 @@ class _QueueSearch extends State<QueueSearch> {
               .doc(fr.partyCode!)
               .collection('queue')
               .where('inQueue', isEqualTo: true)
-              .orderBy('votes', descending: true)
+              .orderBy('votes')
               .limit(100)
               .get()
               .then((value) {
@@ -398,9 +392,7 @@ class _QueueSearch extends State<QueueSearch> {
         child: Column(children: [
           (queueLength > 0)
               ? Expanded(
-                  flex: 1,
                   child: ListView.builder(
-                      shrinkWrap: false,
                       itemCount: queueLength,
                       itemBuilder: (BuildContext context, int index) {
                         Track currentTrack = songs[index];
@@ -542,7 +534,7 @@ class _QueueSearch extends State<QueueSearch> {
                 .doc(fr.partyCode!)
                 .collection('queue')
                 .where('inQueue', isEqualTo: true)
-                .orderBy('votes', descending: true)
+                .orderBy('votes')
                 .limit(100)
                 .get()
                 .then((value) {
@@ -567,7 +559,7 @@ class _QueueSearch extends State<QueueSearch> {
                 ? Expanded(
                     flex: 1,
                     child: ListView.builder(
-                        shrinkWrap: false,
+                        shrinkWrap: true,
                         itemCount: queueLength,
                         itemBuilder: (BuildContext context, int index) {
                           Track currentTrack = songs[index];
@@ -631,6 +623,7 @@ class _QueueSearch extends State<QueueSearch> {
                     selectedIndex = 100;
                   });
                   Navigator.pop(context);
+                  FocusManager.instance.primaryFocus?.unfocus();
                 }),
           ),
         ]);

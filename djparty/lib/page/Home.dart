@@ -101,7 +101,6 @@ class _HomeState extends State<Home> {
     bool expandFlag = false;
     final sp = context.read<SignInProvider>();
     final width = MediaQuery.of(context).size.width;
-    final heigth = MediaQuery.of(context).size.height;
 
     return StreamBuilder(
         stream: parties,

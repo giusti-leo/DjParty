@@ -28,8 +28,8 @@ class _PartySettingsState extends State<PartySettings> {
       RoundedLoadingButtonController();
   final TextEditingController controller = TextEditingController();
 
-  late int _currentTimer;
-  late int _currentInterval;
+  int _currentTimer = 5;
+  int _currentInterval = 5;
 
   Color mainGreen = const Color.fromARGB(228, 53, 191, 101);
   Color backGround = const Color.fromARGB(255, 35, 34, 34);
@@ -39,12 +39,7 @@ class _PartySettingsState extends State<PartySettings> {
     final sp = context.read<SignInProvider>();
     final fr = context.read<FirebaseRequests>();
     sp.getDataFromSharedPreferences();
-    fr.getPartyDataFromFirestore(fr.partyCode!);
-
-    _currentInterval = fr.votingTimer!;
-    _currentTimer = fr.timer!;
-
-    print(fr.votingTimer!);
+    fr.getDataFromSharedPreferences();
   }
 
   @override
@@ -58,6 +53,7 @@ class _PartySettingsState extends State<PartySettings> {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
+    final fr = context.read<FirebaseRequests>();
 
     return MaterialApp(
         debugShowCheckedModeBanner: false,

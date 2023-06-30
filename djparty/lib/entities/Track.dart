@@ -64,7 +64,7 @@ class Song {
   final List<String> artists;
   final String images;
   final String name;
-  final int duration;
+  int? duration;
   final Timestamp? tmp;
 
   final String previousUri;
