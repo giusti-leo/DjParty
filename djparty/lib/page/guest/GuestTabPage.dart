@@ -62,6 +62,9 @@ class _GuestTabPage extends State<GuestTabPage>
 
   bool tmpStatus = false;
 
+  final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   final RoundedLoadingButtonController partyController =
       RoundedLoadingButtonController();
   final RoundedLoadingButtonController submitController =
@@ -130,8 +133,6 @@ class _GuestTabPage extends State<GuestTabPage>
     TabController tabController = TabController(length: 3, vsync: this);
     final fr = context.read<FirebaseRequests>();
 
-    final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
-
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       navigatorKey: navigatorKey,
@@ -139,6 +140,7 @@ class _GuestTabPage extends State<GuestTabPage>
           colorScheme: ColorScheme.fromSwatch()
               .copyWith(primary: mainGreen, secondary: backGround)),
       home: Scaffold(
+        key: _scaffoldKey,
         backgroundColor: backGround,
         appBar: AppBar(
           elevation: 0,
@@ -243,7 +245,7 @@ class _GuestTabPage extends State<GuestTabPage>
                                 ])),
                         SizedBox(
                           width: double.maxFinite,
-                          height: constraints.maxHeight - 58,
+                          height: 580,
                           child: TabBarView(
                             controller: tabController,
                             children: const [
@@ -278,7 +280,7 @@ class _GuestTabPage extends State<GuestTabPage>
                         ),
                         SizedBox(
                             width: double.maxFinite,
-                            height: constraints.maxHeight - 58,
+                            height: 580,
                             child: TabBarView(
                               controller: tabController,
                               children: const [
@@ -314,7 +316,7 @@ class _GuestTabPage extends State<GuestTabPage>
                         ),
                         SizedBox(
                           width: double.maxFinite,
-                          height: constraints.maxHeight - 58,
+                          height: 580,
                           child: TabBarView(
                             controller: tabController,
                             children: const [
@@ -348,26 +350,24 @@ class _GuestTabPage extends State<GuestTabPage>
                   }
                 }),
             StreamBuilder(
-                stream: FirebaseFirestore.instance
-                    .collection('parties')
-                    .doc(fr.partyCode)
-                    .snapshots(),
+                stream: Stream.periodic(const Duration(seconds: 10)),
                 builder: (context, snapshot) {
-                  if (!snapshot.hasData) {
-                    return Container();
-                  }
-                  if (snapshot.data!.get('ping') != null) {
-                    Timestamp tmp = snapshot.data!.get('ping');
-                    Future.delayed(const Duration(minutes: 1)).then((value) {
-                      if ((Timestamp.now().millisecondsSinceEpoch -
-                              tmp.millisecondsSinceEpoch) >=
-                          90000) {
-                        fr.setPartyEnded(fr.partyCode!);
-                      }
-                    });
-                  }
+                  FirebaseFirestore.instance
+                      .collection('parties')
+                      .doc(fr.partyCode)
+                      .snapshots()
+                      .first
+                      .then((value) {
+                    Timestamp tmp = value.get('ping');
+
+                    if ((Timestamp.now().millisecondsSinceEpoch -
+                            tmp.millisecondsSinceEpoch) >=
+                        90000) {
+                      fr.setPartyEnded(fr.partyCode!);
+                    }
+                  });
                   return Container();
-                })
+                }),
           ],
         ),
         bottomNavigationBar: _buildBottomBar(context),

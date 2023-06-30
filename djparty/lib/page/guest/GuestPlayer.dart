@@ -168,91 +168,93 @@ class _GuestPlayerSongRunning extends State<GuestPlayerSongRunning>
 
   Widget _playerWidget(BuildContext context) {
     final fr = context.read<FirebaseRequests>();
+    final width = MediaQuery.of(context).size.width;
 
     return StreamBuilder(
-        stream: FirebaseFirestore.instance
-            .collection('parties')
-            .doc(fr.partyCode)
-            .snapshots(),
-        builder: (context, AsyncSnapshot snap) {
-          if (!snap.hasData) {
-            return Container();
-          }
-          if (snap.connectionState == ConnectionState.waiting) {
-            return Center(
-                child: CircularProgressIndicator(
-              color: mainGreen,
-              backgroundColor: backGround,
-              strokeWidth: 10,
-            ));
-          }
+      stream: FirebaseFirestore.instance
+          .collection('parties')
+          .doc(fr.partyCode)
+          .collection('Party')
+          .doc('Song')
+          .snapshots(),
+      builder: (context, AsyncSnapshot snap) {
+        if (!snap.hasData) {
+          return Container();
+        }
+        if (snap.connectionState == ConnectionState.waiting) {
+          return Center(
+              child: CircularProgressIndicator(
+            color: mainGreen,
+            backgroundColor: backGround,
+            strokeWidth: 10,
+          ));
+        }
 
-          final songSnap = snap.data!.data();
-          Song song;
-          song = Song.getPartyFromFirestore(songSnap);
+        final songSnap = snap.data!.data();
+        Song song;
+        song = Song.getPartyFromFirestore(songSnap);
 
-          return Column(
-            children: [
-              const SizedBox(height: 50),
-              (song.uri != '')
-                  ? SizedBox(
-                      width: 250,
-                      height: 250,
-                      child: Image.network(song.images))
-                  : SizedBox(
-                      width: 250,
-                      height: 250,
-                      child: Image.asset(
-                        'assets/images/logo.jpg',
-                        width: 400,
-                        height: 400,
-                        colorBlendMode: BlendMode.hardLight,
-                      ),
+        return Column(
+          children: [
+            const SizedBox(height: 50),
+            (song.uri != '')
+                ? SizedBox(
+                    width: 250, height: 250, child: Image.network(song.images))
+                : SizedBox(
+                    width: 250,
+                    height: 250,
+                    child: Image.asset(
+                      'assets/images/logo.jpg',
+                      width: 400,
+                      height: 400,
+                      colorBlendMode: BlendMode.hardLight,
                     ),
-              const SizedBox(
-                height: 10,
-              ),
-              (song.uri != '')
-                  ? Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                          Text(
-                            song.name,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                            ),
+                  ),
+            const SizedBox(
+              height: 10,
+            ),
+            (song.uri != '')
+                ? Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                        Text(
+                          song.name,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
                           ),
-                          const SizedBox(
-                            height: 10,
+                        ),
+                        const SizedBox(
+                          height: 10,
+                        ),
+                        Text(
+                          song.artists.first,
+                          style: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 14,
                           ),
-                          Text(
-                            song.artists.first,
-                            style: const TextStyle(
-                              color: Colors.grey,
-                              fontSize: 14,
-                            ),
+                        ),
+                      ])
+                : Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: const [
+                        Text(
+                          'No Music in reprodution',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
                           ),
-                        ])
-                  : Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: const [
-                          Text(
-                            'No Music in reprodution',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 20,
-                            ),
-                          ),
-                        ]),
-              const SizedBox(
-                height: 20,
-              ),
-            ],
-          );
-        });
+                        ),
+                      ]),
+            const SizedBox(
+              height: 20,
+            ),
+          ],
+        );
+      },
+    );
   }
 }
 

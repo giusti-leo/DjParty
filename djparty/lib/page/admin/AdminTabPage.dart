@@ -821,6 +821,7 @@ class _AdminTabPage extends State<AdminTabPage>
                         /// Online logic
                         if (offline) {
                           fr.setPartyOffline;
+                          offline = false;
                         }
                       } else {
                         /// Offline logic

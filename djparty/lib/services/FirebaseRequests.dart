@@ -1074,14 +1074,13 @@ class FirebaseRequests extends ChangeNotifier {
     try {
       DateTime now = DateTime.now();
       await partyCollection.doc(code).update({
-        'isEnded': true,
         'endTime': DateTime.now(),
       });
       await partyCollection
           .doc(code)
           .collection('Party')
-          .doc('MusicStatus')
-          .update({});
+          .doc('PartyStatus')
+          .update({'isEnded': true});
     } on FirebaseException catch (e) {
       switch (e.code) {
         default:
