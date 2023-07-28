@@ -127,28 +127,17 @@ class FirebaseRequests extends ChangeNotifier {
         .snapshots();
   }
 
-  savePartyDataFromFirebase({required String code}) async {
-    return userCollection.doc(code).snapshots();
+  Future<Stream<QuerySnapshot<Map<String, dynamic>>>> getRanking(
+      {required String code}) async {
+    return partyCollection
+        .doc(code)
+        .collection("members")
+        .orderBy("points", descending: true)
+        .snapshots();
   }
 
-  Future<void> removeUserFromPartyList(String user, String party) async {
-    try {
-      List<dynamic> users = [user];
-      await partyCollection
-          .doc(party)
-          .update({
-            'partecipant_list': FieldValue.arrayRemove([users]),
-          })
-          .then((_) => print('Party Deleted'))
-          .catchError((error) => print('Failed: $error'));
-    } on FirebaseException catch (e) {
-      switch (e.code) {
-        default:
-          _errorCode = e.toString();
-          _hasError = true;
-          notifyListeners();
-      }
-    }
+  savePartyDataFromFirebase({required String code}) async {
+    return userCollection.doc(code).snapshots();
   }
 
   Future<void> changeVotingStatus(String code, bool val) async {
@@ -857,7 +846,6 @@ class FirebaseRequests extends ChangeNotifier {
   Future<void> userExitParty(String user, String party) async {
     try {
       await userExitFromParty(user, party);
-      await removeUserFromPartyList(user, party);
       await removeUserFromRanking(user, party);
     } on FirebaseException catch (e) {
       switch (e.code) {
@@ -872,7 +860,6 @@ class FirebaseRequests extends ChangeNotifier {
   Future<void> adminExitParty(String user, String party) async {
     try {
       await userExitFromParty(user, party);
-      await removeUserFromPartyList(user, party);
       await removeUserFromRanking(user, party);
       await changes(party);
     } on FirebaseException catch (e) {

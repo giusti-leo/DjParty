@@ -350,7 +350,7 @@ class _GuestTabPage extends State<GuestTabPage>
                   }
                 }),
             StreamBuilder(
-                stream: Stream.periodic(const Duration(seconds: 10)),
+                stream: Stream.periodic(const Duration(seconds: 90)),
                 builder: (context, snapshot) {
                   FirebaseFirestore.instance
                       .collection('parties')

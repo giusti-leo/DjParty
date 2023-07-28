@@ -28,6 +28,8 @@ class _AdminRankingNotStarted extends State<AdminRankingNotStarted> {
   final RoundedLoadingButtonController partyController =
       RoundedLoadingButtonController();
 
+  Stream<QuerySnapshot>? ranking;
+
   Color mainGreen = const Color.fromARGB(228, 53, 191, 101);
   Color backGround = const Color.fromARGB(255, 35, 34, 34);
   Color alertColor = Colors.red;
@@ -37,6 +39,12 @@ class _AdminRankingNotStarted extends State<AdminRankingNotStarted> {
     final fr = context.read<FirebaseRequests>();
     sp.getDataFromSharedPreferences();
     fr.getDataFromSharedPreferences();
+
+    fr.getRanking(code: fr.partyCode!).then((val) {
+      setState(() {
+        ranking = val;
+      });
+    });
   }
 
   @override
@@ -60,11 +68,7 @@ class _AdminRankingNotStarted extends State<AdminRankingNotStarted> {
           SizedBox(
             height: height * 0.58,
             child: StreamBuilder(
-                stream: FirebaseFirestore.instance
-                    .collection('parties')
-                    .doc(fr.partyCode)
-                    .collection('members')
-                    .snapshots(),
+                stream: ranking,
                 builder: (context, AsyncSnapshot snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting ||
                       !snapshot.hasData) {
@@ -270,6 +274,8 @@ class _AdminRankingStarted extends State<AdminRankingStarted> {
 
   String partyID = '';
 
+  Stream<QuerySnapshot>? ranking;
+
   Future getData() async {
     final sp = context.read<SignInProvider>();
     final fr = context.read<FirebaseRequests>();
@@ -277,6 +283,12 @@ class _AdminRankingStarted extends State<AdminRankingStarted> {
     fr.getDataFromSharedPreferences();
 
     partyID = fr.partyCode!;
+
+    fr.getRanking(code: fr.partyCode!).then((val) {
+      setState(() {
+        ranking = val;
+      });
+    });
   }
 
   @override
@@ -311,11 +323,7 @@ class _AdminRankingStarted extends State<AdminRankingStarted> {
           SizedBox(
             height: height * 0.58,
             child: StreamBuilder(
-                stream: FirebaseFirestore.instance
-                    .collection('parties')
-                    .doc(fr.partyCode)
-                    .collection('members')
-                    .snapshots(),
+                stream: ranking,
                 builder: (context, AsyncSnapshot snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting ||
                       !snapshot.hasData) {
@@ -616,6 +624,8 @@ class _AdminRankingEnded extends State<AdminRankingEnded> {
 
   String partyID = '';
 
+  Stream<QuerySnapshot>? ranking;
+
   Future getData() async {
     final sp = context.read<SignInProvider>();
     final fr = context.read<FirebaseRequests>();
@@ -623,6 +633,12 @@ class _AdminRankingEnded extends State<AdminRankingEnded> {
     fr.getDataFromSharedPreferences();
 
     partyID = fr.partyCode!;
+
+    fr.getRanking(code: fr.partyCode!).then((val) {
+      setState(() {
+        ranking = val;
+      });
+    });
   }
 
   @override

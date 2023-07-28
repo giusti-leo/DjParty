@@ -547,32 +547,38 @@ class _AdminPlayerEnded extends State<AdminPlayerEnded>
                       );
                     } else {
                       return SizedBox(
-                        height: 40,
+                        height: height * 0.05,
+                        width: width * 0.70,
                         child: RoundedLoadingButton(
                           onPressed: () {
                             _handleCreatePlaylist(context);
                           },
                           controller: partyController,
                           successColor: mainGreen,
-                          width: width * 0.80,
                           elevation: 0,
                           borderRadius: 25,
                           color: mainGreen,
                           child: Wrap(
                             children: const [
+                              SizedBox(
+                                width: 10,
+                              ),
                               Icon(
                                 CD.spotify,
                                 size: 20,
                                 color: Colors.white,
                               ),
                               SizedBox(
-                                width: 15,
+                                width: 10,
                               ),
                               Text("Get the Spotify Playlist of the Party!",
                                   style: TextStyle(
                                       color: Colors.white,
                                       fontSize: 15,
                                       fontWeight: FontWeight.w500)),
+                              SizedBox(
+                                width: 10,
+                              ),
                             ],
                           ),
                         ),

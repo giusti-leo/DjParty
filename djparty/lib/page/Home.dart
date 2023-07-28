@@ -94,7 +94,7 @@ class _HomeState extends State<Home> {
     exitController.reset();
     shareController.reset();
     getData();
-    super.initState();
+    super.didChangeDependencies();
   }
 
   streamParties() {
@@ -768,25 +768,18 @@ class _HomeState extends State<Home> {
               exitController.reset();
               return;
             }
-            await fp.userIsInTheParty(sp.uid.toString()).then((value) async {
+
+            await fp.userExitParty(sp.uid.toString(), code).then((value) {
               if (fp.hasError) {
                 displayToastMessage(
                     context, sp.errorCode.toString(), alertColor);
                 exitController.reset();
                 return;
               }
-              await fp.userExitParty(sp.uid.toString(), code).then((value) {
-                if (fp.hasError) {
-                  displayToastMessage(
-                      context, sp.errorCode.toString(), alertColor);
-                  exitController.reset();
-                  return;
-                }
-                exitController.success();
-                Future.delayed(const Duration(milliseconds: 500));
-                displayToastMessage(context, 'You left the party', mainGreen);
-                exitController.reset();
-              });
+              exitController.success();
+              Future.delayed(const Duration(milliseconds: 500));
+              displayToastMessage(context, 'You left the party', mainGreen);
+              exitController.reset();
             });
           });
         });
