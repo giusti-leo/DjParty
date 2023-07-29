@@ -56,9 +56,9 @@ class MusicStatus {
 }
 
 class Party {
-  final String admin;
-  final String code;
-  final String name;
+  String admin;
+  String code;
+  String name;
 
   Party(this.code, this.name, this.admin);
 

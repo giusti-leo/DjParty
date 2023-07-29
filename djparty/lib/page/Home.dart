@@ -41,8 +41,6 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  final User loggedUser = FirebaseAuth.instance.currentUser!;
-
   String myToken = "";
   Stream<QuerySnapshot>? parties;
 
@@ -64,7 +62,7 @@ class _HomeState extends State<Home> {
 
   Future getData() async {
     final FirebaseRequests firebaseRequests = FirebaseRequests(db: widget.db);
-    firebaseRequests.getParties(uid: loggedUser.uid).then((val) {
+    firebaseRequests.getParties(uid: widget.loggedUser.uid).then((val) {
       setState(() {
         parties = val;
       });
@@ -99,7 +97,7 @@ class _HomeState extends State<Home> {
                     fontWeight: FontWeight.normal, color: Colors.white),
                 children: <TextSpan>[
                   TextSpan(
-                      text: '${loggedUser.displayName}',
+                      text: '${widget.loggedUser.displayName}',
                       style: const TextStyle(
                           fontWeight: FontWeight.bold, color: Colors.white)),
                   const TextSpan(
@@ -133,7 +131,7 @@ class _HomeState extends State<Home> {
                           ),
                           child: ExpansionTile(
                             trailing: (snapshot.data.docs[index]['admin'] ==
-                                    loggedUser.uid)
+                                    widget.loggedUser.uid)
                                 ? const Icon(Icons.emoji_people)
                                 : const Icon(Icons.people),
                             title: Text(
@@ -180,7 +178,7 @@ class _HomeState extends State<Home> {
                                               exitController.reset();
                                               if (snapshot.data.docs[index]
                                                       ['admin'] ==
-                                                  loggedUser.uid) {
+                                                  widget.loggedUser.uid) {
                                                 showAdminAlert(
                                                     context,
                                                     snapshot.data.docs[index]
@@ -647,7 +645,7 @@ class _HomeState extends State<Home> {
       return;
     }
 
-    await sp.checkUserExists(loggedUser.uid).then((value) async {
+    await sp.checkUserExists(widget.loggedUser.uid).then((value) async {
       if (sp.hasError == true) {
         displayToastMessage(context, sp.errorCode.toString(), alertColor);
         exitController.reset();
@@ -658,7 +656,7 @@ class _HomeState extends State<Home> {
         exitController.reset();
         return;
       }
-      await sp.getUserDataFromFirestore(loggedUser.uid).then((value) {
+      await sp.getUserDataFromFirestore(widget.loggedUser.uid).then((value) {
         if (sp.hasError == true) {
           displayToastMessage(context, sp.errorCode.toString(), alertColor);
           exitController.reset();
@@ -685,7 +683,7 @@ class _HomeState extends State<Home> {
               }
               fp.saveDataToSharedPreferences().then((value) {
                 if (fp.isEnded!) {
-                  fp.adminExitParty(loggedUser.uid, code).then((value) {
+                  fp.adminExitParty(widget.loggedUser.uid, code).then((value) {
                     if (sp.hasError == true) {
                       displayToastMessage(
                           context, sp.errorCode.toString(), alertColor);
@@ -706,7 +704,7 @@ class _HomeState extends State<Home> {
                       'Please, stop the party before deleting', alertColor);
                   return;
                 } else {
-                  fp.adminExitParty(loggedUser.uid, code).then((value) {
+                  fp.adminExitParty(widget.loggedUser.uid, code).then((value) {
                     if (sp.hasError == true) {
                       displayToastMessage(
                           context, sp.errorCode.toString(), alertColor);
@@ -748,13 +746,13 @@ class _HomeState extends State<Home> {
       return;
     }
 
-    await sp.checkUserExists(loggedUser.uid).then((value) async {
+    await sp.checkUserExists(widget.loggedUser.uid).then((value) async {
       if (sp.hasError == true) {
         displayToastMessage(context, sp.errorCode.toString(), alertColor);
         exitController.reset();
         return;
       }
-      await sp.getUserDataFromFirestore(loggedUser.uid).then((value) {
+      await sp.getUserDataFromFirestore(widget.loggedUser.uid).then((value) {
         if (sp.hasError == true) {
           displayToastMessage(context, sp.errorCode.toString(), alertColor);
           exitController.reset();
@@ -768,7 +766,7 @@ class _HomeState extends State<Home> {
               return;
             }
 
-            await fp.userExitParty(loggedUser.uid, code).then((value) {
+            await fp.userExitParty(widget.loggedUser.uid, code).then((value) {
               if (fp.hasError) {
                 displayToastMessage(
                     context, sp.errorCode.toString(), alertColor);

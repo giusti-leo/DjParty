@@ -106,25 +106,26 @@ class _AdminTabPage extends State<AdminTabPage>
     final FirebaseRequests firebaseRequests = FirebaseRequests(db: widget.db);
     final sr = context.read<SpotifyRequests>();
 
-    getParty();
+    //getParty();
 
     sr.getUserId();
     sr.getAuthToken();
     sr.connectToSpotify();
+    setParty();
 
     Wakelock.enable();
   }
 
-  void getParty() async {
-    final FirebaseRequests firebaseRequests = FirebaseRequests(db: widget.db);
-
+  void setParty() async {
     var collection = widget.db.collection('parties');
     // userUid is the current authenticated user
     var docSnapshot = await collection.doc(widget.code).get();
 
     Map<String, dynamic> data = docSnapshot.data()!;
 
-    party = Party(data['code'], data['partyName'], data['admin']);
+    party.code.replaceAll('code', data['code']);
+    party.name = data['partyName'];
+    party.admin = data['admin'];
   }
 
   @override
@@ -385,7 +386,7 @@ class _AdminTabPage extends State<AdminTabPage>
   Widget build(BuildContext context) {
     final FirebaseRequests fr = FirebaseRequests(db: widget.db);
 
-    getParty();
+    //setParty();
 
     return WillPopScope(
         onWillPop: _onWillPop,
