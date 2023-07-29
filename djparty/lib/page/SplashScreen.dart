@@ -6,7 +6,7 @@ import 'package:djparty/page/HomePage.dart';
 import 'package:djparty/page/Login.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_zoom_drawer/config.dart';
+import 'package:flutter_zoom_drawer/flutter_zoom_drawer.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);

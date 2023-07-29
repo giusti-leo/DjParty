@@ -63,7 +63,12 @@ class _AdminRankingNotStarted extends State<AdminRankingNotStarted> {
           SizedBox(
             height: height * 0.58,
             child: StreamBuilder(
-                stream: ranking,
+                stream: widget.db
+                    .collection('parties')
+                    .doc(widget.code)
+                    .collection("members")
+                    .orderBy("points", descending: true)
+                    .snapshots(),
                 builder: (context, AsyncSnapshot snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting ||
                       !snapshot.hasData) {

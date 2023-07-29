@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_core_platform_interface/firebase_core_platform_interface.dart';
+import 'package:firebase_storage_mocks/firebase_storage_mocks.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
@@ -14,11 +15,12 @@ import 'package:firebase_auth_mocks/firebase_auth_mocks.dart';
 import 'package:google_sign_in_mocks/google_sign_in_mocks.dart';
 
 @GenerateMocks([Firebase])
-void main() {
+void main() async {
+  FakeFirebaseFirestore firestore = await getFakeFirestoreInstance();
   //var firebase = MockFirebase();
 }
 
-typedef Callback = void Function(MethodCall call);
+typedef Callback(MethodCall call);
 
 void setupFirebaseAuthMocks([Callback? customHandlers]) {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -53,29 +55,10 @@ Future<User> getMockedUser() async {
   );
   final auth = MockFirebaseAuth(signedIn: true, mockUser: user);
   await auth.signInWithCredential(credential);
-  return user;
-}
 
-Future<User> getMockedUser2() async {
-  final googleSignIn = MockGoogleSignIn();
-  final signinAccount = await googleSignIn.signIn();
-  final googleAuth = await signinAccount!.authentication;
-  final AuthCredential credential = GoogleAuthProvider.credential(
-    accessToken: googleAuth.accessToken,
-    idToken: googleAuth.idToken,
-  );
-  // Sign in.
-  final user = MockUser(
-    isAnonymous: false,
-    uid: 'someuid',
-    email: 'bob@somedomain.com',
-    displayName: 'Bob',
-  );
-  final auth = MockFirebaseAuth(mockUser: user);
-  final result = await auth.signInWithCredential(credential);
-  final user1 = result.user;
-  print(user1!.displayName);
-  return user1;
+  setupFirebaseAuthMocks();
+
+  return user;
 }
 
 Future<FakeFirebaseFirestore> getFakeFirestoreInstance() async {
@@ -102,13 +85,23 @@ Future<FakeFirebaseFirestore> getFakeFirestoreInstance() async {
 
   await firestore
       .collection('users')
-      .doc(user.uid)
+      .doc('076R1REcV2cFma2h2gFcrPU8kT92')
       .collection('party')
       .doc('nx29B')
       .set(<String, dynamic>{
-    'partyName': 'test',
+    'PartyName': 'test',
+    'code': 'nx29B',
     'startDate': Timestamp.now(),
+    'admin': '076R1REcV2cFma2h2gFcrPU8kT92'
   });
+
+  final QuerySnapshot qSnap = await firestore
+      .collection('users')
+      .doc('076R1REcV2cFma2h2gFcrPU8kT92')
+      .collection('party')
+      .get();
+  final int documents = qSnap.docs.length;
+  print(documents);
 
   await firestore
       .collection('parties')
@@ -211,6 +204,13 @@ Future<FakeFirebaseFirestore> getFakeFirestoreInstance() async {
   });
 
   return firestore;
+}
+
+Future<void> setupMockStorage() async {
+  final storage = MockFirebaseStorage();
+  final storageRef = storage.ref().child('assets/images/default-profile.png');
+  final image = File('assets/images/default-profile.png');
+  await storageRef.putFile(image);
 }
 
 List<DocumentSnapshot<Object?>> getDocumentSnapshots(

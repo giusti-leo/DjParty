@@ -11,7 +11,7 @@ import 'package:djparty/services/InternetProvider.dart';
 import 'package:djparty/services/SignInProvider.dart';
 import 'package:djparty/utils/nextScreen.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter_zoom_drawer/config.dart';
+import 'package:flutter_zoom_drawer/flutter_zoom_drawer.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -83,7 +83,7 @@ class _HomeState extends State<Home> {
     final width = MediaQuery.of(context).size.width;
     final FirebaseRequests firebaseRequests = FirebaseRequests(db: widget.db);
 
-    return StreamBuilder(
+    return StreamBuilder<QuerySnapshot>(
         stream: parties,
         builder: (context, AsyncSnapshot snapshot) {
           if (!snapshot.hasData ||
