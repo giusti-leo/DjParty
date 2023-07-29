@@ -486,9 +486,9 @@ class SignInProvider extends ChangeNotifier {
   }
 
   // checkUser exists or not in cloudfirestore
-  Future<bool> checkUserExists() async {
+  Future<bool> checkUserExists(String uid) async {
     DocumentSnapshot snap =
-        await FirebaseFirestore.instance.collection('users').doc(_uid).get();
+        await FirebaseFirestore.instance.collection('users').doc(uid).get();
     if (snap.exists) {
       print("EXISTING USER");
       return true;

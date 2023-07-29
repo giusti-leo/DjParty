@@ -5,11 +5,8 @@ import 'package:djparty/services/InternetProvider.dart';
 import 'package:djparty/services/SignInProvider.dart';
 import 'package:djparty/utils/nextScreen.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/src/widgets/container.dart';
-import 'package:flutter/src/widgets/framework.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:rounded_loading_button/rounded_loading_button.dart';
@@ -18,7 +15,9 @@ import 'package:spotify_sdk/spotify_sdk.dart';
 import 'package:logger/logger.dart';
 
 class AdminRankingNotStarted extends StatefulWidget {
-  const AdminRankingNotStarted({super.key});
+  String code;
+  FirebaseFirestore db;
+  AdminRankingNotStarted({super.key, required this.code, required this.db});
 
   @override
   State<AdminRankingNotStarted> createState() => _AdminRankingNotStarted();
@@ -35,12 +34,9 @@ class _AdminRankingNotStarted extends State<AdminRankingNotStarted> {
   Color alertColor = Colors.red;
 
   Future getData() async {
-    final sp = context.read<SignInProvider>();
-    final fr = context.read<FirebaseRequests>();
-    sp.getDataFromSharedPreferences();
-    fr.getDataFromSharedPreferences();
+    final FirebaseRequests fr = FirebaseRequests(db: widget.db);
 
-    fr.getRanking(code: fr.partyCode!).then((val) {
+    fr.getRanking(code: widget.code).then((val) {
       setState(() {
         ranking = val;
       });
@@ -57,7 +53,6 @@ class _AdminRankingNotStarted extends State<AdminRankingNotStarted> {
 
   @override
   Widget build(BuildContext context) {
-    final fr = context.read<FirebaseRequests>();
     final width = MediaQuery.of(context).size.width;
     final height = MediaQuery.of(context).size.height;
 
@@ -222,7 +217,8 @@ class _AdminRankingNotStarted extends State<AdminRankingNotStarted> {
   Future _handleStartParty(BuildContext context) async {
     final sp = context.read<SignInProvider>();
     final ip = context.read<InternetProvider>();
-    final fr = context.read<FirebaseRequests>();
+    final FirebaseRequests fr = FirebaseRequests(db: widget.db);
+
     await ip.checkInternetConnection();
 
     if (ip.hasInternet == false) {
@@ -232,15 +228,15 @@ class _AdminRankingNotStarted extends State<AdminRankingNotStarted> {
       return;
     }
 
-    fr.checkPartyExists(code: fr.partyCode!).then((value) async {
+    fr.checkPartyExists(code: widget.code).then((value) async {
       if (sp.hasError == true) {
         displayToastMessage(context, sp.errorCode.toString(), alertColor);
         partyController.reset();
         return;
       }
-      fr.getPartyDataFromFirestore(fr.partyCode!).then((value) {
+      fr.getPartyDataFromFirestore(widget.code).then((value) {
         fr.saveDataToSharedPreferences().then((value) {
-          fr.setPartyStarted(fr.partyCode!).then((value) {
+          fr.setPartyStarted(widget.code).then((value) {
             if (sp.hasError == true) {
               displayToastMessage(context, sp.errorCode.toString(), alertColor);
               partyController.reset();
@@ -256,7 +252,10 @@ class _AdminRankingNotStarted extends State<AdminRankingNotStarted> {
 }
 
 class AdminRankingStarted extends StatefulWidget {
-  const AdminRankingStarted({super.key});
+  String code;
+  FirebaseFirestore db;
+
+  AdminRankingStarted({super.key, required this.code, required this.db});
 
   @override
   State<AdminRankingStarted> createState() => _AdminRankingStarted();
@@ -272,19 +271,12 @@ class _AdminRankingStarted extends State<AdminRankingStarted> {
 
   bool isPaused = false;
 
-  String partyID = '';
-
   Stream<QuerySnapshot>? ranking;
 
   Future getData() async {
-    final sp = context.read<SignInProvider>();
-    final fr = context.read<FirebaseRequests>();
-    sp.getDataFromSharedPreferences();
-    fr.getDataFromSharedPreferences();
+    final FirebaseRequests fr = FirebaseRequests(db: widget.db);
 
-    partyID = fr.partyCode!;
-
-    fr.getRanking(code: fr.partyCode!).then((val) {
+    fr.getRanking(code: widget.code).then((val) {
       setState(() {
         ranking = val;
       });
@@ -312,7 +304,6 @@ class _AdminRankingStarted extends State<AdminRankingStarted> {
 
   @override
   Widget build(BuildContext context) {
-    final fr = context.read<FirebaseRequests>();
     final width = MediaQuery.of(context).size.width;
     final height = MediaQuery.of(context).size.height;
 
@@ -492,11 +483,9 @@ class _AdminRankingStarted extends State<AdminRankingStarted> {
   }
 
   Future _adminEndParty(BuildContext context) async {
-    final CollectionReference partyCollection =
-        FirebaseFirestore.instance.collection("parties");
-
-    await partyCollection
-        .doc(partyID)
+    await widget.db
+        .collection('parties')
+        .doc(widget.code)
         .collection('Party')
         .doc('PartyStatus')
         .update({
@@ -606,7 +595,9 @@ class _AdminRankingStarted extends State<AdminRankingStarted> {
 }
 
 class AdminRankingEnded extends StatefulWidget {
-  const AdminRankingEnded({super.key});
+  String code;
+  FirebaseFirestore db;
+  AdminRankingEnded({super.key, required this.code, required this.db});
 
   @override
   State<AdminRankingEnded> createState() => _AdminRankingEnded();
@@ -622,19 +613,12 @@ class _AdminRankingEnded extends State<AdminRankingEnded> {
 
   bool isPaused = false;
 
-  String partyID = '';
-
   Stream<QuerySnapshot>? ranking;
 
   Future getData() async {
-    final sp = context.read<SignInProvider>();
-    final fr = context.read<FirebaseRequests>();
-    sp.getDataFromSharedPreferences();
-    fr.getDataFromSharedPreferences();
+    final FirebaseRequests fr = FirebaseRequests(db: widget.db);
 
-    partyID = fr.partyCode!;
-
-    fr.getRanking(code: fr.partyCode!).then((val) {
+    fr.getRanking(code: widget.code).then((val) {
       setState(() {
         ranking = val;
       });
@@ -662,7 +646,6 @@ class _AdminRankingEnded extends State<AdminRankingEnded> {
 
   @override
   Widget build(BuildContext context) {
-    final fr = context.read<FirebaseRequests>();
     final width = MediaQuery.of(context).size.width;
     final height = MediaQuery.of(context).size.height;
 
@@ -677,7 +660,7 @@ class _AdminRankingEnded extends State<AdminRankingEnded> {
             child: FutureBuilder(
                 future: FirebaseFirestore.instance
                     .collection('parties')
-                    .doc(fr.partyCode)
+                    .doc(widget.code)
                     .collection('members')
                     .orderBy('points')
                     .limit(50)

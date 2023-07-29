@@ -3,51 +3,45 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:ui';
 
-import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:djparty/entities/Party.dart';
 import 'package:djparty/entities/Track.dart';
 import 'package:djparty/page/HomePage.dart';
 import 'package:djparty/page/PartySettings.dart';
 import 'package:djparty/page/QueueSearch.dart';
-import 'package:djparty/page/RankingPage.dart';
 import 'package:djparty/page/admin/AdminPlayer.dart';
 import 'package:djparty/page/admin/AdminRanking.dart';
-import 'package:djparty/page/guest/GuestTabPage.dart';
 import 'package:djparty/services/Connectivity.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_countdown_timer/flutter_countdown_timer.dart';
 import 'package:flutter/material.dart';
-import 'package:djparty/services/SignInProvider.dart';
-import 'package:djparty/page/SearchItemScreen.dart';
-import 'package:djparty/page/spotifyPlayer.dart';
-import 'package:djparty/page/Queue.dart';
 import 'package:djparty/utils/nextScreen.dart';
-import 'package:djparty/Icons/c_d_icons.dart';
 import 'package:linear_timer/linear_timer.dart';
-import 'package:numberpicker/numberpicker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:spotify_sdk/models/player_state.dart';
-import 'package:spotify_sdk/platform_channels.dart';
 import 'package:spotify_sdk/spotify_sdk.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:logger/logger.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:djparty/services/FirebaseRequests.dart';
 import 'package:djparty/services/InternetProvider.dart';
 import 'package:djparty/services/SpotifyRequests.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:wakelock/wakelock.dart';
 import 'package:rounded_loading_button/rounded_loading_button.dart';
-import 'package:rxdart/rxdart.dart' as rxdart;
 
 class AdminTabPage extends StatefulWidget {
   static String routeName = 'SpotifyTabController';
-  const AdminTabPage({Key? key, required this.homeHeigth}) : super(key: key);
+  User loggedUser;
+  FirebaseFirestore db;
+  String code;
+
+  AdminTabPage(
+      {super.key,
+      required this.homeHeigth,
+      required this.loggedUser,
+      required this.code,
+      required this.db});
 
   final double homeHeigth;
 
@@ -106,21 +100,31 @@ class _AdminTabPage extends State<AdminTabPage>
   Color backGround = const Color.fromARGB(255, 35, 34, 34);
   Color alertColor = Colors.red;
 
+  Party party = Party('code', 'name', 'admin');
+
   Future getData() async {
-    final sp = context.read<SignInProvider>();
-    final fr = context.read<FirebaseRequests>();
+    final FirebaseRequests firebaseRequests = FirebaseRequests(db: widget.db);
     final sr = context.read<SpotifyRequests>();
 
-    sp.getDataFromSharedPreferences();
-    fr.getPartyDataFromFirestore(fr.partyCode!);
-    fr.saveDataToSharedPreferences();
-    fr.getDataFromSharedPreferences();
+    getParty();
 
     sr.getUserId();
     sr.getAuthToken();
     sr.connectToSpotify();
 
     Wakelock.enable();
+  }
+
+  void getParty() async {
+    final FirebaseRequests firebaseRequests = FirebaseRequests(db: widget.db);
+
+    var collection = widget.db.collection('parties');
+    // userUid is the current authenticated user
+    var docSnapshot = await collection.doc(widget.code).get();
+
+    Map<String, dynamic> data = docSnapshot.data()!;
+
+    party = Party(data['code'], data['partyName'], data['admin']);
   }
 
   @override
@@ -135,10 +139,10 @@ class _AdminTabPage extends State<AdminTabPage>
 
   @override
   Future<void> dispose() async {
-    final fr = context.read<FirebaseRequests>();
+    final FirebaseRequests firebaseRequests = FirebaseRequests(db: widget.db);
     SchedulerBinding.instance.addPostFrameCallback((_) async {
       if (mounted) {
-        await fr.setPartyEnded(fr.partyCode!);
+        await firebaseRequests.setPartyEnded(firebaseRequests.partyCode!);
       }
     });
 
@@ -157,14 +161,14 @@ class _AdminTabPage extends State<AdminTabPage>
 
     SchedulerBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        final fr = context.read<FirebaseRequests>();
+        final FirebaseRequests fr = FirebaseRequests(db: widget.db);
 
         if (isBackground || isDetached || isInactive) {
           pause();
 
-          FirebaseFirestore.instance
+          widget.db
               .collection('parties')
-              .doc(fr.partyCode)
+              .doc(widget.code)
               .collection('Party')
               .doc('MusicStatus')
               .get()
@@ -172,15 +176,15 @@ class _AdminTabPage extends State<AdminTabPage>
             MusicStatus musicStatus;
             musicStatus = MusicStatus.getPartyFromFirestore(value.data());
             if (musicStatus.running!) {
-              fr.setBackgrounded(fr.partyCode!);
+              fr.setBackgrounded(widget.code);
               timerController1.stop();
             }
           });
         }
 
-        FirebaseFirestore.instance
+        widget.db
             .collection('parties')
-            .doc(fr.partyCode)
+            .doc(widget.code)
             .collection('Party')
             .doc('PartyStatus')
             .get()
@@ -190,7 +194,7 @@ class _AdminTabPage extends State<AdminTabPage>
           if (isResumed && partyStatus.isStarted! && !partyStatus.isEnded!) {
             await Future.delayed(const Duration(milliseconds: 1000))
                 .then((value) async {
-              fr.setSelection(fr.partyCode!);
+              fr.setSelection(widget.code);
               timerController1.reset();
             });
           }
@@ -200,9 +204,8 @@ class _AdminTabPage extends State<AdminTabPage>
   }
 
   void showSettingAlert(BuildContext context) {
-    final fr = context.read<FirebaseRequests>();
-    fr.getPartyDataFromFirestore(fr.partyCode!);
-    fr.getDataFromSharedPreferences();
+    final FirebaseRequests fr = FirebaseRequests(db: widget.db);
+    fr.getPartyDataFromFirestore(widget.code);
 
     final width = MediaQuery.of(context).size.width;
 
@@ -328,7 +331,7 @@ class _AdminTabPage extends State<AdminTabPage>
 
   Future _handleUpdate() async {
     final ip = context.read<InternetProvider>();
-    final fr = context.read<FirebaseRequests>();
+    final FirebaseRequests fr = FirebaseRequests(db: widget.db);
 
     await ip.checkInternetConnection();
 
@@ -342,31 +345,29 @@ class _AdminTabPage extends State<AdminTabPage>
     }
 
     fr
-        .updatePartySettings(fr.partyCode!, _currentTimer, _currentInterval)
+        .updatePartySettings(widget.code, _currentTimer, _currentInterval)
         .then((value) {
       if (fr.hasError) {
         showInSnackBar(context, fr.errorCode.toString(), alertColor);
         submitController.reset();
         return;
       }
-      fr.getPartyDataFromFirestore(fr.partyCode!).then((value) {
+      fr.getPartyDataFromFirestore(widget.code).then((value) {
         if (fr.hasError) {
           showInSnackBar(context, fr.errorCode.toString(), alertColor);
           submitController.reset();
           return;
         }
-        fr.saveDataToSharedPreferences().then((value) {
-          submitController.success();
-        });
+        submitController.success();
       });
     });
   }
 
   Future<bool> _onWillPop() async {
-    final fr = context.read<FirebaseRequests>();
-    await FirebaseFirestore.instance
+    final FirebaseRequests fr = FirebaseRequests(db: widget.db);
+    await widget.db
         .collection('parties')
-        .doc(fr.partyCode)
+        .doc(widget.code)
         .collection('Party')
         .doc('PartyStatus')
         .get()
@@ -382,7 +383,9 @@ class _AdminTabPage extends State<AdminTabPage>
 
   @override
   Widget build(BuildContext context) {
-    final fr = context.read<FirebaseRequests>();
+    final FirebaseRequests fr = FirebaseRequests(db: widget.db);
+
+    getParty();
 
     return WillPopScope(
         onWillPop: _onWillPop,
@@ -404,7 +407,7 @@ class _AdminTabPage extends State<AdminTabPage>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    fr.partyName!,
+                    party.name,
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                     ),
@@ -421,9 +424,9 @@ class _AdminTabPage extends State<AdminTabPage>
                         color: Colors.white,
                       ),
                       onPressed: () async {
-                        await FirebaseFirestore.instance
+                        await widget.db
                             .collection('parties')
-                            .doc(fr.partyCode)
+                            .doc(widget.code)
                             .collection('Party')
                             .doc('PartyStatus')
                             .get()
@@ -451,7 +454,7 @@ class _AdminTabPage extends State<AdminTabPage>
                         value: 1,
                         child: TextButton(
                           onPressed: () {
-                            handleShare(fr.partyCode!);
+                            handleShare(widget.code);
                             Navigator.of(context).pop();
                           },
                           child: Row(
@@ -472,9 +475,9 @@ class _AdminTabPage extends State<AdminTabPage>
                         // row with 2 children
                         child: TextButton(
                           onPressed: () async {
-                            await FirebaseFirestore.instance
+                            await widget.db
                                 .collection('parties')
-                                .doc(fr.partyCode)
+                                .doc(widget.code)
                                 .collection('Party')
                                 .doc('PartyStatus')
                                 .get()
@@ -483,7 +486,13 @@ class _AdminTabPage extends State<AdminTabPage>
                                   PartyStatus.getPartyFromFirestore(
                                       value.data()!);
                               if (!(pStatus.isStarted! && !pStatus.isEnded!)) {
-                                nextScreen(context, const PartySettings());
+                                nextScreen(
+                                    context,
+                                    PartySettings(
+                                      loggedUser: widget.loggedUser,
+                                      code: widget.code,
+                                      db: widget.db,
+                                    ));
                               } else {
                                 showSettingAlert(context);
                               }
@@ -515,9 +524,9 @@ class _AdminTabPage extends State<AdminTabPage>
                   SizedBox(
                     height: widget.homeHeigth * 0.78,
                     child: StreamBuilder(
-                        stream: FirebaseFirestore.instance
+                        stream: widget.db
                             .collection('parties')
-                            .doc(fr.partyCode)
+                            .doc(widget.code)
                             .collection('Party')
                             .doc('PartyStatus')
                             .snapshots(),
@@ -532,9 +541,6 @@ class _AdminTabPage extends State<AdminTabPage>
                               strokeWidth: 10,
                             ));
                           }
-
-                          fr.getPartyDataFromFirestore(fr.partyCode!);
-                          fr.saveDataToSharedPreferences();
 
                           final partySnap = snapshot.data!.data();
                           PartyStatus partyStatus;
@@ -566,10 +572,17 @@ class _AdminTabPage extends State<AdminTabPage>
                                   height: constraints.maxHeight - 58,
                                   child: TabBarView(
                                     controller: tabController,
-                                    children: const [
-                                      AdminRankingNotStarted(),
-                                      AdminPlayerNotStarted(),
-                                      QueueSearch()
+                                    children: [
+                                      AdminRankingNotStarted(
+                                        db: widget.db,
+                                        code: widget.code,
+                                      ),
+                                      const AdminPlayerNotStarted(),
+                                      QueueSearch(
+                                        loggedUser: widget.loggedUser,
+                                        db: widget.db,
+                                        code: widget.code,
+                                      )
                                     ],
                                   ),
                                 ),
@@ -603,11 +616,20 @@ class _AdminTabPage extends State<AdminTabPage>
                                     child: TabBarView(
                                       controller: tabController,
                                       children: [
-                                        const AdminRankingStarted(),
+                                        AdminRankingStarted(
+                                          db: widget.db,
+                                          code: widget.code,
+                                        ),
                                         AdminPlayerSongRunning(
                                           tabController: tabController,
+                                          db: widget.db,
+                                          code: widget.code,
                                         ),
-                                        const QueueSearch()
+                                        QueueSearch(
+                                          loggedUser: widget.loggedUser,
+                                          db: widget.db,
+                                          code: widget.code,
+                                        )
                                       ],
                                     )),
                               ]);
@@ -640,10 +662,21 @@ class _AdminTabPage extends State<AdminTabPage>
                                   height: constraints.maxHeight - 58,
                                   child: TabBarView(
                                     controller: tabController,
-                                    children: const [
-                                      AdminRankingEnded(),
-                                      AdminPlayerEnded(),
-                                      SongLists()
+                                    children: [
+                                      AdminRankingEnded(
+                                        db: widget.db,
+                                        code: widget.code,
+                                      ),
+                                      AdminPlayerEnded(
+                                        loggedUser: widget.loggedUser,
+                                        db: widget.db,
+                                        code: widget.code,
+                                      ),
+                                      SongLists(
+                                        loggedUser: widget.loggedUser,
+                                        db: widget.db,
+                                        code: widget.code,
+                                      )
                                     ],
                                   ),
                                 ),
@@ -662,12 +695,8 @@ class _AdminTabPage extends State<AdminTabPage>
                         if (snapshot.data!.connected == true) {
                           return Container();
                         } else {
-                          final sp = context.read<SignInProvider>();
-                          final fr = context.read<FirebaseRequests>();
                           final sr = context.read<SpotifyRequests>();
 
-                          sp.getDataFromSharedPreferences();
-                          fr.getDataFromSharedPreferences();
                           sr.getUserId();
                           sr.getAuthToken();
                           sr.connectToSpotify();
@@ -676,9 +705,9 @@ class _AdminTabPage extends State<AdminTabPage>
                       }),
                   // ROUTINE TO UPDATE SONG WHEN SONG ENDS
                   StreamBuilder(
-                      stream: FirebaseFirestore.instance
+                      stream: widget.db
                           .collection('parties')
-                          .doc(fr.partyCode)
+                          .doc(widget.code)
                           .collection('Party')
                           .doc('MusicStatus')
                           .snapshots(),
@@ -692,9 +721,9 @@ class _AdminTabPage extends State<AdminTabPage>
                             MusicStatus.getPartyFromFirestore(partySnap);
 
                         return FutureBuilder(
-                            future: FirebaseFirestore.instance
+                            future: widget.db
                                 .collection('parties')
-                                .doc(fr.partyCode)
+                                .doc(widget.code)
                                 .collection('Party')
                                 .doc('PartyStatus')
                                 .get(),
@@ -725,9 +754,9 @@ class _AdminTabPage extends State<AdminTabPage>
                             });
                       }),
                   StreamBuilder(
-                      stream: FirebaseFirestore.instance
+                      stream: widget.db
                           .collection('parties')
-                          .doc(fr.partyCode!)
+                          .doc(widget.code)
                           .collection('Party')
                           .doc('Voting')
                           .snapshots(),
@@ -748,20 +777,20 @@ class _AdminTabPage extends State<AdminTabPage>
                           } else {
                             t = votingStatus.timer!;
                           }
-                          fr.setCountdown(t, fr.partyCode!);
+                          fr.setCountdown(t, widget.code);
                         }
                         return Container();
                       }),
                   StreamBuilder(
                       stream: Stream.periodic(const Duration(seconds: 25)),
                       builder: (context, snapshot) {
-                        fr.setPing(fr.partyCode!);
+                        fr.setPing(widget.code);
                         return Container();
                       }),
                   StreamBuilder(
-                      stream: FirebaseFirestore.instance
+                      stream: widget.db
                           .collection('parties')
-                          .doc(fr.partyCode)
+                          .doc(widget.code)
                           .snapshots(),
                       builder: (context, snapshot) {
                         if (!snapshot.hasData) {
@@ -769,9 +798,9 @@ class _AdminTabPage extends State<AdminTabPage>
                         }
                         if (snapshot.data!.get('offline') != null) {
                           if (snapshot.data!.get('offline')) {
-                            FirebaseFirestore.instance
+                            widget.db
                                 .collection('parties')
-                                .doc(fr.partyCode)
+                                .doc(widget.code)
                                 .collection('Party')
                                 .doc('Voting')
                                 .get()
@@ -784,13 +813,13 @@ class _AdminTabPage extends State<AdminTabPage>
                                       .nextVotingPhase!.millisecondsSinceEpoch <
                                   Timestamp.now().millisecondsSinceEpoch) {
                                 int t = votingStatus.votingTime!;
-                                fr.setCountdown(t, fr.partyCode!);
+                                fr.setCountdown(t, widget.code);
                               }
                             });
 
-                            FirebaseFirestore.instance
+                            widget.db
                                 .collection('parties')
-                                .doc(fr.partyCode)
+                                .doc(widget.code)
                                 .collection('Party')
                                 .doc('Song')
                                 .get()
@@ -801,11 +830,11 @@ class _AdminTabPage extends State<AdminTabPage>
 
                               if (song.running == true &&
                                   timerController1.value == 0) {
-                                fr.setSelection(fr.partyCode!);
+                                fr.setSelection(widget.code);
                               }
                             });
 
-                            fr.setPartyOnline(fr.partyCode!);
+                            fr.setPartyOnline(widget.code);
                           }
                         }
                         return Container();
@@ -869,16 +898,16 @@ class _AdminTabPage extends State<AdminTabPage>
   }
 
   Future _addTrack() async {
-    final fr = context.read<FirebaseRequests>();
-    var db = FirebaseFirestore.instance.collection('parties').doc(fr.partyCode);
+    final FirebaseRequests fr = FirebaseRequests(db: widget.db);
+    var db = FirebaseFirestore.instance.collection('parties').doc(widget.code);
     String trackUri = '';
 
     Song previousSong = Song(
         [], '', '', '', 0, Timestamp.now(), [], '', '', '', 0, Timestamp.now());
 
-    FirebaseFirestore.instance
+    widget.db
         .collection('parties')
-        .doc(fr.partyCode)
+        .doc(widget.code)
         .collection('Party')
         .doc('Song')
         .get()
@@ -886,9 +915,9 @@ class _AdminTabPage extends State<AdminTabPage>
       previousSong = Song.getPartyFromFirestore(value);
     });
 
-    FirebaseFirestore.instance
+    widget.db
         .collection('parties')
-        .doc(fr.partyCode)
+        .doc(widget.code)
         .collection('queue')
         .where('inQueue', isEqualTo: true)
         .orderBy('likes', descending: true)
@@ -902,9 +931,9 @@ class _AdminTabPage extends State<AdminTabPage>
         final batch = FirebaseFirestore.instance.batch();
 
         if (previousSong.previousUri == '') {
-          var pathSong = FirebaseFirestore.instance
+          var pathSong = widget.db
               .collection('parties')
-              .doc(fr.partyCode)
+              .doc(widget.code)
               .collection('Party')
               .doc('Song');
           batch.set(pathSong, {
@@ -922,9 +951,9 @@ class _AdminTabPage extends State<AdminTabPage>
             "previousRecs": FieldValue.serverTimestamp(),
           });
         } else {
-          var pathSong = FirebaseFirestore.instance
+          var pathSong = widget.db
               .collection('parties')
-              .doc(fr.partyCode)
+              .doc(widget.code)
               .collection('Party')
               .doc('Song');
           batch.update(pathSong, {
@@ -943,9 +972,9 @@ class _AdminTabPage extends State<AdminTabPage>
           });
         }
 
-        var pathMusicStatus = FirebaseFirestore.instance
+        var pathMusicStatus = widget.db
             .collection('parties')
-            .doc(fr.partyCode)
+            .doc(widget.code)
             .collection('Party')
             .doc('MusicStatus');
         batch.update(pathMusicStatus, {
@@ -956,9 +985,9 @@ class _AdminTabPage extends State<AdminTabPage>
           'resume': false
         });
 
-        var pathParty = FirebaseFirestore.instance
+        var pathParty = widget.db
             .collection('parties')
-            .doc(fr.partyCode)
+            .doc(widget.code)
             .collection('queue')
             .doc(track.uri);
         batch.update(pathParty, {
@@ -968,9 +997,9 @@ class _AdminTabPage extends State<AdminTabPage>
         });
 
         for (var element in track.likes) {
-          var pathUserPoint = FirebaseFirestore.instance
+          var pathUserPoint = widget.db
               .collection('parties')
-              .doc(fr.partyCode)
+              .doc(widget.code)
               .collection('members')
               .doc(element);
           batch.update(pathUserPoint, {
@@ -980,9 +1009,9 @@ class _AdminTabPage extends State<AdminTabPage>
 
         batch.commit();
       } else {
-        FirebaseFirestore.instance
+        widget.db
             .collection('parties')
-            .doc(fr.partyCode)
+            .doc(widget.code)
             .collection('queue')
             .get()
             .then((snapshot) {
@@ -993,9 +1022,9 @@ class _AdminTabPage extends State<AdminTabPage>
           trackUri = track.uri;
           final batch = FirebaseFirestore.instance.batch();
 
-          var pathSong = FirebaseFirestore.instance
+          var pathSong = widget.db
               .collection('parties')
-              .doc(fr.partyCode)
+              .doc(widget.code)
               .collection('Party')
               .doc('Song');
           batch.update(pathSong, {
@@ -1013,9 +1042,9 @@ class _AdminTabPage extends State<AdminTabPage>
             "previousRecs": FieldValue.serverTimestamp(),
           });
 
-          var pathMusicStatus = FirebaseFirestore.instance
+          var pathMusicStatus = widget.db
               .collection('parties')
-              .doc(fr.partyCode)
+              .doc(widget.code)
               .collection('Party')
               .doc('MusicStatus');
           batch.update(pathMusicStatus, {
@@ -1026,9 +1055,9 @@ class _AdminTabPage extends State<AdminTabPage>
             'resume': false
           });
 
-          var pathParty = FirebaseFirestore.instance
+          var pathParty = widget.db
               .collection('parties')
-              .doc(fr.partyCode)
+              .doc(widget.code)
               .collection('queue')
               .doc(track.uri);
           batch.update(pathParty, {
@@ -1047,26 +1076,26 @@ class _AdminTabPage extends State<AdminTabPage>
   }
 
   Future _addPreviousTrack() async {
-    final fr = context.read<FirebaseRequests>();
-    var db = FirebaseFirestore.instance.collection('parties').doc(fr.partyCode);
+    final FirebaseRequests fr = FirebaseRequests(db: widget.db);
+    var db = FirebaseFirestore.instance.collection('parties').doc(widget.code);
     String trackUri = '';
 
     Song previousSong = Song(
         [], '', '', '', 0, Timestamp.now(), [], '', '', '', 0, Timestamp.now());
     final batch = FirebaseFirestore.instance.batch();
 
-    FirebaseFirestore.instance
+    widget.db
         .collection('parties')
-        .doc(fr.partyCode)
+        .doc(widget.code)
         .collection('Party')
         .doc('Song')
         .get()
         .then((value) async {
       previousSong = Song.getPartyFromFirestore(value);
 
-      var pathSong = FirebaseFirestore.instance
+      var pathSong = widget.db
           .collection('parties')
-          .doc(fr.partyCode)
+          .doc(widget.code)
           .collection('Party')
           .doc('Song');
 
@@ -1085,9 +1114,9 @@ class _AdminTabPage extends State<AdminTabPage>
         "previousRecs": FieldValue.serverTimestamp(),
       });
 
-      var pathMusicStatus = FirebaseFirestore.instance
+      var pathMusicStatus = widget.db
           .collection('parties')
-          .doc(fr.partyCode)
+          .doc(widget.code)
           .collection('Party')
           .doc('MusicStatus');
       batch.update(pathMusicStatus, {
@@ -1099,9 +1128,9 @@ class _AdminTabPage extends State<AdminTabPage>
         'resume': false
       });
 
-      var pathParty = FirebaseFirestore.instance
+      var pathParty = widget.db
           .collection('parties')
-          .doc(fr.partyCode)
+          .doc(widget.code)
           .collection('queue')
           .doc(previousSong.previousUri);
       batch.update(pathParty, {
@@ -1118,14 +1147,14 @@ class _AdminTabPage extends State<AdminTabPage>
   }
 
   Widget _buildBottomBar(BuildContext context) {
-    final fr = context.read<FirebaseRequests>();
+    final FirebaseRequests fr = FirebaseRequests(db: widget.db);
 
     return SizedBox(
       height: 75,
       child: StreamBuilder(
-          stream: FirebaseFirestore.instance
+          stream: widget.db
               .collection('parties')
-              .doc(fr.partyCode)
+              .doc(widget.code)
               .collection('Party')
               .doc('PartyStatus')
               .snapshots(),
@@ -1191,14 +1220,14 @@ class _AdminTabPage extends State<AdminTabPage>
   }
 
   Widget _buildActiveBottomBar(BuildContext context) {
-    final fr = context.read<FirebaseRequests>();
+    final FirebaseRequests fr = FirebaseRequests(db: widget.db);
 
     return Column(children: [
       Expanded(child: _linearTimerWidget(context)),
       StreamBuilder(
-          stream: FirebaseFirestore.instance
+          stream: widget.db
               .collection('parties')
-              .doc(fr.partyCode!)
+              .doc(widget.code)
               .collection('Party')
               .doc('MusicStatus')
               .snapshots(),
@@ -1234,9 +1263,9 @@ class _AdminTabPage extends State<AdminTabPage>
             return Container();
           }),
       StreamBuilder(
-          stream: FirebaseFirestore.instance
+          stream: widget.db
               .collection('parties')
-              .doc(fr.partyCode!)
+              .doc(widget.code)
               .collection('Party')
               .doc('Voting')
               .snapshots(),
@@ -1283,9 +1312,9 @@ class _AdminTabPage extends State<AdminTabPage>
           }),
       Expanded(
         child: StreamBuilder(
-            stream: FirebaseFirestore.instance
+            stream: widget.db
                 .collection('parties')
-                .doc(fr.partyCode!)
+                .doc(widget.code)
                 .collection('Party')
                 .doc('Song')
                 .snapshots(),
@@ -1306,7 +1335,7 @@ class _AdminTabPage extends State<AdminTabPage>
                     song.name != '') {
                   SchedulerBinding.instance.addPostFrameCallback((_) {
                     if (mounted) {
-                      fr.setRunning(fr.partyCode!);
+                      fr.setRunning(widget.code);
                       timerController1.reset();
 
                       timerController1.start();
@@ -1321,16 +1350,16 @@ class _AdminTabPage extends State<AdminTabPage>
   }
 
   Widget _linearTimerWidget(BuildContext context) {
-    final fr = context.read<FirebaseRequests>();
+    final FirebaseRequests fr = FirebaseRequests(db: widget.db);
     final width = MediaQuery.of(context).size.width;
 
     int timer = 100000;
 
     return SizedBox(
         child: StreamBuilder(
-            stream: FirebaseFirestore.instance
+            stream: widget.db
                 .collection('parties')
-                .doc(fr.partyCode)
+                .doc(widget.code)
                 .collection('Party')
                 .doc('Song')
                 .snapshots(),
@@ -1360,7 +1389,7 @@ class _AdminTabPage extends State<AdminTabPage>
                           if (mounted) {
                             timerController1.reset();
                             // only if admin
-                            fr.setSelection(fr.partyCode!);
+                            fr.setSelection(widget.code);
                             pause();
                           }
                         });
@@ -1411,14 +1440,14 @@ class _AdminTabPage extends State<AdminTabPage>
 
   Future<void> restart() async {
     final sr = context.read<SpotifyRequests>();
-    final fr = context.read<FirebaseRequests>();
+    final FirebaseRequests fr = FirebaseRequests(db: widget.db);
 
     String uri = '';
 
     try {
-      await FirebaseFirestore.instance
+      await widget.db
           .collection('parties')
-          .doc(fr.partyCode)
+          .doc(widget.code)
           .collection('Party')
           .doc('Song')
           .get()
@@ -1550,8 +1579,7 @@ class _AdminTabPage extends State<AdminTabPage>
 
   Future _handleEndCountdown(bool tmpStatus) async {
     final ip = context.read<InternetProvider>();
-    final fr = context.read<FirebaseRequests>();
-
+    final FirebaseRequests fr = FirebaseRequests(db: widget.db);
     await ip.checkInternetConnection();
 
     if (ip.hasInternet == false) {
@@ -1560,7 +1588,7 @@ class _AdminTabPage extends State<AdminTabPage>
       return;
     }
 
-    await fr.changeVoting(fr.partyCode!, !tmpStatus).then((value) async {
+    await fr.changeVoting(widget.code, !tmpStatus).then((value) async {
       if (fr.hasError) {
         displayToastMessage(context, fr.errorCode.toString(), alertColor);
         return;
@@ -1570,7 +1598,8 @@ class _AdminTabPage extends State<AdminTabPage>
 
   _handleStepBack() {
     Future.delayed(const Duration(milliseconds: 200)).then((value) {
-      nextScreenReplace(context, const HomePage());
+      nextScreenReplace(
+          context, HomePage(loggedUser: widget.loggedUser, db: widget.db));
     });
   }
 

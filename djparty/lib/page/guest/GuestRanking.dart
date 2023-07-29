@@ -1,24 +1,17 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:djparty/entities/User.dart';
-import 'package:djparty/services/FirebaseRequests.dart';
-import 'package:djparty/services/InternetProvider.dart';
-import 'package:djparty/services/SignInProvider.dart';
-import 'package:djparty/utils/nextScreen.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/src/widgets/container.dart';
 import 'package:flutter/src/widgets/framework.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:provider/provider.dart';
 import 'package:rounded_loading_button/rounded_loading_button.dart';
-import 'package:spotify_sdk/spotify_sdk.dart';
 
 import 'package:logger/logger.dart';
 
 class GuestRankingNotStarted extends StatefulWidget {
-  const GuestRankingNotStarted({super.key});
+  String code;
+  FirebaseFirestore db;
+  GuestRankingNotStarted({super.key, required this.db, required this.code});
 
   @override
   State<GuestRankingNotStarted> createState() => _GuestRankingNotStarted();
@@ -32,24 +25,14 @@ class _GuestRankingNotStarted extends State<GuestRankingNotStarted> {
   Color backGround = const Color.fromARGB(255, 35, 34, 34);
   Color alertColor = Colors.red;
 
-  Future getData() async {
-    final sp = context.read<SignInProvider>();
-    final fr = context.read<FirebaseRequests>();
-    sp.getDataFromSharedPreferences();
-    fr.getDataFromSharedPreferences();
-  }
-
   @override
   void initState() {
     super.initState();
-    getData();
-
     FocusManager.instance.primaryFocus?.unfocus();
   }
 
   @override
   Widget build(BuildContext context) {
-    final fr = context.read<FirebaseRequests>();
     final width = MediaQuery.of(context).size.width;
     final height = MediaQuery.of(context).size.height;
 
@@ -62,7 +45,7 @@ class _GuestRankingNotStarted extends State<GuestRankingNotStarted> {
             child: StreamBuilder(
                 stream: FirebaseFirestore.instance
                     .collection('parties')
-                    .doc(fr.partyCode)
+                    .doc(widget.code)
                     .collection('members')
                     .snapshots(),
                 builder: (context, AsyncSnapshot snapshot) {
@@ -181,7 +164,9 @@ class _GuestRankingNotStarted extends State<GuestRankingNotStarted> {
 }
 
 class GuestRankingStarted extends StatefulWidget {
-  const GuestRankingStarted({super.key});
+  String code;
+  FirebaseFirestore db;
+  GuestRankingStarted({super.key, required this.db, required this.code});
 
   @override
   State<GuestRankingStarted> createState() => _GuestRankingStarted();
@@ -197,20 +182,9 @@ class _GuestRankingStarted extends State<GuestRankingStarted> {
 
   bool isPaused = false;
 
-  String partyID = '';
-
-  Future getData() async {
-    final sp = context.read<SignInProvider>();
-    final fr = context.read<FirebaseRequests>();
-    sp.getDataFromSharedPreferences();
-    fr.getDataFromSharedPreferences();
-  }
-
   @override
   void initState() {
     super.initState();
-    getData();
-
     FocusManager.instance.primaryFocus?.unfocus();
   }
 
@@ -227,7 +201,6 @@ class _GuestRankingStarted extends State<GuestRankingStarted> {
 
   @override
   Widget build(BuildContext context) {
-    final fr = context.read<FirebaseRequests>();
     final width = MediaQuery.of(context).size.width;
     final height = MediaQuery.of(context).size.height;
 
@@ -239,7 +212,7 @@ class _GuestRankingStarted extends State<GuestRankingStarted> {
           child: StreamBuilder(
               stream: FirebaseFirestore.instance
                   .collection('parties')
-                  .doc(fr.partyCode)
+                  .doc(widget.code)
                   .collection('members')
                   .snapshots(),
               builder: (context, AsyncSnapshot snapshot) {
@@ -372,7 +345,10 @@ class _GuestRankingStarted extends State<GuestRankingStarted> {
 }
 
 class GuestRankingEnded extends StatefulWidget {
-  const GuestRankingEnded({super.key});
+  String code;
+  FirebaseFirestore db;
+
+  GuestRankingEnded({super.key, required this.code, required this.db});
 
   @override
   State<GuestRankingEnded> createState() => _GuestRankingEnded();
@@ -386,24 +362,15 @@ class _GuestRankingEnded extends State<GuestRankingEnded> {
   Color backGround = const Color.fromARGB(255, 35, 34, 34);
   Color alertColor = Colors.red;
 
-  Future getData() async {
-    final sp = context.read<SignInProvider>();
-    final fr = context.read<FirebaseRequests>();
-    sp.getDataFromSharedPreferences();
-    fr.getDataFromSharedPreferences();
-  }
-
   @override
   void initState() {
     super.initState();
-    getData();
 
     FocusManager.instance.primaryFocus?.unfocus();
   }
 
   @override
   Widget build(BuildContext context) {
-    final fr = context.read<FirebaseRequests>();
     final width = MediaQuery.of(context).size.width;
     final height = MediaQuery.of(context).size.height;
 
@@ -417,7 +384,7 @@ class _GuestRankingEnded extends State<GuestRankingEnded> {
           child: FutureBuilder(
               future: FirebaseFirestore.instance
                   .collection('parties')
-                  .doc(fr.partyCode)
+                  .doc(widget.code)
                   .collection('members')
                   .orderBy('points')
                   .limit(50)

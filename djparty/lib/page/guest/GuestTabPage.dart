@@ -1,51 +1,41 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:math';
 import 'dart:ui';
 
-import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:djparty/entities/Party.dart';
 import 'package:djparty/entities/Track.dart';
 import 'package:djparty/page/HomePage.dart';
-import 'package:djparty/page/PartySettings.dart';
 import 'package:djparty/page/QueueSearch.dart';
-import 'package:djparty/page/RankingPage.dart';
-import 'package:djparty/page/admin/AdminPlayer.dart';
 import 'package:djparty/page/guest/GuestPlayer.dart';
 import 'package:djparty/page/guest/GuestRanking.dart';
-import 'package:djparty/services/Connectivity.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_countdown_timer/countdown_timer_controller.dart';
 import 'package:flutter_countdown_timer/flutter_countdown_timer.dart';
 import 'package:flutter/material.dart';
-import 'package:djparty/services/SignInProvider.dart';
-import 'package:djparty/page/SearchItemScreen.dart';
-import 'package:djparty/page/spotifyPlayer.dart';
-import 'package:djparty/page/Queue.dart';
 import 'package:djparty/utils/nextScreen.dart';
-import 'package:djparty/Icons/c_d_icons.dart';
 import 'package:linear_timer/linear_timer.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:spotify_sdk/models/player_state.dart';
 import 'package:spotify_sdk/spotify_sdk.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:logger/logger.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:djparty/services/FirebaseRequests.dart';
-import 'package:djparty/services/InternetProvider.dart';
 import 'package:djparty/services/SpotifyRequests.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:wakelock/wakelock.dart';
 import 'package:rounded_loading_button/rounded_loading_button.dart';
 
 class GuestTabPage extends StatefulWidget {
   static String routeName = 'SpotifyTabController';
-  const GuestTabPage({Key? key}) : super(key: key);
+  User loggedUser;
+  FirebaseFirestore db;
+  String code;
+
+  GuestTabPage(
+      {super.key,
+      required this.loggedUser,
+      required this.code,
+      required this.db});
 
   @override
   _GuestTabPage createState() => _GuestTabPage();
@@ -102,12 +92,12 @@ class _GuestTabPage extends State<GuestTabPage>
   Color alertColor = Colors.red;
 
   Future getData() async {
-    final sp = context.read<SignInProvider>();
-    final fr = context.read<FirebaseRequests>();
+    final FirebaseRequests firebaseRequests = FirebaseRequests(db: widget.db);
     final sr = context.read<SpotifyRequests>();
 
-    sp.getDataFromSharedPreferences();
-    fr.getDataFromSharedPreferences();
+    firebaseRequests.getPartyDataFromFirestore(widget.code);
+    firebaseRequests.saveDataToSharedPreferences();
+    firebaseRequests.getDataFromSharedPreferences();
 
     sr.getUserId();
     sr.getAuthToken();
@@ -131,7 +121,7 @@ class _GuestTabPage extends State<GuestTabPage>
   @override
   Widget build(BuildContext context) {
     TabController tabController = TabController(length: 3, vsync: this);
-    final fr = context.read<FirebaseRequests>();
+    final FirebaseRequests fr = FirebaseRequests(db: widget.db);
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
@@ -176,7 +166,7 @@ class _GuestTabPage extends State<GuestTabPage>
                     value: 1,
                     child: TextButton(
                       onPressed: () {
-                        handleShare(fr.partyCode!);
+                        handleShare(widget.code);
                         Navigator.of(context).pop();
                       },
                       child: Row(
@@ -202,9 +192,9 @@ class _GuestTabPage extends State<GuestTabPage>
         body: Column(
           children: [
             StreamBuilder(
-                stream: FirebaseFirestore.instance
+                stream: widget.db
                     .collection('parties')
-                    .doc(fr.partyCode)
+                    .doc(widget.code)
                     .collection('Party')
                     .doc('PartyStatus')
                     .snapshots(),
@@ -248,10 +238,17 @@ class _GuestTabPage extends State<GuestTabPage>
                           height: 580,
                           child: TabBarView(
                             controller: tabController,
-                            children: const [
-                              GuestRankingNotStarted(),
-                              GuestPlayerNotStarted(),
-                              QueueSearch()
+                            children: [
+                              GuestRankingNotStarted(
+                                db: widget.db,
+                                code: widget.code,
+                              ),
+                              const GuestPlayerNotStarted(),
+                              QueueSearch(
+                                loggedUser: widget.loggedUser,
+                                db: widget.db,
+                                code: widget.code,
+                              )
                             ],
                           ),
                         ),
@@ -283,10 +280,19 @@ class _GuestTabPage extends State<GuestTabPage>
                             height: 580,
                             child: TabBarView(
                               controller: tabController,
-                              children: const [
-                                GuestRankingStarted(),
-                                GuestPlayerSongRunning(),
-                                QueueSearch()
+                              children: [
+                                GuestRankingStarted(
+                                  db: widget.db,
+                                  code: widget.code,
+                                ),
+                                GuestPlayerSongRunning(
+                                  code: widget.code,
+                                ),
+                                QueueSearch(
+                                  loggedUser: widget.loggedUser,
+                                  db: widget.db,
+                                  code: widget.code,
+                                )
                               ],
                             )),
                       ]);
@@ -319,10 +325,19 @@ class _GuestTabPage extends State<GuestTabPage>
                           height: 580,
                           child: TabBarView(
                             controller: tabController,
-                            children: const [
-                              GuestRankingEnded(),
-                              GuestPlayerEnded(),
-                              SongLists()
+                            children: [
+                              GuestRankingEnded(
+                                db: widget.db,
+                                code: widget.code,
+                              ),
+                              GuestPlayerEnded(
+                                code: widget.code,
+                              ),
+                              SongLists(
+                                loggedUser: widget.loggedUser,
+                                db: widget.db,
+                                code: widget.code,
+                              )
                             ],
                           ),
                         ),
@@ -352,9 +367,9 @@ class _GuestTabPage extends State<GuestTabPage>
             StreamBuilder(
                 stream: Stream.periodic(const Duration(seconds: 90)),
                 builder: (context, snapshot) {
-                  FirebaseFirestore.instance
+                  widget.db
                       .collection('parties')
-                      .doc(fr.partyCode)
+                      .doc(widget.code)
                       .snapshots()
                       .first
                       .then((value) {
@@ -363,7 +378,7 @@ class _GuestTabPage extends State<GuestTabPage>
                     if ((Timestamp.now().millisecondsSinceEpoch -
                             tmp.millisecondsSinceEpoch) >=
                         90000) {
-                      fr.setPartyEnded(fr.partyCode!);
+                      fr.setPartyEnded(widget.code);
                     }
                   });
                   return Container();
@@ -406,14 +421,14 @@ class _GuestTabPage extends State<GuestTabPage>
   }
 
   Widget _buildBottomBar(BuildContext context) {
-    final fr = context.read<FirebaseRequests>();
+    final FirebaseRequests fr = FirebaseRequests(db: widget.db);
 
     return SizedBox(
       height: 75,
       child: StreamBuilder(
-          stream: FirebaseFirestore.instance
+          stream: widget.db
               .collection('parties')
-              .doc(fr.partyCode)
+              .doc(widget.code)
               .collection('Party')
               .doc('PartyStatus')
               .snapshots(),
@@ -479,14 +494,14 @@ class _GuestTabPage extends State<GuestTabPage>
   }
 
   Widget _buildActiveBottomBar(BuildContext context) {
-    final fr = context.read<FirebaseRequests>();
+    final FirebaseRequests fr = FirebaseRequests(db: widget.db);
 
     return Column(children: [
       Expanded(child: _linearTimerWidget(context)),
       StreamBuilder(
-          stream: FirebaseFirestore.instance
+          stream: widget.db
               .collection('parties')
-              .doc(fr.partyCode!)
+              .doc(widget.code)
               .collection('Party')
               .doc('MusicStatus')
               .snapshots(),
@@ -529,9 +544,9 @@ class _GuestTabPage extends State<GuestTabPage>
             return Container();
           }),
       StreamBuilder(
-          stream: FirebaseFirestore.instance
+          stream: widget.db
               .collection('parties')
-              .doc(fr.partyCode!)
+              .doc(widget.code)
               .collection('Party')
               .doc('Voting')
               .snapshots(),
@@ -580,16 +595,16 @@ class _GuestTabPage extends State<GuestTabPage>
   }
 
   Widget _linearTimerWidget(BuildContext context) {
-    final fr = context.read<FirebaseRequests>();
+    final FirebaseRequests fr = FirebaseRequests(db: widget.db);
     final width = MediaQuery.of(context).size.width;
 
     int timer = 100000;
 
     return SizedBox(
         child: StreamBuilder(
-            stream: FirebaseFirestore.instance
+            stream: widget.db
                 .collection('parties')
-                .doc(fr.partyCode)
+                .doc(widget.code)
                 .collection('Party')
                 .doc('Song')
                 .snapshots(),
@@ -722,7 +737,8 @@ class _GuestTabPage extends State<GuestTabPage>
 
   _handleStepBack() {
     Future.delayed(const Duration(milliseconds: 200)).then((value) {
-      nextScreenReplace(context, const HomePage());
+      nextScreenReplace(
+          context, HomePage(loggedUser: widget.loggedUser, db: widget.db));
     });
   }
 }

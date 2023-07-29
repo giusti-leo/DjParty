@@ -1,13 +1,12 @@
 import 'dart:async';
 
 import 'package:animated_splash_screen/animated_splash_screen.dart';
-import 'package:djparty/page/Home.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:djparty/page/HomePage.dart';
 import 'package:djparty/page/Login.dart';
-import 'package:djparty/services/SignInProvider.dart';
-import 'package:djparty/utils/nextScreen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_zoom_drawer/config.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
@@ -20,12 +19,9 @@ class _SplashScreenState extends State<SplashScreen> {
   // init state
   @override
   void initState() {
-    final sp = context.read<SignInProvider>();
     super.initState();
     Timer(const Duration(seconds: 1), () {
-      sp.isSignedIn == false
-          ? nextScreenReplace(context, const Login())
-          : nextScreenReplace(context, const HomePage());
+      redirectHomeOrLogin();
     });
   }
 
@@ -48,4 +44,29 @@ class _SplashScreenState extends State<SplashScreen> {
             splashTransition: SplashTransition.fadeTransition,
             backgroundColor: Colors.black));
   }
+}
+
+StreamBuilder redirectHomeOrLogin() {
+  // Fast track for already authenticated users
+
+  final ZoomDrawerController drawerController = ZoomDrawerController();
+
+  return StreamBuilder<User?>(
+    stream: FirebaseAuth.instance.authStateChanges(),
+    builder: (context, snapshot) {
+      if (snapshot.connectionState != ConnectionState.active) {
+        return const Center(child: CircularProgressIndicator());
+      }
+
+      final hasUser = snapshot.hasData;
+      if (hasUser && FirebaseAuth.instance.currentUser!.emailVerified) {
+        return HomePage(
+          loggedUser: FirebaseAuth.instance.currentUser!,
+          db: FirebaseFirestore.instance,
+        );
+      } else {
+        return const Login();
+      }
+    },
+  );
 }

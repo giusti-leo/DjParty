@@ -1,41 +1,25 @@
 import 'dart:ui';
 import 'dart:io';
 
-import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:djparty/Icons/spotify_icons.dart';
-import 'package:djparty/entities/Entities.dart';
-import 'package:djparty/main.dart';
-import 'package:djparty/page/HomePage.dart';
 import 'package:djparty/page/InsertCode.dart';
-import 'package:djparty/page/Login.dart';
 import 'package:djparty/page/GenerateShare.dart';
-import 'package:djparty/page/SpotifyTabController.dart';
 import 'package:djparty/page/admin/AdminTabPage.dart';
 import 'package:djparty/page/guest/GuestTabPage.dart';
-import 'package:djparty/page/spotifyPlayer.dart';
 import 'package:djparty/services/FirebaseRequests.dart';
 import 'package:djparty/services/InternetProvider.dart';
 import 'package:djparty/services/SignInProvider.dart';
 import 'package:djparty/utils/nextScreen.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_zoom_drawer/config.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:google_nav_bar/google_nav_bar.dart';
-import 'package:line_icons/line_icons.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:rounded_loading_button/rounded_loading_button.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:spotify_sdk/spotify_sdk.dart';
-import 'package:spotify_sdk/models/connection_status.dart';
-import 'package:logger/logger.dart';
 import 'package:flutter/services.dart';
-import 'package:djparty/page/UserProfile.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 
 List parties = [];
@@ -43,18 +27,21 @@ List parties = [];
 class Home extends StatefulWidget {
   static String routeName = 'home';
   ZoomDrawerController drawerController;
+  User loggedUser;
+  FirebaseFirestore db;
 
-  Home({super.key, required this.drawerController});
+  Home(
+      {super.key,
+      required this.drawerController,
+      required this.loggedUser,
+      required this.db});
 
   @override
   State<Home> createState() => _HomeState();
 }
 
 class _HomeState extends State<Home> {
-  DatabaseReference dbRef = FirebaseDatabase.instance.ref();
-
-  FirebaseAuth auth = FirebaseAuth.instance;
-  String uid = FirebaseAuth.instance.currentUser!.uid;
+  final User loggedUser = FirebaseAuth.instance.currentUser!;
 
   String myToken = "";
   Stream<QuerySnapshot>? parties;
@@ -76,12 +63,8 @@ class _HomeState extends State<Home> {
   File? file;
 
   Future getData() async {
-    final sp = context.read<SignInProvider>();
-    final fr = context.read<FirebaseRequests>();
-
-    sp.getDataFromSharedPreferences();
-
-    fr.getParties(uid: uid).then((val) {
+    final FirebaseRequests firebaseRequests = FirebaseRequests(db: widget.db);
+    firebaseRequests.getParties(uid: loggedUser.uid).then((val) {
       setState(() {
         parties = val;
       });
@@ -99,8 +82,8 @@ class _HomeState extends State<Home> {
 
   streamParties() {
     bool expandFlag = false;
-    final sp = context.read<SignInProvider>();
     final width = MediaQuery.of(context).size.width;
+    final FirebaseRequests firebaseRequests = FirebaseRequests(db: widget.db);
 
     return StreamBuilder(
         stream: parties,
@@ -116,7 +99,7 @@ class _HomeState extends State<Home> {
                     fontWeight: FontWeight.normal, color: Colors.white),
                 children: <TextSpan>[
                   TextSpan(
-                      text: '${sp.name}',
+                      text: '${loggedUser.displayName}',
                       style: const TextStyle(
                           fontWeight: FontWeight.bold, color: Colors.white)),
                   const TextSpan(
@@ -135,6 +118,7 @@ class _HomeState extends State<Home> {
               strokeWidth: 10,
             ));
           }
+
           return snapshot.data.docs.length > 0
               ? ListView.builder(
                   itemCount: snapshot.data.docs.length,
@@ -148,10 +132,10 @@ class _HomeState extends State<Home> {
                             borderRadius: BorderRadius.circular(10.0),
                           ),
                           child: ExpansionTile(
-                            trailing:
-                                (snapshot.data.docs[index]['admin'] == uid)
-                                    ? const Icon(Icons.emoji_people)
-                                    : const Icon(Icons.people),
+                            trailing: (snapshot.data.docs[index]['admin'] ==
+                                    loggedUser.uid)
+                                ? const Icon(Icons.emoji_people)
+                                : const Icon(Icons.people),
                             title: Text(
                               snapshot.data.docs[index]['PartyName'],
                               style: const TextStyle(
@@ -196,7 +180,7 @@ class _HomeState extends State<Home> {
                                               exitController.reset();
                                               if (snapshot.data.docs[index]
                                                       ['admin'] ==
-                                                  sp.uid) {
+                                                  loggedUser.uid) {
                                                 showAdminAlert(
                                                     context,
                                                     snapshot.data.docs[index]
@@ -318,17 +302,6 @@ class _HomeState extends State<Home> {
         });
   }
 
-  Widget qrImage(String string, GlobalKey key) {
-    return RepaintBoundary(
-      key: key,
-      child: QrImage(
-        data: string,
-        size: 200,
-        backgroundColor: Colors.white,
-      ),
-    );
-  }
-
   Future handleShare(String string) async {
     try {
       var image = await QrPainter(
@@ -365,7 +338,6 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     final Size size = MediaQuery.of(context).size;
-    final sp = context.watch<SignInProvider>();
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
@@ -388,7 +360,12 @@ class _HomeState extends State<Home> {
           actions: [
             IconButton(
               onPressed: () {
-                nextScreen(context, GeneratorScreen());
+                nextScreen(
+                    context,
+                    GeneratorScreen(
+                      loggedUser: widget.loggedUser,
+                      db: widget.db,
+                    ));
               },
               icon: const Icon(
                 Icons.add_box_outlined,
@@ -396,7 +373,12 @@ class _HomeState extends State<Home> {
             ),
             IconButton(
               onPressed: () {
-                nextScreen(context, InsertCode());
+                nextScreen(
+                    context,
+                    InsertCode(
+                      loggedUser: widget.loggedUser,
+                      db: widget.db,
+                    ));
               },
               icon: const Icon(
                 Icons.search,
@@ -404,7 +386,12 @@ class _HomeState extends State<Home> {
             ),
             IconButton(
               onPressed: () {
-                nextScreen(context, const ScannerScreen());
+                nextScreen(
+                    context,
+                    ScannerScreen(
+                      loggedUser: widget.loggedUser,
+                      db: widget.db,
+                    ));
               },
               icon: const Icon(
                 Icons.qr_code,
@@ -585,7 +572,7 @@ class _HomeState extends State<Home> {
   Future handleJoinLobby(String code) async {
     final sp = context.read<SignInProvider>();
     final ip = context.read<InternetProvider>();
-    final fp = context.read<FirebaseRequests>();
+    final FirebaseRequests fr = FirebaseRequests(db: widget.db);
     await ip.checkInternetConnection();
 
     if (ip.hasInternet == false) {
@@ -595,51 +582,60 @@ class _HomeState extends State<Home> {
       return;
     }
 
-    fp.checkPartyExists(code: code).then((value) async {
+    fr.checkPartyExists(code: code).then((value) async {
       if (sp.hasError == true) {
         displayToastMessage(context, sp.errorCode.toString(), alertColor);
         partyController.reset();
         return;
       }
-      fp.getPartyDataFromFirestore(code).then((value) {
+      fr.getPartyDataFromFirestore(code).then((value) {
         if (sp.hasError == true) {
           displayToastMessage(context, sp.errorCode.toString(), alertColor);
           partyController.reset();
           return;
         }
-        fp.saveDataToSharedPreferences().then((value) {
+        fr.saveDataToSharedPreferences().then((value) {
           partyController.success();
 
-          if (fp.admin! == sp.uid) {
-            handlePassToAdminLobby();
+          if (fr.admin! == sp.uid) {
+            handlePassToAdminLobby(code);
           } else {
-            handlePassToGuestLobby();
+            handlePassToGuestLobby(code);
           }
         });
       });
     });
   }
 
-  handlePassToAdminLobby() {
+  handlePassToAdminLobby(String code) {
     Future.delayed(const Duration(milliseconds: 200)).then((value) {
       nextScreen(
           context,
           AdminTabPage(
             homeHeigth: MediaQuery.of(context).size.height,
+            db: widget.db,
+            code: code,
+            loggedUser: widget.loggedUser,
           ));
     });
   }
 
-  handlePassToGuestLobby() {
+  handlePassToGuestLobby(String code) {
     Future.delayed(const Duration(milliseconds: 200)).then((value) {
-      nextScreen(context, const GuestTabPage());
+      nextScreen(
+          context,
+          GuestTabPage(
+            db: widget.db,
+            code: code,
+            loggedUser: widget.loggedUser,
+          ));
     });
   }
 
   Future handleExitPartyAdmin(String code) async {
-    final sp = context.read<SignInProvider>();
     final ip = context.read<InternetProvider>();
-    final fp = context.read<FirebaseRequests>();
+    final FirebaseRequests fp = FirebaseRequests(db: widget.db);
+    final sp = context.read<SignInProvider>();
 
     await ip.checkInternetConnection();
     Future<List<dynamic>> list;
@@ -651,7 +647,7 @@ class _HomeState extends State<Home> {
       return;
     }
 
-    await sp.checkUserExists().then((value) async {
+    await sp.checkUserExists(loggedUser.uid).then((value) async {
       if (sp.hasError == true) {
         displayToastMessage(context, sp.errorCode.toString(), alertColor);
         exitController.reset();
@@ -662,7 +658,7 @@ class _HomeState extends State<Home> {
         exitController.reset();
         return;
       }
-      await sp.getUserDataFromFirestore(sp.uid!).then((value) {
+      await sp.getUserDataFromFirestore(loggedUser.uid).then((value) {
         if (sp.hasError == true) {
           displayToastMessage(context, sp.errorCode.toString(), alertColor);
           exitController.reset();
@@ -689,7 +685,7 @@ class _HomeState extends State<Home> {
               }
               fp.saveDataToSharedPreferences().then((value) {
                 if (fp.isEnded!) {
-                  fp.adminExitParty(sp.uid!, code).then((value) {
+                  fp.adminExitParty(loggedUser.uid, code).then((value) {
                     if (sp.hasError == true) {
                       displayToastMessage(
                           context, sp.errorCode.toString(), alertColor);
@@ -710,7 +706,7 @@ class _HomeState extends State<Home> {
                       'Please, stop the party before deleting', alertColor);
                   return;
                 } else {
-                  fp.adminExitParty(sp.uid!, code).then((value) {
+                  fp.adminExitParty(loggedUser.uid, code).then((value) {
                     if (sp.hasError == true) {
                       displayToastMessage(
                           context, sp.errorCode.toString(), alertColor);
@@ -724,7 +720,10 @@ class _HomeState extends State<Home> {
                         context,
                         MaterialPageRoute(
                             builder: (context) => Home(
-                                drawerController: widget.drawerController)));
+                                  drawerController: widget.drawerController,
+                                  loggedUser: widget.loggedUser,
+                                  db: widget.db,
+                                )));
                     displayToastMessage(context, 'Party Deleted', mainGreen);
                   });
                 }
@@ -739,7 +738,7 @@ class _HomeState extends State<Home> {
   Future handleExitNormalUser(String code) async {
     final sp = context.read<SignInProvider>();
     final ip = context.read<InternetProvider>();
-    final fp = context.read<FirebaseRequests>();
+    final FirebaseRequests fp = FirebaseRequests(db: widget.db);
     await ip.checkInternetConnection();
 
     if (ip.hasInternet == false) {
@@ -749,13 +748,13 @@ class _HomeState extends State<Home> {
       return;
     }
 
-    await sp.checkUserExists().then((value) async {
+    await sp.checkUserExists(loggedUser.uid).then((value) async {
       if (sp.hasError == true) {
         displayToastMessage(context, sp.errorCode.toString(), alertColor);
         exitController.reset();
         return;
       }
-      await sp.getUserDataFromFirestore(sp.uid!).then((value) {
+      await sp.getUserDataFromFirestore(loggedUser.uid).then((value) {
         if (sp.hasError == true) {
           displayToastMessage(context, sp.errorCode.toString(), alertColor);
           exitController.reset();
@@ -769,7 +768,7 @@ class _HomeState extends State<Home> {
               return;
             }
 
-            await fp.userExitParty(sp.uid.toString(), code).then((value) {
+            await fp.userExitParty(loggedUser.uid, code).then((value) {
               if (fp.hasError) {
                 displayToastMessage(
                     context, sp.errorCode.toString(), alertColor);

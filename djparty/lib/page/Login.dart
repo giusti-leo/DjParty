@@ -1,9 +1,7 @@
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:djparty/page/Home.dart';
 import 'package:djparty/page/HomePage.dart';
 import 'package:djparty/page/SignIn.dart';
-import 'package:djparty/services/FirebaseAuthMethods.dart';
 import 'package:djparty/services/InternetProvider.dart';
 import 'package:djparty/services/SignInProvider.dart';
 import 'package:djparty/utils/nextScreen.dart';
@@ -11,13 +9,10 @@ import 'package:email_validator/email_validator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
 
-import 'package:djparty/services/FirebaseAuthMethods.dart';
 import 'package:rounded_loading_button/rounded_loading_button.dart';
 
 DatabaseReference dbRef = FirebaseDatabase.instance.ref();
@@ -401,8 +396,10 @@ class _LoginState extends State<Login> {
 
         return;
       }
+
+      User loggedUser = FirebaseAuth.instance.currentUser!;
       // checking whether user exists or not
-      sp.checkUserExists().then((value) async {
+      sp.checkUserExists(loggedUser.uid).then((value) async {
         if (sp.hasError == true) {
           showInSnackBar(context, sp.errorCode.toString(), Colors.red);
           facebookController.reset();
@@ -410,13 +407,12 @@ class _LoginState extends State<Login> {
         }
         if (value == true) {
           // user exists
-          await sp.getUserDataFromFirestore((sp.uid.toString())).then((value) =>
-              sp
-                  .saveDataToSharedPreferences()
-                  .then((value) => sp.setSignIn().then((value) {
-                        facebookController.success();
-                        handleAfterSignIn();
-                      })));
+          await sp.getUserDataFromFirestore((loggedUser.uid)).then((value) => sp
+              .saveDataToSharedPreferences()
+              .then((value) => sp.setSignIn().then((value) {
+                    facebookController.success();
+                    handleAfterSignIn();
+                  })));
         } else {
           // user does not exist
           sp.saveDataToFirestore().then((value) => sp
@@ -450,22 +446,23 @@ class _LoginState extends State<Login> {
         googleController.reset();
         return;
       } else {
+        User loggedUser = FirebaseAuth.instance.currentUser!;
+
         // checking whether user exists or not
-        sp.checkUserExists().then((value) async {
+        sp.checkUserExists(loggedUser.uid).then((value) async {
           if (value == true) {
             // user exists
-            await sp.getUserDataFromFirestore(sp.uid.toString()).then((value) =>
-                sp
-                    .saveDataToSharedPreferences()
-                    .then((value) => sp.setSignIn().then((value) {
-                          googleController.success();
-                          handleAfterSignIn();
-                        })));
+            await sp.getUserDataFromFirestore(loggedUser.uid).then((value) => sp
+                .saveDataToSharedPreferences()
+                .then((value) => sp.setSignIn().then((value) {
+                      googleController.success();
+                      handleAfterSignIn();
+                    })));
           } else {
             // user does not exist
             sp.saveDataToFirestore().then((value) async {
-              await sp.getUserDataFromFirestore(sp.uid.toString()).then(
-                  (value) => sp
+              await sp.getUserDataFromFirestore(loggedUser.uid).then((value) =>
+                  sp
                       .saveDataToSharedPreferences()
                       .then((value) => sp.setSignIn().then((value) {
                             googleController.success();
@@ -480,7 +477,12 @@ class _LoginState extends State<Login> {
 
   handleAfterSignIn() {
     Future.delayed(const Duration(milliseconds: 1000)).then((value) {
-      nextScreenReplace(context, const HomePage());
+      nextScreenReplace(
+          context,
+          HomePage(
+            loggedUser: FirebaseAuth.instance.currentUser!,
+            db: FirebaseFirestore.instance,
+          ));
     });
   }
 

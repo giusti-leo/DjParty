@@ -1,39 +1,22 @@
-import 'dart:ffi';
-
 import 'package:djparty/Icons/c_d_icons.dart';
-import 'dart:math';
 import 'package:djparty/entities/Track.dart';
 import 'package:djparty/page/admin/AdminTabPage.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import 'package:djparty/entities/Party.dart';
 import 'package:djparty/services/FirebaseRequests.dart';
-import 'package:djparty/services/InternetProvider.dart';
 import 'package:djparty/services/SpotifyRequests.dart';
 import 'package:djparty/utils/nextScreen.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:linear_timer/linear_timer.dart';
 import 'package:rounded_loading_button/rounded_loading_button.dart';
-import 'package:spotify_sdk/models/player_state.dart';
 import 'package:spotify_sdk/spotify_sdk.dart';
 import 'package:logger/logger.dart';
 import 'package:spotify_sdk/models/connection_status.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:djparty/services/SignInProvider.dart';
 import 'package:provider/provider.dart';
-import 'package:http/http.dart' as http;
 import 'dart:async';
-import 'package:spotify_sdk/models/image_uri.dart';
-import 'package:spotify_sdk/models/player_context.dart';
-import 'package:djparty/Icons/SizedIconButton.dart';
-import 'package:djparty/page/SearchItemScreen.dart';
-import 'package:djparty/page/PartyPlaylist.dart';
-import 'package:djparty/page/Home.dart';
-import 'package:update_notification/screens/update_notification.dart';
-import 'package:quickalert/quickalert.dart';
 
 class AdminPlayerNotStarted extends StatefulWidget {
   static String routeName = 'SpotifyPlayer';
@@ -56,11 +39,7 @@ class _AdminPlayerNotStarted extends State<AdminPlayerNotStarted>
   bool isPaused = false;
 
   Future getData() async {
-    final sp = context.read<SignInProvider>();
-    final fr = context.read<FirebaseRequests>();
     final sr = context.read<SpotifyRequests>();
-    sp.getDataFromSharedPreferences();
-    fr.getDataFromSharedPreferences();
     sr.getUserId();
   }
 
@@ -153,7 +132,14 @@ class _AdminPlayerNotStarted extends State<AdminPlayerNotStarted>
 class AdminPlayerSongRunning extends StatefulWidget {
   static String routeName = 'SpotifyPlayer';
 
-  AdminPlayerSongRunning({Key? key, required this.tabController})
+  String code;
+  FirebaseFirestore db;
+
+  AdminPlayerSongRunning(
+      {Key? key,
+      required this.tabController,
+      required this.db,
+      required this.code})
       : super(key: key);
   TabController tabController;
 
@@ -170,11 +156,7 @@ class _AdminPlayerSongRunning extends State<AdminPlayerSongRunning>
   late LinearTimerController timerController1 = LinearTimerController(this);
 
   Future getData() async {
-    final sp = context.read<SignInProvider>();
-    final fr = context.read<FirebaseRequests>();
     final sr = context.read<SpotifyRequests>();
-    sp.getDataFromSharedPreferences();
-    fr.getDataFromSharedPreferences();
     sr.getUserId();
   }
 
@@ -193,8 +175,6 @@ class _AdminPlayerSongRunning extends State<AdminPlayerSongRunning>
     return StreamBuilder<ConnectionStatus>(
       stream: SpotifySdk.subscribeConnectionStatus(),
       builder: (context, snapshot) {
-        final sr = context.read<SpotifyRequests>();
-
         var data = snapshot.data;
 
         return Center(
@@ -212,13 +192,13 @@ class _AdminPlayerSongRunning extends State<AdminPlayerSongRunning>
   }
 
   Widget _playerWidget(BuildContext context) {
-    final fr = context.read<FirebaseRequests>();
+    final FirebaseRequests fr = FirebaseRequests(db: widget.db);
     final width = MediaQuery.of(context).size.width;
 
     return StreamBuilder(
-      stream: FirebaseFirestore.instance
+      stream: widget.db
           .collection('parties')
-          .doc(fr.partyCode)
+          .doc(widget.code)
           .collection('Party')
           .doc('Song')
           .snapshots(),
@@ -303,9 +283,9 @@ class _AdminPlayerSongRunning extends State<AdminPlayerSongRunning>
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   StreamBuilder(
-                      stream: FirebaseFirestore.instance
+                      stream: widget.db
                           .collection('parties')
-                          .doc(fr.partyCode)
+                          .doc(widget.code)
                           .collection('Party')
                           .doc('MusicStatus')
                           .snapshots(),
@@ -336,7 +316,7 @@ class _AdminPlayerSongRunning extends State<AdminPlayerSongRunning>
                                     ),
                                     onPressed: () {
                                       pause();
-                                      fr.setBackSkip(fr.partyCode!);
+                                      fr.setBackSkip(widget.code);
                                     },
                                   ),
                                   SizedBox(
@@ -354,7 +334,7 @@ class _AdminPlayerSongRunning extends State<AdminPlayerSongRunning>
                                     ),
                                     onPressed: () {
                                       pause();
-                                      fr.setPause(fr.partyCode!);
+                                      fr.setPause(widget.code);
                                     },
                                   ),
                                   SizedBox(
@@ -372,7 +352,7 @@ class _AdminPlayerSongRunning extends State<AdminPlayerSongRunning>
                                     ),
                                     onPressed: () {
                                       pause();
-                                      fr.setSelection(fr.partyCode!);
+                                      fr.setSelection(widget.code);
                                     },
                                   ),
                                 ],
@@ -394,7 +374,7 @@ class _AdminPlayerSongRunning extends State<AdminPlayerSongRunning>
                                     ),
                                     onPressed: () {
                                       resume();
-                                      fr.setResume(fr.partyCode!);
+                                      fr.setResume(widget.code);
                                     },
                                   )
                                 ],
@@ -463,7 +443,15 @@ class _AdminPlayerSongRunning extends State<AdminPlayerSongRunning>
 class AdminPlayerEnded extends StatefulWidget {
   static String routeName = 'SpotifyPlayer';
 
-  const AdminPlayerEnded({Key? key}) : super(key: key);
+  User loggedUser;
+  FirebaseFirestore db;
+  String code;
+
+  AdminPlayerEnded(
+      {super.key,
+      required this.loggedUser,
+      required this.code,
+      required this.db});
 
   @override
   _AdminPlayerEnded createState() => _AdminPlayerEnded();
@@ -479,12 +467,7 @@ class _AdminPlayerEnded extends State<AdminPlayerEnded>
   Color alertColor = Colors.red;
 
   Future getData() async {
-    final sp = context.read<SignInProvider>();
-    final fr = context.read<FirebaseRequests>();
     final sr = context.read<SpotifyRequests>();
-
-    sp.getDataFromSharedPreferences();
-    fr.getDataFromSharedPreferences();
     sr.getUserId();
   }
 
@@ -502,9 +485,6 @@ class _AdminPlayerEnded extends State<AdminPlayerEnded>
   }
 
   Widget _endParty(BuildContext context) {
-    final fr = context.read<FirebaseRequests>();
-    final sp = context.read<SignInProvider>();
-
     final height = MediaQuery.of(context).size.height;
     final width = MediaQuery.of(context).size.height;
 
@@ -524,9 +504,9 @@ class _AdminPlayerEnded extends State<AdminPlayerEnded>
               StreamBuilder(
                   stream: FirebaseFirestore.instance
                       .collection('parties')
-                      .doc(fr.partyCode!)
+                      .doc(widget.code)
                       .collection('members')
-                      .doc(sp.uid)
+                      .doc(widget.loggedUser.uid)
                       .snapshots(),
                   builder: (context, snapshot) {
                     if (!snapshot.hasData) {
@@ -594,18 +574,17 @@ class _AdminPlayerEnded extends State<AdminPlayerEnded>
 
   void _handleCreatePlaylist(BuildContext context) async {
     final sr = context.read<SpotifyRequests>();
-    final fr = context.read<FirebaseRequests>();
-    final sp = context.read<SignInProvider>();
+    final FirebaseRequests fr = FirebaseRequests(db: widget.db);
 
-    sr.createPlaylist(fr.partyName!, sr.userId!);
+    sr.createPlaylist('DjParty_${widget.code}', sr.userId);
 
     Future.delayed(const Duration(seconds: 1), () {
-      sr.addSongsToPlaylist(fr.partyCode!);
+      sr.addSongsToPlaylist(widget.code);
     });
 
-    await fr.addPlaylist(sp.uid!, fr.partyCode!);
+    await fr.addPlaylist(widget.loggedUser.uid, widget.code);
 
     displayToastMessage(
-        context, 'Playlist ${fr.partyName} created!', mainGreen);
+        context, 'Playlist name  DjParty_${widget.code} created!', mainGreen);
   }
 }

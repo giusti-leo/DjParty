@@ -1,6 +1,8 @@
 import 'dart:typed_data';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:djparty/page/EditProfile.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class ProfileWidget extends StatelessWidget {
@@ -9,8 +11,10 @@ class ProfileWidget extends StatelessWidget {
   final int initColor;
   final bool isEdit;
   final VoidCallback onClicked;
+  final User loggedUser = FirebaseAuth.instance.currentUser!;
+  final FirebaseFirestore db = FirebaseFirestore.instance;
 
-  const ProfileWidget({
+  ProfileWidget({
     Key? key,
     required this.imagePath,
     required this.initColor,
@@ -65,8 +69,13 @@ class ProfileWidget extends StatelessWidget {
           child: IconButton(
             icon: const Icon(Icons.edit),
             onPressed: () {
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => EditProfile()));
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => EditProfile(
+                            loggedUser: loggedUser,
+                            db: db,
+                          )));
             },
             color: Colors.white,
           ),

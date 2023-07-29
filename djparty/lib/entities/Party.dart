@@ -54,3 +54,19 @@ class MusicStatus {
         party["backSkip"]);
   }
 }
+
+class Party {
+  final String admin;
+  final String code;
+  final String name;
+
+  Party(this.code, this.name, this.admin);
+
+  factory Party.getPartyFromFirestore(dynamic party) {
+    return Party(
+      party["code"],
+      party["partyName"],
+      party["admin"],
+    );
+  }
+}

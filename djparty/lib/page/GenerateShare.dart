@@ -1,37 +1,25 @@
 import 'dart:ui';
-import 'dart:io';
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:djparty/page/Home.dart';
 import 'package:djparty/page/HomePage.dart';
-import 'package:djparty/page/SignIn.dart';
-import 'package:djparty/page/UserProfile.dart';
 import 'package:djparty/services/FirebaseRequests.dart';
 import 'package:djparty/services/InternetProvider.dart';
 import 'package:djparty/services/SignInProvider.dart';
 import 'package:djparty/utils/nextScreen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_zoom_drawer/config.dart';
 import 'package:provider/provider.dart';
-import 'package:qr_flutter/qr_flutter.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:rounded_loading_button/rounded_loading_button.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 
-import '../services/FirebaseAuthMethods.dart';
-import 'package:intl/intl.dart';
-import 'package:numberpicker/numberpicker.dart';
-
 class GeneratorScreen extends StatefulWidget {
   static String routeName = 'qrGeneration';
+  User loggedUser;
+  FirebaseFirestore db;
 
-  GeneratorScreen({
-    super.key,
-  });
+  GeneratorScreen({super.key, required this.loggedUser, required this.db});
 
   @override
   State<GeneratorScreen> createState() => _insertPartyName();
@@ -158,7 +146,7 @@ class _insertPartyName extends State<GeneratorScreen> {
   Future<void> handleCreation() async {
     final sp = context.read<SignInProvider>();
     final ip = context.read<InternetProvider>();
-    final fp = context.read<FirebaseRequests>();
+    final FirebaseRequests fr = FirebaseRequests(db: widget.db);
 
     await ip.checkInternetConnection();
 
@@ -177,14 +165,14 @@ class _insertPartyName extends State<GeneratorScreen> {
 
     while (!found) {
       controller.text = getRandomString(5);
-      await fp.checkPartyExists(code: controller.text).then((value) {
+      await fr.checkPartyExists(code: controller.text).then((value) {
         if (value == false) {
           found = true;
         }
       });
     }
 
-    await sp.checkUserExists().then((value) async {
+    await sp.checkUserExists(widget.loggedUser.uid).then((value) async {
       if (sp.hasError == true) {
         displayToastMessage(context, sp.errorCode.toString(), alertColor);
         return;
@@ -194,11 +182,11 @@ class _insertPartyName extends State<GeneratorScreen> {
             context, 'The user data does not exists', alertColor);
         return;
       }
-      fp
-          .addParty(sp.uid!, partyName.text, controller.text, sp.image!,
-              sp.name!, sp.imageUrl!)
+      fr
+          .addParty(widget.loggedUser.uid, partyName.text, controller.text, 0,
+              widget.loggedUser.displayName!, widget.loggedUser.photoURL!)
           .then((value) {
-        if (fp.hasError == true) {
+        if (fr.hasError == true) {
           displayToastMessage(context, sp.errorCode.toString(), alertColor);
           submitController.reset();
           return;
@@ -221,7 +209,12 @@ class _insertPartyName extends State<GeneratorScreen> {
 
   handleAfterSubmit() {
     Future.delayed(const Duration(milliseconds: 1000)).then((value) {
-      nextScreenReplace(context, const HomePage());
+      nextScreenReplace(
+          context,
+          HomePage(
+            loggedUser: widget.loggedUser,
+            db: widget.db,
+          ));
     });
   }
 }

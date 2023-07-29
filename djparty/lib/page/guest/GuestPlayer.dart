@@ -1,36 +1,16 @@
 import 'package:djparty/Icons/c_d_icons.dart';
-import 'dart:math';
 import 'package:djparty/entities/Track.dart';
-import 'package:djparty/entities/User.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-import 'package:djparty/entities/Party.dart';
-import 'package:djparty/services/FirebaseRequests.dart';
-import 'package:djparty/services/InternetProvider.dart';
 import 'package:djparty/services/SpotifyRequests.dart';
 import 'package:djparty/utils/nextScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:rounded_loading_button/rounded_loading_button.dart';
-import 'package:spotify_sdk/models/player_state.dart';
-import 'package:spotify_sdk/spotify_sdk.dart';
-import 'package:logger/logger.dart';
-import 'package:spotify_sdk/models/connection_status.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:djparty/services/SignInProvider.dart';
 import 'package:provider/provider.dart';
-import 'package:http/http.dart' as http;
 import 'dart:async';
-import 'package:spotify_sdk/models/image_uri.dart';
-import 'package:spotify_sdk/models/player_context.dart';
-import 'package:djparty/Icons/SizedIconButton.dart';
-import 'package:djparty/page/SearchItemScreen.dart';
-import 'package:djparty/page/PartyPlaylist.dart';
-import 'package:djparty/page/Home.dart';
-import 'package:update_notification/screens/update_notification.dart';
-import 'package:quickalert/quickalert.dart';
 
 class GuestPlayerNotStarted extends StatefulWidget {
   static String routeName = 'SpotifyPlayer';
@@ -53,11 +33,7 @@ class _GuestPlayerNotStarted extends State<GuestPlayerNotStarted>
   bool isPaused = false;
 
   Future getData() async {
-    final sp = context.read<SignInProvider>();
-    final fr = context.read<FirebaseRequests>();
     final sr = context.read<SpotifyRequests>();
-    sp.getDataFromSharedPreferences();
-    fr.getDataFromSharedPreferences();
     sr.getUserId();
   }
 
@@ -121,7 +97,9 @@ class _GuestPlayerNotStarted extends State<GuestPlayerNotStarted>
 class GuestPlayerSongRunning extends StatefulWidget {
   static String routeName = 'SpotifyPlayer';
 
-  const GuestPlayerSongRunning({Key? key}) : super(key: key);
+  String code;
+
+  GuestPlayerSongRunning({Key? key, required this.code}) : super(key: key);
 
   @override
   _GuestPlayerSongRunning createState() => _GuestPlayerSongRunning();
@@ -134,11 +112,7 @@ class _GuestPlayerSongRunning extends State<GuestPlayerSongRunning>
   Color alertColor = Colors.red;
 
   Future getData() async {
-    final sp = context.read<SignInProvider>();
-    final fr = context.read<FirebaseRequests>();
     final sr = context.read<SpotifyRequests>();
-    sp.getDataFromSharedPreferences();
-    fr.getDataFromSharedPreferences();
     sr.getUserId();
   }
 
@@ -167,13 +141,12 @@ class _GuestPlayerSongRunning extends State<GuestPlayerSongRunning>
   }
 
   Widget _playerWidget(BuildContext context) {
-    final fr = context.read<FirebaseRequests>();
     final width = MediaQuery.of(context).size.width;
 
     return StreamBuilder(
       stream: FirebaseFirestore.instance
           .collection('parties')
-          .doc(fr.partyCode)
+          .doc(widget.code)
           .collection('Party')
           .doc('Song')
           .snapshots(),
@@ -261,7 +234,9 @@ class _GuestPlayerSongRunning extends State<GuestPlayerSongRunning>
 class GuestPlayerEnded extends StatefulWidget {
   static String routeName = 'SpotifyPlayer';
 
-  const GuestPlayerEnded({Key? key}) : super(key: key);
+  String code;
+
+  GuestPlayerEnded({Key? key, required this.code}) : super(key: key);
 
   @override
   _GuestPlayerEnded createState() => _GuestPlayerEnded();
@@ -277,12 +252,7 @@ class _GuestPlayerEnded extends State<GuestPlayerEnded>
   Color alertColor = Colors.red;
 
   Future getData() async {
-    final sp = context.read<SignInProvider>();
-    final fr = context.read<FirebaseRequests>();
     final sr = context.read<SpotifyRequests>();
-
-    sp.getDataFromSharedPreferences();
-    fr.getDataFromSharedPreferences();
     sr.getUserId();
   }
 
@@ -300,7 +270,6 @@ class _GuestPlayerEnded extends State<GuestPlayerEnded>
   }
 
   Widget _endParty(BuildContext context) {
-    final fr = context.read<FirebaseRequests>();
     bool pressed = false;
 
     final height = MediaQuery.of(context).size.height;
@@ -321,8 +290,10 @@ class _GuestPlayerEnded extends State<GuestPlayerEnded>
               ElevatedButton(
                 onPressed: () {
                   if (pressed) {
-                    displayToastMessage(context,
-                        'Playlist ${fr.partyName} already added!', mainGreen);
+                    displayToastMessage(
+                        context,
+                        'Playlist named DjParty_${widget.code} already added!',
+                        mainGreen);
                   } else {
                     _handleCreatePlaylist(context);
                     pressed = true;
@@ -355,14 +326,13 @@ class _GuestPlayerEnded extends State<GuestPlayerEnded>
 
   void _handleCreatePlaylist(BuildContext context) {
     final sr = context.read<SpotifyRequests>();
-    final fr = context.read<FirebaseRequests>();
-    sr.createPlaylist(fr.partyName!, sr.userId!);
+    sr.createPlaylist('DjParty_${widget.code}', sr.userId);
 
     Future.delayed(const Duration(seconds: 1), () {
-      sr.addSongsToPlaylist(fr.partyCode!);
+      sr.addSongsToPlaylist(widget.code);
     });
 
     displayToastMessage(
-        context, 'Playlist ${fr.partyName} created!', mainGreen);
+        context, 'Playlist named DjParty_${widget.code} created!', mainGreen);
   }
 }

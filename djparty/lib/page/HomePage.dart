@@ -1,41 +1,32 @@
-import 'package:djparty/Icons/spotify_icons.dart';
-import 'package:djparty/main.dart';
-import 'package:djparty/page/GenerateShare.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:djparty/page/Home.dart';
-import 'package:djparty/page/InsertCode.dart';
-import 'package:djparty/page/SignIn.dart';
 import 'package:djparty/page/UserProfile.dart';
-import 'package:djparty/services/FirebaseRequests.dart';
-import 'package:djparty/services/InternetProvider.dart';
 import 'package:djparty/services/SignInProvider.dart';
-import 'package:djparty/utils/nextScreen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_zoom_drawer/config.dart';
 import 'package:flutter_zoom_drawer/flutter_zoom_drawer.dart';
-import 'package:google_nav_bar/google_nav_bar.dart';
+import 'package:flutter_zoom_drawer/flutter_zoom_drawer.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:provider/provider.dart';
-import 'package:spotify_sdk/models/connection_status.dart';
-import 'package:spotify_sdk/spotify_sdk.dart';
 import 'package:logger/logger.dart';
 
 class HomePage extends StatefulWidget {
   static String routeName = 'home';
-  const HomePage({super.key});
+  User loggedUser;
+  FirebaseFirestore db;
+
+  HomePage({super.key, required this.loggedUser, required this.db});
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  bool _connected = false;
   final ZoomDrawerController drawerController = ZoomDrawerController();
   MenuItem currentItem = MenuItems.home;
 
-  bool _loading = false;
   String myToken = "";
 
   final Logger _logger = Logger(
@@ -60,6 +51,8 @@ class _HomePageState extends State<HomePage> {
         mainScreen: getScreen(),
         menuScreen: Builder(builder: (context) {
           return MenuScreen(
+            loggedUser: widget.loggedUser,
+            db: widget.db,
             currentItem: currentItem,
             onSelectedItem: (item) {
               setState(() {
@@ -95,10 +88,14 @@ class _HomePageState extends State<HomePage> {
       case MenuItems.profile:
         return UserProfile(
           drawerController: drawerController,
+          loggedUser: FirebaseAuth.instance.currentUser!,
+          db: FirebaseFirestore.instance,
         );
       case MenuItems.home:
         return Home(
           drawerController: drawerController,
+          loggedUser: FirebaseAuth.instance.currentUser!,
+          db: FirebaseFirestore.instance,
         );
     }
   }
@@ -107,17 +104,19 @@ class _HomePageState extends State<HomePage> {
 class MenuScreen extends StatelessWidget {
   MenuItem currentItem;
   ValueChanged<MenuItem> onSelectedItem;
+  User loggedUser;
+  FirebaseFirestore db;
 
-  MenuScreen({
-    Key? key,
-    required this.currentItem,
-    required this.onSelectedItem,
-  }) : super(key: key);
+  MenuScreen(
+      {Key? key,
+      required this.currentItem,
+      required this.onSelectedItem,
+      required this.loggedUser,
+      required this.db})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final sp = context.watch<SignInProvider>();
-
     return Theme(
       data: ThemeData.dark(),
       child: Scaffold(
@@ -130,14 +129,15 @@ class MenuScreen extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    (sp.imageUrl != '')
+                    (loggedUser.photoURL != '')
                         ? CircleAvatar(
                             radius: 37,
                             backgroundColor: Colors.white,
                             child: CircleAvatar(
                               radius: 35,
                               backgroundColor: Colors.white,
-                              backgroundImage: NetworkImage("${sp.imageUrl}"),
+                              backgroundImage:
+                                  NetworkImage("${loggedUser.photoURL}"),
                             ),
                           )
                         : CircleAvatar(
@@ -147,7 +147,9 @@ class MenuScreen extends StatelessWidget {
                                 radius: 35,
                                 backgroundColor: Colors.black,
                                 child: Text(
-                                  sp.init.toString().toUpperCase(),
+                                  loggedUser.displayName!
+                                      .toUpperCase()
+                                      .substring(0, 1),
                                   style: const TextStyle(
                                       color: Colors.greenAccent,
                                       fontSize: 20,
@@ -161,7 +163,7 @@ class MenuScreen extends StatelessWidget {
                 ),
                 Row(
                   children: [
-                    Text('${sp.name}',
+                    Text('${loggedUser.displayName}',
                         style:
                             const TextStyle(color: Colors.white, fontSize: 12))
                   ],
@@ -175,54 +177,6 @@ class MenuScreen extends StatelessWidget {
             const Spacer(
               flex: 2,
             ),
-            /*
-            Padding(
-              padding: const EdgeInsets.all(10),
-              child: InkWell(
-                onTap: (() => nextScreen(context, const HomePage())),
-                child: Row(children: const [
-                  Icon(
-                    Icons.home,
-                    color: Color.fromARGB(255, 215, 208, 208),
-                  ),
-                  SizedBox(
-                    width: 28,
-                  ),
-                  Text('Home',
-                      style: TextStyle(
-                          color: Color.fromARGB(255, 215, 208, 208),
-                          fontSize: 20))
-                ]),
-              ),
-            ),
-            const Divider(
-              thickness: 2,
-              color: Color.fromARGB(255, 215, 208, 208),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(10),
-              child: InkWell(
-                child: Row(children: const [
-                  Icon(
-                    Icons.person,
-                    color: Color.fromARGB(255, 215, 208, 208),
-                  ),
-                  SizedBox(
-                    width: 28,
-                  ),
-                  Text('Profile',
-                      style: TextStyle(
-                          color: Color.fromARGB(255, 215, 208, 208),
-                          fontSize: 20))
-                ]),
-                onTap: () => nextScreen(context, UserProfile()),
-              ),
-            ),
-            const Spacer(),
-            const Divider(
-              thickness: 2,
-              color: Color.fromARGB(255, 215, 208, 208),
-            ),*/
             Padding(
               padding: const EdgeInsets.all(10),
               child: InkWell(
@@ -239,8 +193,7 @@ class MenuScreen extends StatelessWidget {
                 ]),
                 onTap: () async {
                   {
-                    await sp.userSignOut();
-                    nextScreenReplace(context, const Main());
+                    FirebaseAuth.instance.signOut();
                   }
                 },
               ),

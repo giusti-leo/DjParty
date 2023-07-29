@@ -1,24 +1,21 @@
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:djparty/page/Home.dart';
 import 'package:djparty/page/HomePage.dart';
-import 'package:djparty/page/UserProfile.dart';
 import 'package:djparty/services/FirebaseRequests.dart';
 import 'package:djparty/services/InternetProvider.dart';
 import 'package:djparty/services/SignInProvider.dart';
 import 'package:djparty/utils/nextScreen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_zoom_drawer/config.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
-import '../services/FirebaseAuthMethods.dart';
 
 class InsertCode extends StatefulWidget {
-  InsertCode({
-    super.key,
-  });
+  User loggedUser;
+  FirebaseFirestore db;
+
+  InsertCode({super.key, required this.loggedUser, required this.db});
 
   @override
   State<InsertCode> createState() => _InsertCodeState();
@@ -128,7 +125,7 @@ class _InsertCodeState extends State<InsertCode> {
   Future handleInsert() async {
     final sp = context.read<SignInProvider>();
     final ip = context.read<InternetProvider>();
-    final fp = context.read<FirebaseRequests>();
+    final FirebaseRequests fp = FirebaseRequests(db: widget.db);
 
     await ip.checkInternetConnection();
 
@@ -141,7 +138,7 @@ class _InsertCodeState extends State<InsertCode> {
       return;
     }
 
-    await sp.checkUserExists().then((value) async {
+    await sp.checkUserExists(widget.loggedUser.uid).then((value) async {
       if (sp.hasError == true) {
         showInSnackBar(context, sp.errorCode.toString(), alertColor);
         return;
@@ -151,7 +148,7 @@ class _InsertCodeState extends State<InsertCode> {
         return;
       }
 
-      await sp.getUserDataFromFirestore(sp.uid!).then((value) {
+      await sp.getUserDataFromFirestore(widget.loggedUser.uid).then((value) {
         if (sp.hasError == true) {
           showInSnackBar(context, sp.errorCode.toString(), alertColor);
           return;
@@ -168,8 +165,10 @@ class _InsertCodeState extends State<InsertCode> {
               return;
             } else {
               fp.getPartyDataFromFirestore(textController.text).then((value) =>
-                  fp.saveDataToSharedPreferences().then((value) =>
-                      fp.isUserInsideParty(sp.uid!).then((value) {
+                  fp.saveDataToSharedPreferences().then((value) => fp
+                          .isUserInsideParty(
+                              widget.loggedUser.uid, textController.text)
+                          .then((value) {
                         if (value == true) {
                           displayToastMessage(context,
                               'You are already part of the party', mainGreen);
@@ -177,8 +176,12 @@ class _InsertCodeState extends State<InsertCode> {
                         }
 
                         fp
-                            .userJoinParty(sp.uid!, textController.text,
-                                sp.name!, sp.imageUrl!, sp.image!)
+                            .userJoinParty(
+                                widget.loggedUser.uid,
+                                textController.text,
+                                widget.loggedUser.displayName!,
+                                widget.loggedUser.photoURL!,
+                                0)
                             .then((value) {
                           if (fp.hasError) {
                             showInSnackBar(
@@ -200,7 +203,12 @@ class _InsertCodeState extends State<InsertCode> {
 
   handleAfterSubmit() {
     Future.delayed(const Duration(milliseconds: 1000)).then((value) {
-      nextScreenReplace(context, const HomePage());
+      nextScreenReplace(
+          context,
+          HomePage(
+            loggedUser: FirebaseAuth.instance.currentUser!,
+            db: FirebaseFirestore.instance,
+          ));
     });
   }
 
@@ -216,8 +224,10 @@ class _InsertCodeState extends State<InsertCode> {
 }
 
 class ScannerScreen extends StatefulWidget {
-  const ScannerScreen({Key? key}) : super(key: key);
+  User loggedUser;
+  FirebaseFirestore db;
 
+  ScannerScreen({super.key, required this.loggedUser, required this.db});
   @override
   State<ScannerScreen> createState() => _ScannerScreenState();
 }
@@ -267,7 +277,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
 
     final sp = context.read<SignInProvider>();
     final ip = context.read<InternetProvider>();
-    final fp = context.read<FirebaseRequests>();
+    final FirebaseRequests fp = FirebaseRequests(db: widget.db);
 
     await ip.checkInternetConnection();
 
@@ -288,7 +298,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
       return;
     }
 
-    await sp.checkUserExists().then((value) async {
+    await sp.checkUserExists(widget.loggedUser.uid).then((value) async {
       if (sp.hasError == true) {
         displayToastMessage(context, sp.errorCode.toString(), alertColor);
         return;
@@ -299,7 +309,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
         return;
       }
 
-      await sp.getUserDataFromFirestore(sp.uid!).then((value) {
+      await sp.getUserDataFromFirestore(widget.loggedUser.uid).then((value) {
         if (sp.hasError == true) {
           displayToastMessage(context, sp.errorCode.toString(), alertColor);
           return;
@@ -323,29 +333,35 @@ class _ScannerScreenState extends State<ScannerScreen> {
               return;
             }
             fp.getPartyDataFromFirestore(result!.code.toString()).then(
-                (value) => fp.saveDataToSharedPreferences().then(
-                    (value) => fp.isUserInsideParty(sp.uid!).then((value) {
-                          if (value == true) {
-                            displayToastMessage(context,
-                                'You are already part of the party', mainGreen);
-                            handleAfterSubmit();
-                            return;
-                          }
-                          fp
-                              .userJoinParty(sp.uid!, result!.code.toString(),
-                                  sp.name!, sp.imageUrl!, sp.image!)
-                              .then((value) {
-                            if (fp.hasError) {
-                              displayToastMessage(
-                                  context, sp.errorCode.toString(), alertColor);
-                              return;
-                            }
-                            displayToastMessage(
-                                context, 'You join the party', mainGreen);
-                            handleAfterSubmit();
-                            return;
-                          });
-                        })));
+                (value) => fp.saveDataToSharedPreferences().then((value) => fp
+                        .isUserInsideParty(
+                            widget.loggedUser.uid, result!.code.toString())
+                        .then((value) {
+                      if (value == true) {
+                        displayToastMessage(context,
+                            'You are already part of the party', mainGreen);
+                        handleAfterSubmit();
+                        return;
+                      }
+                      fp
+                          .userJoinParty(
+                              widget.loggedUser.uid,
+                              result!.code.toString(),
+                              widget.loggedUser.displayName!,
+                              widget.loggedUser.photoURL!,
+                              0)
+                          .then((value) {
+                        if (fp.hasError) {
+                          displayToastMessage(
+                              context, sp.errorCode.toString(), alertColor);
+                          return;
+                        }
+                        displayToastMessage(
+                            context, 'You join the party', mainGreen);
+                        handleAfterSubmit();
+                        return;
+                      });
+                    })));
           });
         });
       });
@@ -354,7 +370,12 @@ class _ScannerScreenState extends State<ScannerScreen> {
 
   handleAfterSubmit() {
     Future.delayed(const Duration(milliseconds: 1000)).then((value) {
-      nextScreenReplace(context, const HomePage());
+      nextScreenReplace(
+          context,
+          HomePage(
+            loggedUser: widget.loggedUser,
+            db: widget.db,
+          ));
     });
   }
 
@@ -372,7 +393,12 @@ class _ScannerScreenState extends State<ScannerScreen> {
 
   handleAfterAdd() {
     Future.delayed(const Duration(milliseconds: 500)).then((value) {
-      nextScreenReplace(context, const HomePage());
+      nextScreenReplace(
+          context,
+          HomePage(
+            loggedUser: widget.loggedUser,
+            db: widget.db,
+          ));
     });
   }
 

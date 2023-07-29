@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:ui';
 
 import 'package:djparty/entities/Party.dart';
@@ -9,22 +8,25 @@ import 'package:djparty/services/SignInProvider.dart';
 import 'package:djparty/utils/nextScreen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:djparty/page/SearchItemScreen.dart';
-import 'package:djparty/Icons/spotify_icons.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
-import 'package:spotify_sdk/spotify_sdk.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:logger/logger.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 import 'package:djparty/services/SpotifyRequests.dart';
-import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 
 class QueueSearch extends StatefulWidget {
   static String routeName = 'SearchItemScreen';
-  const QueueSearch({Key? key}) : super(key: key);
+
+  User loggedUser;
+  FirebaseFirestore db;
+  String code;
+
+  QueueSearch(
+      {super.key,
+      required this.loggedUser,
+      required this.code,
+      required this.db});
 
   @override
   State<QueueSearch> createState() => _QueueSearch();
@@ -53,14 +55,7 @@ class _QueueSearch extends State<QueueSearch> {
   final key = GlobalKey();
 
   Future getData() async {
-    final sp = context.read<SignInProvider>();
-    final fr = context.read<FirebaseRequests>();
-    final sr = context.read<SpotifyRequests>();
-
-    sp.getDataFromSharedPreferences();
-    fr.getDataFromSharedPreferences();
-
-    await _getSongs(fr.partyCode!);
+    await _getSongs(widget.code);
   }
 
   @override
@@ -108,9 +103,9 @@ class _QueueSearch extends State<QueueSearch> {
     List<Track> songsNew = [];
     int queueLen = 0;
 
-    await FirebaseFirestore.instance
+    await widget.db
         .collection('parties')
-        .doc(code)
+        .doc(widget.code)
         .collection("queue")
         .where('inQueue', isEqualTo: true)
         .orderBy('votes')
@@ -134,9 +129,8 @@ class _QueueSearch extends State<QueueSearch> {
 
   @override
   Widget build(BuildContext context) {
-    final sp = context.read<SignInProvider>();
     final sr = context.read<SpotifyRequests>();
-    final fr = context.read<FirebaseRequests>();
+    final FirebaseRequests fr = FirebaseRequests(db: widget.db);
 
     final height = MediaQuery.of(context).size.height;
     final width = MediaQuery.of(context).size.width;
@@ -168,16 +162,17 @@ class _QueueSearch extends State<QueueSearch> {
                             fontSize: 20,
                           ),
                           onChanged: (input) async {
-                            await _updateTracks(input, sr.myToken, sp.uid!);
+                            await _updateTracks(
+                                input, sr.myToken, widget.loggedUser.uid);
                           },
                           onTap: () async {
                             setState(() {
                               _showSearch = true;
                             });
-                            await _getSongs(fr.partyCode!);
+                            await _getSongs(widget.code);
                           },
                           onEditingComplete: () async {
-                            await _getSongs(fr.partyCode!);
+                            await _getSongs(widget.code);
                           },
                           decoration: InputDecoration(
                             fillColor: Colors.white,
@@ -205,7 +200,7 @@ class _QueueSearch extends State<QueueSearch> {
                                         _showSearch = false;
                                         //keyboard.unfocus();
                                       });
-                                      await _getSongs(fr.partyCode!);
+                                      await _getSongs(widget.code);
                                     },
                                   )
                                 : IconButton(
@@ -305,9 +300,9 @@ class _QueueSearch extends State<QueueSearch> {
                       : SizedBox(
                           height: height * 0.7,
                           child: FutureBuilder(
-                              future: FirebaseFirestore.instance
+                              future: widget.db
                                   .collection('parties')
-                                  .doc(fr.partyCode!)
+                                  .doc(widget.code)
                                   .collection('queue')
                                   .where('inQueue', isEqualTo: true)
                                   .orderBy('votes')
@@ -330,9 +325,9 @@ class _QueueSearch extends State<QueueSearch> {
                                 }
 
                                 return StreamBuilder(
-                                    stream: FirebaseFirestore.instance
+                                    stream: widget.db
                                         .collection('parties')
-                                        .doc(fr.partyCode!)
+                                        .doc(widget.code)
                                         .collection('Party')
                                         .doc('Voting')
                                         .snapshots(),
@@ -359,14 +354,14 @@ class _QueueSearch extends State<QueueSearch> {
   }
 
   Widget queueVoteSong(BuildContext context) {
-    final fr = context.read<FirebaseRequests>();
+    final FirebaseRequests fr = FirebaseRequests(db: widget.db);
 
     return SizedBox(
       child: RefreshIndicator(
         onRefresh: () async {
-          await FirebaseFirestore.instance
+          await widget.db
               .collection('parties')
-              .doc(fr.partyCode!)
+              .doc(widget.code)
               .collection('queue')
               .where('inQueue', isEqualTo: true)
               .orderBy('votes')
@@ -448,8 +443,7 @@ class _QueueSearch extends State<QueueSearch> {
   }
 
   Future _handleLikeLogic(Track track) async {
-    final sp = context.read<SignInProvider>();
-    final fr = context.read<FirebaseRequests>();
+    final FirebaseRequests fr = FirebaseRequests(db: widget.db);
 
     final ip = context.read<InternetProvider>();
 
@@ -468,22 +462,22 @@ class _QueueSearch extends State<QueueSearch> {
   }
 
   bool userLikeSong(Track track) {
-    final sp = context.read<SignInProvider>();
-    return (track.likes.contains(sp.uid));
+    return (track.likes.contains(widget.loggedUser.uid));
   }
 
   void _handleLikeSong(Track track) {
-    final fr = context.read<FirebaseRequests>();
-    final sp = context.read<SignInProvider>();
+    final FirebaseRequests fr = FirebaseRequests(db: widget.db);
 
     List<String> newLikes = track.likes;
-    newLikes.add(sp.uid!);
+    newLikes.add(widget.loggedUser.uid);
 
     setState(() {
       track.likes = newLikes;
     });
 
-    fr.userLikesSong(track.uri!, sp.uid!).then((value) {
+    fr
+        .userLikesSong(track.uri, widget.loggedUser.uid, widget.code)
+        .then((value) {
       if (fr.hasError) {
         showInSnackBar(context, fr.errorCode.toString(), alertColor);
         return;
@@ -492,17 +486,18 @@ class _QueueSearch extends State<QueueSearch> {
   }
 
   void _handleDisLikeSong(Track track) {
-    final fr = context.read<FirebaseRequests>();
-    final sp = context.read<SignInProvider>();
+    final FirebaseRequests fr = FirebaseRequests(db: widget.db);
 
     List<String> newLikes = track.likes;
-    newLikes.remove(sp.uid!);
+    newLikes.remove(widget.loggedUser.uid);
 
     setState(() {
       track.likes = newLikes;
     });
 
-    fr.userDoesNotLikeSong(track.uri!, sp.uid!).then((value) {
+    fr
+        .userDoesNotLikeSong(track.uri, widget.loggedUser.uid, widget.code)
+        .then((value) {
       if (fr.hasError) {
         showInSnackBar(context, fr.errorCode.toString(), alertColor);
         return;
@@ -522,16 +517,15 @@ class _QueueSearch extends State<QueueSearch> {
   }
 
   Widget queueListSong(BuildContext context) {
-    final fr = context.read<FirebaseRequests>();
-    final sp = context.read<SignInProvider>();
+    final FirebaseRequests fr = FirebaseRequests(db: widget.db);
 
     return Scaffold(
         backgroundColor: backGround,
         body: RefreshIndicator(
           onRefresh: () async {
-            await FirebaseFirestore.instance
+            await widget.db
                 .collection('parties')
-                .doc(fr.partyCode!)
+                .doc(widget.code)
                 .collection('queue')
                 .where('inQueue', isEqualTo: true)
                 .orderBy('votes')
@@ -567,7 +561,7 @@ class _QueueSearch extends State<QueueSearch> {
                           return Column(
                             children: [
                               ListTile(
-                                title: Text(currentTrack.name!,
+                                title: Text(currentTrack.name,
                                     style: const TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w800,
@@ -632,7 +626,7 @@ class _QueueSearch extends State<QueueSearch> {
   Future _handleAddSongToQueue(Track currentTrack) async {
     final sp = context.read<SignInProvider>();
     final ip = context.read<InternetProvider>();
-    final fr = context.read<FirebaseRequests>();
+    final FirebaseRequests fr = FirebaseRequests(db: widget.db);
 
     await ip.checkInternetConnection();
 
@@ -642,12 +636,12 @@ class _QueueSearch extends State<QueueSearch> {
       return;
     }
 
-    fr.checkPartyExists(code: fr.partyCode!).then((value) async {
+    fr.checkPartyExists(code: widget.code).then((value) async {
       if (value == false) {
         displayToastMessage(context, sp.errorCode.toString(), alertColor);
         return;
       } else {
-        fr.getPartyDataFromFirestore(fr.partyCode!).then((value) {
+        fr.getPartyDataFromFirestore(widget.code).then((value) {
           if (value == true) {
             displayToastMessage(
                 context,
@@ -655,39 +649,36 @@ class _QueueSearch extends State<QueueSearch> {
                 alertColor);
             return;
           }
-          fr.saveDataToSharedPreferences().then((value) {
-            fr.songExists(currentTrack).then(
-              (value) {
-                if (fr.hasError) {
+          fr.songExists(currentTrack, widget.code).then(
+            (value) {
+              if (fr.hasError) {
+                displayToastMessage(
+                    context, fr.errorCode.toString(), alertColor);
+                return;
+              } else {
+                if (fr.isEnded!) {
                   displayToastMessage(
-                      context, fr.errorCode.toString(), alertColor);
-                  return;
+                      context, 'Sorry, the party is ended!', alertColor);
                 } else {
-                  if (fr.isEnded!) {
-                    displayToastMessage(
-                        context, 'Sorry, the party is ended!', alertColor);
+                  if (value == false) {
+                    fr.addSongToFirebase(currentTrack, widget.code).then(
+                      (value) {
+                        if (fr.hasError) {
+                          displayToastMessage(
+                              context, fr.errorCode.toString(), alertColor);
+                        } else {
+                          displayToastMessage(context, 'Song added', mainGreen);
+                        }
+                      },
+                    );
                   } else {
-                    if (value == false) {
-                      fr.addSongToFirebase(currentTrack).then(
-                        (value) {
-                          if (fr.hasError) {
-                            displayToastMessage(
-                                context, fr.errorCode.toString(), alertColor);
-                          } else {
-                            displayToastMessage(
-                                context, 'Song added', mainGreen);
-                          }
-                        },
-                      );
-                    } else {
-                      displayToastMessage(
-                          context, 'Song already present!', mainGreen);
-                    }
+                    displayToastMessage(
+                        context, 'Song already present!', mainGreen);
                   }
                 }
-              },
-            );
-          });
+              }
+            },
+          );
         });
       }
     });
@@ -696,7 +687,15 @@ class _QueueSearch extends State<QueueSearch> {
 
 class SongLists extends StatefulWidget {
   static String routeName = 'SearchItemScreen';
-  const SongLists({Key? key}) : super(key: key);
+  User loggedUser;
+  FirebaseFirestore db;
+  String code;
+
+  SongLists(
+      {super.key,
+      required this.loggedUser,
+      required this.code,
+      required this.db});
 
   @override
   State<SongLists> createState() => _SongLists();
@@ -707,29 +706,14 @@ class _SongLists extends State<SongLists> {
   Color backGround = const Color.fromARGB(255, 35, 34, 34);
   Color alertColor = Colors.red;
 
-  Future getData() async {
-    final sp = context.read<SignInProvider>();
-    final fr = context.read<FirebaseRequests>();
-    final sr = context.read<SpotifyRequests>();
-
-    sp.getDataFromSharedPreferences();
-    fr.getDataFromSharedPreferences();
-  }
-
   @override
   void initState() {
     super.initState();
-    getData();
   }
 
   @override
   Widget build(BuildContext context) {
-    final sp = context.read<SignInProvider>();
-    final sr = context.read<SpotifyRequests>();
-    final fr = context.read<FirebaseRequests>();
-
     final height = MediaQuery.of(context).size.height;
-    final width = MediaQuery.of(context).size.width;
 
     return MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -747,15 +731,14 @@ class _SongLists extends State<SongLists> {
   }
 
   Widget fullSongList(BuildContext context) {
-    final fr = context.read<FirebaseRequests>();
-    final sp = context.read<SignInProvider>();
+    final FirebaseRequests fr = FirebaseRequests(db: widget.db);
 
     return SizedBox(
       height: 1,
       child: FutureBuilder(
           future: FirebaseFirestore.instance
               .collection('parties')
-              .doc(fr.partyCode)
+              .doc(widget.code)
               .collection('queue')
               .orderBy('lastStreaming')
               .limit(50)
@@ -785,7 +768,7 @@ class _SongLists extends State<SongLists> {
                       fontWeight: FontWeight.normal, color: Colors.white),
                   children: <TextSpan>[
                     TextSpan(
-                        text: '${sp.name}',
+                        text: '${widget.loggedUser.displayName}',
                         style: const TextStyle(
                             fontWeight: FontWeight.bold, color: Colors.white)),
                     const TextSpan(

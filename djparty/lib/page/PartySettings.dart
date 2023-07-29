@@ -1,23 +1,26 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:djparty/entities/Party.dart';
-import 'package:djparty/page/SpotifyTabController.dart';
 import 'package:djparty/page/admin/AdminTabPage.dart';
 import 'package:djparty/services/FirebaseRequests.dart';
 import 'package:djparty/services/InternetProvider.dart';
-import 'package:djparty/services/SignInProvider.dart';
 import 'package:djparty/utils/nextScreen.dart';
-import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/container.dart';
 import 'package:flutter/src/widgets/framework.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:numberpicker/numberpicker.dart';
 import 'package:provider/provider.dart';
 import 'package:rounded_loading_button/rounded_loading_button.dart';
 
 class PartySettings extends StatefulWidget {
-  const PartySettings({super.key});
+  User loggedUser;
+  FirebaseFirestore db;
+  String code;
+
+  PartySettings(
+      {super.key,
+      required this.loggedUser,
+      required this.code,
+      required this.db});
 
   @override
   State<PartySettings> createState() => _PartySettingsState();
@@ -35,25 +38,15 @@ class _PartySettingsState extends State<PartySettings> {
   Color backGround = const Color.fromARGB(255, 35, 34, 34);
   Color alertColor = Colors.red;
 
-  Future getData() async {
-    final sp = context.read<SignInProvider>();
-    final fr = context.read<FirebaseRequests>();
-    sp.getDataFromSharedPreferences();
-    fr.getDataFromSharedPreferences();
-  }
-
   @override
   void initState() {
     super.initState();
-    getData();
-
     FocusManager.instance.primaryFocus?.unfocus();
   }
 
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
-    final fr = context.read<FirebaseRequests>();
 
     return MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -81,6 +74,9 @@ class _PartySettingsState extends State<PartySettings> {
                       context,
                       AdminTabPage(
                         homeHeigth: h,
+                        loggedUser: widget.loggedUser,
+                        code: widget.code,
+                        db: widget.db,
                       ));
                 },
               ),
@@ -183,7 +179,7 @@ class _PartySettingsState extends State<PartySettings> {
 
   Future _handleUpdate() async {
     final ip = context.read<InternetProvider>();
-    final fr = context.read<FirebaseRequests>();
+    final FirebaseRequests fr = FirebaseRequests(db: widget.db);
 
     await ip.checkInternetConnection();
 
@@ -194,14 +190,14 @@ class _PartySettingsState extends State<PartySettings> {
     }
 
     fr
-        .updatePartySettings(fr.partyCode!, _currentTimer, _currentInterval)
+        .updatePartySettings(widget.code, _currentTimer, _currentInterval)
         .then((value) {
       if (fr.hasError) {
         showInSnackBar(context, fr.errorCode.toString(), alertColor);
         submitController.reset();
         return;
       }
-      fr.getPartyDataFromFirestore(fr.partyCode!).then((value) {
+      fr.getPartyDataFromFirestore(widget.code).then((value) {
         if (fr.hasError) {
           showInSnackBar(context, fr.errorCode.toString(), alertColor);
           submitController.reset();
@@ -218,7 +214,14 @@ class _PartySettingsState extends State<PartySettings> {
   handlePassToPartyLobby() {
     Future.delayed(const Duration(milliseconds: 200)).then((value) {
       double h = MediaQuery.of(context).size.height;
-      nextScreen(context, AdminTabPage(homeHeigth: h));
+      nextScreen(
+          context,
+          AdminTabPage(
+            homeHeigth: h,
+            loggedUser: widget.loggedUser,
+            code: widget.code,
+            db: widget.db,
+          ));
     });
   }
 }

@@ -7,15 +7,11 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class FirebaseRequests extends ChangeNotifier {
-  final String? uid;
+  final FirebaseFirestore db;
 
-  FirebaseRequests({this.uid});
+  FirebaseRequests({required this.db});
 
   // reference for our collections
-  final CollectionReference userCollection =
-      FirebaseFirestore.instance.collection("users");
-  final CollectionReference partyCollection =
-      FirebaseFirestore.instance.collection("parties");
 
   bool _hasError = false;
   bool get hasError => _hasError;
@@ -89,47 +85,26 @@ class FirebaseRequests extends ChangeNotifier {
   int? _votingTimer;
   int? get votingTimer => _votingTimer;
 
-  /*
-
-  // creating a group
-  Future createGroup(String userName, String id, String groupName) async {
-    DocumentReference groupDocumentReference = await groupCollection.add({
-      "groupName": groupName,
-      "groupIcon": "",
-      "admin": "${id}_$userName",
-      "members": [],
-      "groupId": "",
-      "recentMessage": "",
-      "recentMessageSender": "",
-    });
-    // update the members
-    await groupDocumentReference.update({
-      "members": FieldValue.arrayUnion(["${uid}_$userName"]),
-      "groupId": groupDocumentReference.id,
-    });
-
-    DocumentReference userDocumentReference = userCollection.doc(uid);
-    return await userDocumentReference.update({
-      "groups":
-          FieldValue.arrayUnion(["${groupDocumentReference.id}_$groupName"])
-    });
-  }
-
-  */
-
   // getting the parties
   Future<Stream<QuerySnapshot<Map<String, dynamic>>>> getParties(
       {required String uid}) async {
-    return userCollection
+    return db
+        .collection('users')
         .doc(uid)
         .collection("party")
         .orderBy("startDate", descending: true)
         .snapshots();
   }
 
+  Future<Future<DocumentSnapshot<Map<String, dynamic>>>> getParty(
+      {required String code}) async {
+    return db.collection('parties').doc(code).get();
+  }
+
   Future<Stream<QuerySnapshot<Map<String, dynamic>>>> getRanking(
       {required String code}) async {
-    return partyCollection
+    return db
+        .collection('parties')
         .doc(code)
         .collection("members")
         .orderBy("points", descending: true)
@@ -137,12 +112,17 @@ class FirebaseRequests extends ChangeNotifier {
   }
 
   savePartyDataFromFirebase({required String code}) async {
-    return userCollection.doc(code).snapshots();
+    return db.collection('users').doc(code).snapshots();
   }
 
   Future<void> changeVotingStatus(String code, bool val) async {
     try {
-      await partyCollection.doc(code).collection('Party').doc('Voting').update({
+      await db
+          .collection('parties')
+          .doc(code)
+          .collection('Party')
+          .doc('Voting')
+          .update({
         'votingStatus': val,
         'countdown': false,
       });
@@ -158,7 +138,7 @@ class FirebaseRequests extends ChangeNotifier {
 
   // checkPartyCode exists or not in cloudfirestore
   Future<bool> checkPartyExists({required String code}) async {
-    DocumentSnapshot snap = await partyCollection.doc(code).get();
+    DocumentSnapshot snap = await db.collection('parties').doc(code).get();
     if (snap.exists) {
       return true;
     } else {
@@ -168,7 +148,8 @@ class FirebaseRequests extends ChangeNotifier {
 
   Future getPartyStatusFromFirestore(String code) async {
     try {
-      await partyCollection
+      await db
+          .collection('parties')
           .doc(code)
           .collection('Party')
           .doc('PartyStatus')
@@ -189,7 +170,8 @@ class FirebaseRequests extends ChangeNotifier {
 
   Future getPartyVotingFromFirestore(String code) async {
     try {
-      await partyCollection
+      await db
+          .collection('parties')
           .doc(code)
           .collection('Party')
           .doc('Voting')
@@ -210,7 +192,8 @@ class FirebaseRequests extends ChangeNotifier {
 
   Future getPartySongFromFirestore(String code) async {
     try {
-      await partyCollection
+      await db
+          .collection('parties')
           .doc(code)
           .collection('Party')
           .doc('Song')
@@ -245,7 +228,8 @@ class FirebaseRequests extends ChangeNotifier {
 
   Future getPartyInfoFromFirestore(String code) async {
     try {
-      await partyCollection
+      await db
+          .collection('parties')
           .doc(code)
           .get()
           .then((DocumentSnapshot snapshot) => {
@@ -267,7 +251,12 @@ class FirebaseRequests extends ChangeNotifier {
 
   Future<void> removeUserFromRanking(String user, String party) async {
     try {
-      await partyCollection.doc(party).collection('members').doc(user).delete();
+      await db
+          .collection('parties')
+          .doc(party)
+          .collection('members')
+          .doc(user)
+          .delete();
     } on FirebaseException catch (e) {
       switch (e.code) {
         default:
@@ -281,7 +270,12 @@ class FirebaseRequests extends ChangeNotifier {
   Future<void> addUserToRanking(
       String uid, String name, String imageUrl, int image, String party) async {
     try {
-      await partyCollection.doc(party).collection('members').doc(uid).set({
+      await db
+          .collection('parties')
+          .doc(party)
+          .collection('members')
+          .doc(uid)
+          .set({
         "uid": uid,
         "username": name,
         "image_url": imageUrl,
@@ -303,7 +297,8 @@ class FirebaseRequests extends ChangeNotifier {
 
   Future<void> addPlaylist(String uid, String party) async {
     try {
-      await partyCollection
+      await db
+          .collection('parties')
           .doc(party)
           .collection('members')
           .doc(uid)
@@ -349,21 +344,21 @@ class FirebaseRequests extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future addParty(String uid, String partyName, String partyCode, int image,
+  Future addParty(String uid, String partyName, String code, int image,
       String username, String imageUrl) async {
     try {
       //await createParty(uid, partyName, partyCode);
-      await organizeParty(uid, partyName, partyCode);
-      await createPartyForAUser(uid, uid, partyName, partyCode);
-      await addUserToRanking(uid, username, imageUrl, image, partyCode);
+      await organizeParty(uid, partyName, code);
+      await createPartyForAUser(uid, uid, partyName, code);
+      await addUserToRanking(uid, username, imageUrl, image, code);
       // add Party Status
-      await createPartyStatus(partyCode);
+      await createPartyStatus(code);
       // add Song Status
-      await createSongParty(partyCode);
+      await createSongParty(code);
       // add party Voting
-      await createPartyVoting(partyCode);
+      await createPartyVoting(code);
       // add Song Selection Status
-      await createSelectionStatus(partyCode);
+      await createSelectionStatus(code);
     } on FirebaseException catch (e) {
       switch (e.code) {
         default:
@@ -378,7 +373,12 @@ class FirebaseRequests extends ChangeNotifier {
     String code,
   ) async {
     try {
-      await partyCollection.doc(code).collection('Party').doc('Voting').set({
+      await db
+          .collection('parties')
+          .doc(code)
+          .collection('Party')
+          .doc('Voting')
+          .set({
         'votingStatus': false,
         'nextVotingPhase': DateTime.now(),
         'timer': 2,
@@ -400,7 +400,8 @@ class FirebaseRequests extends ChangeNotifier {
     String code,
   ) async {
     try {
-      await partyCollection
+      await db
+          .collection('parties')
           .doc(code)
           .collection('Party')
           .doc('MusicStatus')
@@ -429,7 +430,12 @@ class FirebaseRequests extends ChangeNotifier {
     String code,
   ) async {
     try {
-      await partyCollection.doc(code).collection('Party').doc('Song').set({
+      await db
+          .collection('parties')
+          .doc(code)
+          .collection('Party')
+          .doc('Song')
+          .set({
         'songCurrentlyPlayed': '',
         'trackDuration': 0,
         'image': '',
@@ -460,12 +466,15 @@ class FirebaseRequests extends ChangeNotifier {
     try {
       var batch = FirebaseFirestore.instance.batch();
       var pathVoting =
-          partyCollection.doc(code).collection('Party').doc('Song');
+          db.collection('parties').doc(code).collection('Party').doc('Song');
 
       batch.update(pathVoting, {'recs': Timestamp.now()});
 
-      var pathPartyStatus =
-          partyCollection.doc(code).collection('Party').doc('PartyStatus');
+      var pathPartyStatus = db
+          .collection('parties')
+          .doc(code)
+          .collection('Party')
+          .doc('PartyStatus');
 
       batch.update(pathPartyStatus, {
         'isBackgrounded': false,
@@ -488,7 +497,8 @@ class FirebaseRequests extends ChangeNotifier {
     String code,
   ) async {
     try {
-      await partyCollection
+      await db
+          .collection('parties')
           .doc(code)
           .collection('Party')
           .doc('PartyStatus')
@@ -518,7 +528,7 @@ class FirebaseRequests extends ChangeNotifier {
     List<Map<String, dynamic>> queue = [];
     List<String> members = [admin];
     try {
-      await partyCollection.doc(code).set({
+      await db.collection('parties').doc(code).set({
         'admin': admin,
         'partyName': partyName,
         'code': code,
@@ -545,7 +555,7 @@ class FirebaseRequests extends ChangeNotifier {
     List<Map<String, dynamic>> queue = [];
     List<String> members = [admin];
     try {
-      await partyCollection.doc(code).set({
+      await db.collection('parties').doc(code).set({
         'admin': admin,
         'partyName': partyName,
         'code': code,
@@ -575,7 +585,7 @@ class FirebaseRequests extends ChangeNotifier {
   }
 
   Future<bool> checkUserExists(String user) async {
-    DocumentSnapshot snap = await userCollection.doc(user).get();
+    DocumentSnapshot snap = await db.collection('users').doc(user).get();
     if (snap.exists) {
       return true;
     } else {
@@ -583,8 +593,8 @@ class FirebaseRequests extends ChangeNotifier {
     }
   }
 
-  Future<bool> isPartyStarted() async {
-    DocumentSnapshot snap = await partyCollection.doc(partyCode).get();
+  Future<bool> isPartyStarted(String code) async {
+    DocumentSnapshot snap = await db.collection('parties').doc(code).get();
     if (snap.exists) {
       return true;
     } else {
@@ -592,8 +602,8 @@ class FirebaseRequests extends ChangeNotifier {
     }
   }
 
-  Future<bool> isPartyEnded() async {
-    DocumentSnapshot snap = await partyCollection.doc(partyCode).get();
+  Future<bool> isPartyEnded(String code) async {
+    DocumentSnapshot snap = await db.collection('parties').doc(code).get();
     if (snap.get('isEnded')) {
       return true;
     } else {
@@ -609,10 +619,10 @@ class FirebaseRequests extends ChangeNotifier {
     return isStarted;
   }
 
-  Future<List<String>> getPartecipants(String partyCode) async {
+  Future<List<String>> getPartecipants(String code) async {
     List<String> list = [];
     try {
-      await partyCollection.doc(partyCode).get().then((value) {
+      await db.collection('parties').doc(code).get().then((value) {
         for (var element in List.from(value.get('partecipant_list'))) {
           String data = (element.toString());
           list.add(data);
@@ -631,7 +641,7 @@ class FirebaseRequests extends ChangeNotifier {
 
   Future<void> deleteParty(String party) async {
     try {
-      await partyCollection.doc(party).delete();
+      await db.collection('parties').doc(party).delete();
     } on FirebaseException catch (e) {
       switch (e.code) {
         default:
@@ -649,7 +659,7 @@ class FirebaseRequests extends ChangeNotifier {
     String code,
   ) async {
     try {
-      await userCollection.doc(uid).collection('party').doc(code).set({
+      await db.collection('users').doc(uid).collection('party').doc(code).set({
         'admin': admin,
         'PartyName': partyName,
         'code': code,
@@ -666,12 +676,12 @@ class FirebaseRequests extends ChangeNotifier {
   }
 
   Future setSelection(String code) async {
-    var db = FirebaseFirestore.instance
+    var db1 = db
         .collection('parties')
         .doc(code)
         .collection('Party')
         .doc('MusicStatus');
-    await db.update({
+    await db1.update({
       "selected": false,
       "running": false,
       "resume": false,
@@ -681,12 +691,12 @@ class FirebaseRequests extends ChangeNotifier {
   }
 
   Future setRunning(String code) async {
-    var db = FirebaseFirestore.instance
+    var db1 = db
         .collection('parties')
         .doc(code)
         .collection('Party')
         .doc('MusicStatus');
-    await db.update({
+    await db1.update({
       "selected": false,
       "running": true,
       "resume": false,
@@ -696,22 +706,22 @@ class FirebaseRequests extends ChangeNotifier {
   }
 
   Future setPartyOffline(String code) async {
-    var db = FirebaseFirestore.instance.collection('parties').doc(code);
-    await db.update({"offline": true});
+    var db1 = db.collection('parties').doc(code);
+    await db1.update({"offline": true});
   }
 
   Future setPartyOnline(String code) async {
-    var db = FirebaseFirestore.instance.collection('parties').doc(code);
-    await db.update({"offline": false});
+    var db1 = db.collection('parties').doc(code);
+    await db1.update({"offline": false});
   }
 
   Future setBackSkip(String code) async {
-    var db = FirebaseFirestore.instance
+    var db1 = db
         .collection('parties')
         .doc(code)
         .collection('Party')
         .doc('MusicStatus');
-    await db.update({
+    await db1.update({
       "selected": false,
       "running": false,
       "resume": false,
@@ -721,63 +731,67 @@ class FirebaseRequests extends ChangeNotifier {
   }
 
   Future setPing(String code) async {
-    var db = FirebaseFirestore.instance.collection('parties').doc(code);
-    await db.update({
+    var db1 = db.collection('parties').doc(code);
+    await db1.update({
       "ping": Timestamp.now(),
     });
   }
 
   Future setResume(String code) async {
-    var db = FirebaseFirestore.instance
+    var db1 = db
         .collection('parties')
         .doc(code)
         .collection('Party')
         .doc('MusicStatus');
-    await db.update({"resume": true, "pause": false});
+    await db1.update({"resume": true, "pause": false});
   }
 
   Future setPause(String code) async {
-    var db = FirebaseFirestore.instance
+    var db1 = db
         .collection('parties')
         .doc(code)
         .collection('Party')
         .doc('MusicStatus');
-    await db.update({"pause": true, "resume": false});
+    await db1.update({"pause": true, "resume": false});
   }
 
   Future setBackgrounded(String code) async {
-    var db = FirebaseFirestore.instance
+    var db1 = db
         .collection('parties')
         .doc(code)
         .collection('Party')
         .doc('PartyStatus');
-    await db.update({"isBackgrounded": true});
+    await db1.update({"isBackgrounded": true});
   }
 
   Future setNotBackgrounded(String code) async {
-    var db = FirebaseFirestore.instance
+    var db1 = db
         .collection('parties')
         .doc(code)
         .collection('Party')
         .doc('PartyStatus');
-    await db.update({"isBackgrounded": false});
+    await db1.update({"isBackgrounded": false});
   }
 
   Future setNotSelection(String code) async {
-    var db = FirebaseFirestore.instance
+    var db1 = db
         .collection('parties')
         .doc(code)
         .collection('Party')
         .doc('MusicStatus');
-    await db.update({
+    await db1.update({
       "selected": false,
       "running": true,
     });
   }
 
-  Future<bool> isUserInsideParty(String user) async {
-    DocumentSnapshot snap =
-        await userCollection.doc(user).collection('party').doc(partyCode).get();
+  Future<bool> isUserInsideParty(String user, String code) async {
+    DocumentSnapshot snap = await db
+        .collection('users')
+        .doc(user)
+        .collection('party')
+        .doc(code)
+        .get();
     if (snap.exists) {
       return true;
     } else {
@@ -785,12 +799,12 @@ class FirebaseRequests extends ChangeNotifier {
     }
   }
 
-  Future<bool> userIsInTheParty(String uid) async {
+  Future<bool> userIsInTheParty(String uid, String code) async {
     List<dynamic> members = [];
     List<String> currentMembers = [];
 
     try {
-      await partyCollection.doc(partyCode).get().then((value) {
+      await db.collection('parties').doc(code).get().then((value) {
         members = value.get('partecipant_list');
       });
 
@@ -809,12 +823,12 @@ class FirebaseRequests extends ChangeNotifier {
     }
   }
 
-  Future<void> addPartyInfoToUser(String uid) async {
+  Future<void> addPartyInfoToUser(String uid, String code) async {
     try {
-      await userCollection.doc(uid).collection('party').doc(partyCode).set({
+      await db.collection('users').doc(uid).collection('party').doc(code).set({
         'PartyName': partyName.toString(),
         'startDate': creationTime,
-        'code': partyCode,
+        'code': code,
         'admin': admin
       });
     } on FirebaseException catch (e) {
@@ -830,7 +844,7 @@ class FirebaseRequests extends ChangeNotifier {
   Future<void> userJoinParty(String user, String party, String name,
       String imageUrl, int image) async {
     try {
-      await addPartyInfoToUser(user);
+      await addPartyInfoToUser(user, party);
 //      await addUserToParty(user);
       await addUserToRanking(user, name, imageUrl, image, party);
     } on FirebaseException catch (e) {
@@ -874,12 +888,13 @@ class FirebaseRequests extends ChangeNotifier {
 
   Future<void> changes(String party) async {
     try {
-      var users = await partyCollection.doc(party).collection('members').get();
+      var users =
+          await db.collection('parties').doc(party).collection('members').get();
       if (users.size > 0) {
         String user = users.docs[0].get('uid').toString();
-        await partyCollection.doc(party).update({'admin': user});
+        await db.collection('parties').doc(party).update({'admin': user});
       } else {
-        await partyCollection.doc(party).delete();
+        await db.collection('parties').doc(party).delete();
       }
     } on FirebaseException catch (e) {
       switch (e.code) {
@@ -893,7 +908,12 @@ class FirebaseRequests extends ChangeNotifier {
 
   Future<void> userExitFromParty(String user, String party) async {
     try {
-      await userCollection.doc(user).collection('party').doc(party).delete();
+      await db
+          .collection('users')
+          .doc(user)
+          .collection('party')
+          .doc(party)
+          .delete();
     } on FirebaseException catch (e) {
       switch (e.code) {
         default:
@@ -910,7 +930,12 @@ class FirebaseRequests extends ChangeNotifier {
     int interval,
   ) async {
     try {
-      await partyCollection.doc(code).collection('Party').doc('Voting').update({
+      await db
+          .collection('parties')
+          .doc(code)
+          .collection('Party')
+          .doc('Voting')
+          .update({
         'timer': timer,
         'votingTime': interval,
       });
@@ -931,12 +956,15 @@ class FirebaseRequests extends ChangeNotifier {
 
       var batch = FirebaseFirestore.instance.batch();
       var pathVoting =
-          partyCollection.doc(code).collection('Party').doc('Voting');
+          db.collection('parties').doc(code).collection('Party').doc('Voting');
 
       batch.update(pathVoting, {'countdown': false, 'votingStatus': true});
 
-      var pathPartyStatus =
-          partyCollection.doc(code).collection('Party').doc('PartyStatus');
+      var pathPartyStatus = db
+          .collection('parties')
+          .doc(code)
+          .collection('Party')
+          .doc('PartyStatus');
 
       batch.update(pathPartyStatus, {
         'isStarted': true,
@@ -958,7 +986,12 @@ class FirebaseRequests extends ChangeNotifier {
     try {
       Timestamp now = Timestamp.fromDate(
           DateTime.now().add(Duration(minutes: _votingTimer!)));
-      await partyCollection.doc(code).collection('Party').doc('Voting').update({
+      await db
+          .collection('parties')
+          .doc(code)
+          .collection('Party')
+          .doc('Voting')
+          .update({
         'votingStatus': true,
         'nextVotingPhase': now,
       });
@@ -976,7 +1009,12 @@ class FirebaseRequests extends ChangeNotifier {
     try {
       Timestamp now =
           Timestamp.fromDate(DateTime.now().add(Duration(minutes: t)));
-      await partyCollection.doc(code).collection('Party').doc('Voting').update({
+      await db
+          .collection('parties')
+          .doc(code)
+          .collection('Party')
+          .doc('Voting')
+          .update({
         'countdown': true,
         'nextVotingPhase': now,
       });
@@ -992,7 +1030,8 @@ class FirebaseRequests extends ChangeNotifier {
 
   Future<void> startsParty(String code) async {
     try {
-      await partyCollection
+      await db
+          .collection('parties')
           .doc(code)
           .collection('Party')
           .doc('PartyStatus')
@@ -1012,7 +1051,8 @@ class FirebaseRequests extends ChangeNotifier {
 
   Future<void> changeFirstVoting(String code) async {
     try {
-      await partyCollection
+      await db
+          .collection('parties')
           .doc(code)
           .collection('Party')
           .doc('MusicStatus')
@@ -1033,14 +1073,17 @@ class FirebaseRequests extends ChangeNotifier {
     try {
       var batch = FirebaseFirestore.instance.batch();
 
-      var pathVoting =
-          partyCollection.doc(code).collection('Party').doc('MusicStatus');
+      var pathVoting = db
+          .collection('parties')
+          .doc(code)
+          .collection('Party')
+          .doc('MusicStatus');
       batch.update(pathVoting, {
         'firstVoting': true,
       });
 
       var pathPartyStatus =
-          partyCollection.doc(code).collection('Party').doc('Voting');
+          db.collection('parties').doc(code).collection('Party').doc('Voting');
       batch.update(pathPartyStatus, {
         'votingStatus': val,
         'countdown': false,
@@ -1060,10 +1103,11 @@ class FirebaseRequests extends ChangeNotifier {
   Future<void> setPartyEnded(String code) async {
     try {
       DateTime now = DateTime.now();
-      await partyCollection.doc(code).update({
+      await db.collection('parties').doc(code).update({
         'endTime': DateTime.now(),
       });
-      await partyCollection
+      await db
+          .collection('parties')
           .doc(code)
           .collection('Party')
           .doc('PartyStatus')
@@ -1078,11 +1122,12 @@ class FirebaseRequests extends ChangeNotifier {
     }
   }
 
-  Future<void> userLikesSong(String song, String user) async {
+  Future<void> userLikesSong(String song, String user, String code) async {
     List<String> users = [user];
     try {
-      await partyCollection
-          .doc(partyCode)
+      await db
+          .collection('parties')
+          .doc(code)
           .collection('queue')
           .doc(song)
           .update({
@@ -1099,11 +1144,13 @@ class FirebaseRequests extends ChangeNotifier {
     }
   }
 
-  Future<void> userDoesNotLikeSong(String song, String user) async {
+  Future<void> userDoesNotLikeSong(
+      String song, String user, String code) async {
     List<String> users = [user];
     try {
-      await partyCollection
-          .doc(partyCode)
+      await db
+          .collection('parties')
+          .doc(code)
           .collection('queue')
           .doc(song)
           .update({
@@ -1120,27 +1167,11 @@ class FirebaseRequests extends ChangeNotifier {
     }
   }
 
-/*
-  Future<void> addUserToParty(String uid) async {
-    try {
-      await partyCollection.doc(partyCode).update({
-        'partecipant_list': FieldValue.arrayUnion([uid]),
-      });
-    } on FirebaseException catch (e) {
-      switch (e.code) {
-        default:
-          _errorCode = e.toString();
-          _hasError = true;
-          notifyListeners();
-      }
-    }
-  }*/
-
-  Future addSongToFirebase(Track track) async {
+  Future addSongToFirebase(Track track, String code) async {
     try {
       var batch = FirebaseFirestore.instance.batch();
       var pathVoting =
-          partyCollection.doc(partyCode).collection('queue').doc(track.uri);
+          db.collection('parties').doc(code).collection('queue').doc(track.uri);
 
       batch.set(pathVoting, {
         'admin': admin,
@@ -1156,8 +1187,11 @@ class FirebaseRequests extends ChangeNotifier {
         'inQueue': true
       });
 
-      var pathPartyStatus =
-          partyCollection.doc(partyCode).collection('Party').doc('MusicStatus');
+      var pathPartyStatus = db
+          .collection('parties')
+          .doc(code)
+          .collection('Party')
+          .doc('MusicStatus');
       batch.update(pathPartyStatus, {'songs': true});
 
       batch.commit();
@@ -1171,10 +1205,11 @@ class FirebaseRequests extends ChangeNotifier {
     }
   }
 
-  Future<bool> songExists(Track track) async {
+  Future<bool> songExists(Track track, String code) async {
     try {
-      DocumentSnapshot snap = await partyCollection
-          .doc(partyCode)
+      DocumentSnapshot snap = await db
+          .collection('parties')
+          .doc(code)
           .collection('queue')
           .doc(track.uri)
           .get();
@@ -1192,68 +1227,4 @@ class FirebaseRequests extends ChangeNotifier {
       }
     }
   }
-
-  /*
-
-  Future getGroupAdmin(String groupId) async {
-    DocumentReference d = groupCollection.doc(groupId);
-    DocumentSnapshot documentSnapshot = await d.get();
-    return documentSnapshot['admin'];
-  }
-
-
-
-  // function -> bool
-  Future<bool> isUserJoined(
-      String groupName, String groupId, String userName) async {
-    DocumentReference userDocumentReference = userCollection.doc(uid);
-    DocumentSnapshot documentSnapshot = await userDocumentReference.get();
-
-    List<dynamic> groups = await documentSnapshot['groups'];
-    if (groups.contains("${groupId}_$groupName")) {
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  // toggling the group join/exit
-  Future toggleGroupJoin(
-      String groupId, String userName, String groupName) async {
-    // doc reference
-    DocumentReference userDocumentReference = userCollection.doc(uid);
-    DocumentReference groupDocumentReference = groupCollection.doc(groupId);
-
-    DocumentSnapshot documentSnapshot = await userDocumentReference.get();
-    List<dynamic> groups = await documentSnapshot['groups'];
-
-    // if user has our groups -> then remove then or also in other part re join
-    if (groups.contains("${groupId}_$groupName")) {
-      await userDocumentReference.update({
-        "groups": FieldValue.arrayRemove(["${groupId}_$groupName"])
-      });
-      await groupDocumentReference.update({
-        "members": FieldValue.arrayRemove(["${uid}_$userName"])
-      });
-    } else {
-      await userDocumentReference.update({
-        "groups": FieldValue.arrayUnion(["${groupId}_$groupName"])
-      });
-      await groupDocumentReference.update({
-        "members": FieldValue.arrayUnion(["${uid}_$userName"])
-      });
-    }
-  }
-
-  // send message
-  sendMessage(String groupId, Map<String, dynamic> chatMessageData) async {
-    groupCollection.doc(groupId).collection("messages").add(chatMessageData);
-    groupCollection.doc(groupId).update({
-      "recentMessage": chatMessageData['message'],
-      "recentMessageSender": chatMessageData['sender'],
-      "recentMessageTime": chatMessageData['time'].toString(),
-    });
-  }
-
-  */
 }

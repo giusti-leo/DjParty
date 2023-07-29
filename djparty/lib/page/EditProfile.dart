@@ -1,11 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:djparty/page/UserProfile.dart';
-import 'package:djparty/services/FirebaseRequests.dart';
 import 'package:djparty/services/InternetProvider.dart';
 import 'package:djparty/services/SignInProvider.dart';
 import 'package:djparty/utils/nextScreen.dart';
-import 'package:djparty/widgets/ProfileWidget.dart';
-import 'package:djparty/widgets/TextFieldWidget.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
@@ -21,6 +17,10 @@ String username = '';
 
 class EditProfile extends StatefulWidget {
   static String routeName = 'editProfile';
+  User loggedUser;
+  FirebaseFirestore db;
+
+  EditProfile({super.key, required this.loggedUser, required this.db});
 
   @override
   _EditProfileState createState() => _EditProfileState();
@@ -60,10 +60,8 @@ class _EditProfileState extends State<EditProfile> {
 
   Future getData() async {
     final sp = context.read<SignInProvider>();
-    final ip = context.read<InternetProvider>();
-    final fr = context.read<FirebaseRequests>();
 
-    await sp.getUserDataFromFirestore(sp.uid!).then((value) {
+    await sp.getUserDataFromFirestore(widget.loggedUser.uid).then((value) {
       if (sp.hasError == true) {
         showInSnackBar(context, sp.errorCode.toString(), Colors.red);
         return;
@@ -399,7 +397,6 @@ class _EditProfileState extends State<EditProfile> {
   Future saveChanges() async {
     final sp = context.read<SignInProvider>();
     final ip = context.read<InternetProvider>();
-    final fp = context.read<FirebaseRequests>();
     await ip.checkInternetConnection();
 
     if (ip.hasInternet == false) {
@@ -413,7 +410,7 @@ class _EditProfileState extends State<EditProfile> {
       return;
     }
 
-    sp.checkUserExists().then((value) async {
+    sp.checkUserExists(widget.loggedUser.uid).then((value) async {
       if (sp.hasError == true) {
         showInSnackBar(context, sp.errorCode.toString(), Colors.red);
         updateController.reset();
@@ -421,7 +418,7 @@ class _EditProfileState extends State<EditProfile> {
         return;
       }
       // user exists
-      await sp.getUserDataFromFirestore(sp.uid!).then((value) {
+      await sp.getUserDataFromFirestore(widget.loggedUser.uid).then((value) {
         if (sp.hasError == true) {
           showInSnackBar(context, sp.errorCode.toString(), Colors.red);
           updateController.reset();
@@ -438,7 +435,9 @@ class _EditProfileState extends State<EditProfile> {
                 updateController.reset();
                 return;
               }
-              await sp.getUserDataFromFirestore(sp.uid!).then((value) {
+              await sp
+                  .getUserDataFromFirestore(widget.loggedUser.uid)
+                  .then((value) {
                 if (sp.hasError == true) {
                   showInSnackBar(context, sp.errorCode.toString(), Colors.red);
                   updateController.reset();
@@ -464,7 +463,9 @@ class _EditProfileState extends State<EditProfile> {
                 updateController.reset();
                 return;
               }
-              await sp.getUserDataFromFirestore(sp.uid!).then((value) {
+              await sp
+                  .getUserDataFromFirestore(widget.loggedUser.uid)
+                  .then((value) {
                 if (sp.hasError == true) {
                   showInSnackBar(context, sp.errorCode.toString(), Colors.red);
                   updateController.reset();

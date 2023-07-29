@@ -1,12 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:djparty/page/EditProfile.dart';
-import 'package:djparty/page/Home.dart';
-import 'package:djparty/page/HomePage.dart';
-import 'package:djparty/services/FirebaseRequests.dart';
 import 'package:djparty/services/InternetProvider.dart';
 import 'package:djparty/services/SignInProvider.dart';
 import 'package:djparty/utils/nextScreen.dart';
-import 'package:djparty/widgets/ProfileWidget.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -18,8 +13,14 @@ import 'package:rounded_loading_button/rounded_loading_button.dart';
 class UserProfile extends StatefulWidget {
   static String routeName = 'userProfile';
   ZoomDrawerController drawerController;
+  User loggedUser;
+  FirebaseFirestore db;
 
-  UserProfile({super.key, required this.drawerController});
+  UserProfile(
+      {super.key,
+      required this.drawerController,
+      required this.loggedUser,
+      required this.db});
 
   @override
   _UserProfileState createState() => _UserProfileState();
@@ -279,7 +280,7 @@ class _UserProfileState extends State<UserProfile> {
       name = _username.text;
     }
 
-    sp.checkUserExists().then((value) async {
+    sp.checkUserExists(widget.loggedUser.uid).then((value) async {
       if (sp.hasError == true) {
         displayToastMessage(context, sp.errorCode.toString(), alertColor);
         updateController.reset();
@@ -293,10 +294,7 @@ class _UserProfileState extends State<UserProfile> {
         }
       });
 
-      sp.getUserDataFromFirestore(sp.uid.toString()).then((value) async {
-        print(sp.name);
-        print(sp.description);
-
+      sp.getUserDataFromFirestore(widget.loggedUser.uid).then((value) async {
         if (sp.hasError == true) {
           displayToastMessage(context, sp.errorCode.toString(), alertColor);
           updateController.reset();

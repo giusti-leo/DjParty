@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:djparty/page/PartyPlaylist.dart';
-import 'package:djparty/page/SearchItemScreen.dart';
 import 'package:djparty/Icons/spotify_icons.dart';
 import 'package:spotify_sdk/spotify_sdk.dart';
 import 'package:logger/logger.dart';

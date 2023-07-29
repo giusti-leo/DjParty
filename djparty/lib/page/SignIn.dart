@@ -1,18 +1,13 @@
-import 'package:djparty/page/Home.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:djparty/page/HomePage.dart';
 import 'package:djparty/page/Login.dart';
 import 'package:djparty/page/ResetPassword.dart';
-import 'package:djparty/services/FirebaseAuthMethods.dart';
 import 'package:djparty/services/InternetProvider.dart';
 import 'package:djparty/services/SignInProvider.dart';
 import 'package:djparty/utils/nextScreen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
-import 'package:djparty/animations/ScaleRoute.dart';
 
-import 'package:flutter/scheduler.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:rounded_loading_button/rounded_loading_button.dart';
@@ -256,7 +251,11 @@ class _SignInState extends State<SignIn> {
 
   handleAfterSignIn() {
     Future.delayed(const Duration(milliseconds: 1000)).then((value) {
-      nextScreenReplace(context, const HomePage());
+      nextScreenReplace(
+          context,
+          HomePage(
+              loggedUser: FirebaseAuth.instance.currentUser!,
+              db: FirebaseFirestore.instance));
     });
   }
 
