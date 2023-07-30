@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:animated_splash_screen/animated_splash_screen.dart';
+//import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:djparty/page/HomePage.dart';
 import 'package:djparty/page/Login.dart';
@@ -27,6 +27,12 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // TODO: implement build
+    throw UnimplementedError();
+  }
+
+/*  @override
+  Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
     double heigth = MediaQuery.of(context).size.height;
     return MaterialApp(
@@ -43,7 +49,7 @@ class _SplashScreenState extends State<SplashScreen> {
             nextScreen: Container(),
             splashTransition: SplashTransition.fadeTransition,
             backgroundColor: Colors.black));
-  }
+  }*/
 }
 
 StreamBuilder redirectHomeOrLogin() {
