@@ -69,7 +69,7 @@ Future<FakeFirebaseFirestore> getFakeFirestoreInstance() async {
   await firestore.collection('parties').doc('nx29B').set(<String, dynamic>{
     'admin': user.uid,
     'code': 'nx29B',
-    'creationTime': DateTime.now(),
+    'creationTime': DateTime(2023, 9, 7, 17, 30),
     'offline': false,
     'partyName': 'test',
   });

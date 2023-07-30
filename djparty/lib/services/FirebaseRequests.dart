@@ -64,6 +64,9 @@ class FirebaseRequests extends ChangeNotifier {
   int? _timer;
   int? get timer => _timer;
 
+  int? _partiesLength;
+  int? get partiesLength => _partiesLength;
+
   String? _songUri;
   String? get songUri => _songUri;
 
@@ -94,6 +97,14 @@ class FirebaseRequests extends ChangeNotifier {
         .collection("party")
         .orderBy("startDate", descending: true)
         .snapshots();
+  }
+
+  Future<int> getPartiesLength({required String uid}) async {
+    final QuerySnapshot qSnap =
+        await db.collection('users').doc(uid).collection('party').get();
+    final int documentslength = qSnap.docs.length;
+    _partiesLength = documentslength;
+    return documentslength;
   }
 
   Future<Future<DocumentSnapshot<Map<String, dynamic>>>> getParty(
@@ -1169,7 +1180,7 @@ class FirebaseRequests extends ChangeNotifier {
 
   Future addSongToFirebase(Track track, String code) async {
     try {
-      var batch = FirebaseFirestore.instance.batch();
+      var batch = db.batch();
       var pathVoting =
           db.collection('parties').doc(code).collection('queue').doc(track.uri);
 

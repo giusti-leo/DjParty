@@ -59,6 +59,7 @@ class _HomeState extends State<Home> {
 
   final key = GlobalKey();
   File? file;
+  late int partiesLength;
 
   Future getData() async {
     final FirebaseRequests firebaseRequests = FirebaseRequests(db: widget.db);
@@ -67,6 +68,11 @@ class _HomeState extends State<Home> {
         parties = val;
       });
     });
+
+    partiesLength =
+        await firebaseRequests.getPartiesLength(uid: widget.loggedUser.uid);
+    print(widget.loggedUser.uid);
+    print(partiesLength);
   }
 
   @override
@@ -86,9 +92,17 @@ class _HomeState extends State<Home> {
     return StreamBuilder<QuerySnapshot>(
         stream: parties,
         builder: (context, AsyncSnapshot snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(
+                child: CircularProgressIndicator(
+              color: mainGreen,
+              backgroundColor: backGround,
+              strokeWidth: 10,
+            ));
+          }
           if (!snapshot.hasData ||
               snapshot.data!.docs == null ||
-              snapshot.data.docs.length == 0) {
+              partiesLength == 0) {
             return Center(
                 child: RichText(
               text: TextSpan(
@@ -108,18 +122,18 @@ class _HomeState extends State<Home> {
               ),
             ));
           }
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(
-                child: CircularProgressIndicator(
-              color: mainGreen,
-              backgroundColor: backGround,
-              strokeWidth: 10,
-            ));
-          }
+          // if (snapshot.connectionState == ConnectionState.waiting) {
+          //   return Center(
+          //       child: CircularProgressIndicator(
+          //     color: mainGreen,
+          //     backgroundColor: backGround,
+          //     strokeWidth: 10,
+          //   ));
+          // }
 
-          return snapshot.data.docs.length > 0
+          return partiesLength > 0
               ? ListView.builder(
-                  itemCount: snapshot.data.docs.length,
+                  itemCount: partiesLength,
                   itemBuilder: (context, index) {
                     var tmp = snapshot.data.docs[index]['startDate'];
                     return Padding(
