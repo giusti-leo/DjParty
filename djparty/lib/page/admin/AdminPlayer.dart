@@ -59,45 +59,47 @@ class _AdminPlayerNotStarted extends State<AdminPlayerNotStarted>
   Widget _adminLobby(BuildContext context) {
     final height = MediaQuery.of(context).size.height;
 
-    return Column(
-      children: [
-        SizedBox(
-          height: height * 0.052,
-        ),
-        SizedBox(
-          height: height * 0.6,
-          child: Center(
-              child: Column(
-            children: [
-              const SizedBox(height: 50),
-              SizedBox(
-                width: 250,
-                height: 250,
-                child: Image.asset(
-                  'assets/images/logo.jpg',
-                  width: 400,
-                  height: 400,
-                  colorBlendMode: BlendMode.hardLight,
-                ),
-              ),
-              const Center(
-                child: Text(
-                  'Songs in the Queue will be reproduced\n when the party will start',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 15,
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          SizedBox(
+            height: height * 0.052,
+          ),
+          SizedBox(
+            height: height,
+            child: Center(
+                child: Column(
+              children: [
+                const SizedBox(height: 50),
+                SizedBox(
+                  width: 250,
+                  height: 250,
+                  child: Image.asset(
+                    'assets/images/logo.jpg',
+                    width: 400,
+                    height: 400,
+                    colorBlendMode: BlendMode.hardLight,
                   ),
-                  textAlign: TextAlign.center,
-                  maxLines: 5,
                 ),
-              ),
-              const SizedBox(
-                height: 20,
-              ),
-            ],
-          )),
-        )
-      ],
+                const Center(
+                  child: Text(
+                    'Songs in the Queue will be reproduced\n when the party will start',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 5,
+                  ),
+                ),
+                const SizedBox(
+                  height: 20,
+                ),
+              ],
+            )),
+          )
+        ],
+      ),
     );
   }
 

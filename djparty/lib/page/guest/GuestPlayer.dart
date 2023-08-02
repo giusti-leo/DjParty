@@ -277,10 +277,10 @@ class _GuestPlayerEnded extends State<GuestPlayerEnded>
     return Column(
       children: [
         SizedBox(
-          height: height * 0.052,
+          height: height * 0.010,
         ),
         SizedBox(
-          height: height * 0.70,
+          height: height * 0.4,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
