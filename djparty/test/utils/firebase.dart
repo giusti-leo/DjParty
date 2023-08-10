@@ -16,7 +16,6 @@ import 'package:google_sign_in_mocks/google_sign_in_mocks.dart';
 
 @GenerateMocks([Firebase])
 void main() async {
-  FakeFirebaseFirestore firestore = await getFakeFirestoreInstance();
   //var firebase = MockFirebase();
 }
 
@@ -88,10 +87,10 @@ Future<FakeFirebaseFirestore> getFakeFirestoreInstance() async {
       .doc('076R1REcV2cFma2h2gFcrPU8kT92')
       .collection('party')
       .doc('nx29B')
-      .set(<String, dynamic>{
+      .set({
     'PartyName': 'test',
     'code': 'nx29B',
-    'startDate': Timestamp.now(),
+    'startDate': DateTime(2023, 9, 7, 17, 30),
     'admin': '076R1REcV2cFma2h2gFcrPU8kT92'
   });
 

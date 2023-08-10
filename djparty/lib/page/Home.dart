@@ -94,7 +94,9 @@ class _HomeState extends State<Home> {
               strokeWidth: 10,
             ));
           }
-          if (!snapshot.hasData || snapshot.data!.docs == null) {
+          if (!snapshot.hasData ||
+              snapshot.data!.docs == null ||
+              snapshot.data.docs.length == 0) {
             return Center(
                 child: RichText(
               text: TextSpan(
@@ -621,6 +623,7 @@ class _HomeState extends State<Home> {
       nextScreen(
           context,
           GuestTabPage(
+            homeHeigth: MediaQuery.of(context).size.height,
             db: widget.db,
             code: code,
             loggedUser: widget.loggedUser,

@@ -156,6 +156,7 @@ class _QueueSearch extends State<QueueSearch> {
                           textAlign: TextAlign.start,
                           controller: textController,
                           cursorColor: Colors.white,
+                          autocorrect: false,
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,

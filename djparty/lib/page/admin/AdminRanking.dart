@@ -57,164 +57,171 @@ class _AdminRankingNotStarted extends State<AdminRankingNotStarted> {
     final height = MediaQuery.of(context).size.height;
 
     return Center(
-      child: Column(
-        children: [
-          SizedBox(height: height * 0.02),
-          SizedBox(
-            height: height * 0.58,
-            child: StreamBuilder(
-                stream: widget.db
-                    .collection('parties')
-                    .doc(widget.code)
-                    .collection("members")
-                    .orderBy("points", descending: true)
-                    .snapshots(),
-                builder: (context, AsyncSnapshot snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting ||
-                      !snapshot.hasData) {
-                    return Center(
-                        child: CircularProgressIndicator(
-                      color: mainGreen,
-                      backgroundColor: backGround,
-                      strokeWidth: 10,
-                    ));
-                  }
-                  return (snapshot.data.docs.length > 0)
-                      ? ListView.builder(
-                          itemBuilder: ((context, index) {
-                            final user = snapshot.data.docs[index];
-                            User currentUser = User.getTrackFromFirestore(user);
-                            return Padding(
-                                padding: const EdgeInsets.all(12),
-                                child: Card(
-                                  elevation: 20,
-                                  color:
-                                      const Color.fromARGB(255, 215, 208, 208),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10.0),
-                                  ),
-                                  child: Column(
-                                    children: [
-                                      const SizedBox(
-                                        height: 5,
-                                      ),
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.start,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.center,
-                                        children: [
-                                          SizedBox(width: width * 0.02),
-                                          SizedBox(
-                                            width: width * 0.4,
-                                            child: Row(children: [
-                                              (currentUser.imageUrl != '')
-                                                  ? CircleAvatar(
-                                                      backgroundColor:
-                                                          Colors.white,
-                                                      maxRadius: height * 0.025,
-                                                      child: CircleAvatar(
+      child: SingleChildScrollView(
+        child: Column(
+          children: [
+            SizedBox(height: height * 0.010),
+            SizedBox(
+              height: height * 0.3,
+              child: StreamBuilder(
+                  stream: widget.db
+                      .collection('parties')
+                      .doc(widget.code)
+                      .collection("members")
+                      .orderBy("points", descending: true)
+                      .snapshots(),
+                  builder: (context, AsyncSnapshot snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting ||
+                        !snapshot.hasData) {
+                      return Center(
+                          child: CircularProgressIndicator(
+                        color: mainGreen,
+                        backgroundColor: backGround,
+                        strokeWidth: 10,
+                      ));
+                    }
+                    return (snapshot.data.docs.length > 0)
+                        ? ListView.builder(
+                            itemBuilder: ((context, index) {
+                              final user = snapshot.data.docs[index];
+                              User currentUser =
+                                  User.getTrackFromFirestore(user);
+                              return Padding(
+                                  padding: const EdgeInsets.all(12),
+                                  child: Card(
+                                    elevation: 20,
+                                    color: const Color.fromARGB(
+                                        255, 215, 208, 208),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10.0),
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        const SizedBox(
+                                          height: 5,
+                                        ),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.start,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.center,
+                                          children: [
+                                            SizedBox(width: width * 0.02),
+                                            SizedBox(
+                                              width: width * 0.4,
+                                              child: Row(children: [
+                                                (currentUser.imageUrl != '')
+                                                    ? CircleAvatar(
                                                         backgroundColor:
                                                             Colors.white,
-                                                        backgroundImage:
-                                                            NetworkImage(
-                                                                '${currentUser.imageUrl}'),
                                                         maxRadius:
-                                                            height * 0.022,
-                                                      ),
-                                                    )
-                                                  : CircleAvatar(
-                                                      backgroundColor:
-                                                          Colors.white,
-                                                      maxRadius: height * 0.025,
-                                                      child: CircleAvatar(
+                                                            height * 0.020,
+                                                        child: CircleAvatar(
+                                                          backgroundColor:
+                                                              Colors.white,
+                                                          backgroundImage:
+                                                              NetworkImage(
+                                                                  '${currentUser.imageUrl}'),
                                                           maxRadius:
                                                               height * 0.022,
-                                                          backgroundColor:
-                                                              Color(currentUser
-                                                                  .image!),
-                                                          child: Text(
-                                                            currentUser
-                                                                .username![0]
-                                                                .toUpperCase(),
-                                                            textAlign: TextAlign
-                                                                .center,
-                                                            style: const TextStyle(
-                                                                color: Colors
-                                                                    .black,
-                                                                fontSize: 40,
-                                                                fontStyle:
-                                                                    FontStyle
-                                                                        .italic),
-                                                          ))),
-                                              const Text(
-                                                '   ',
-                                                style: TextStyle(
-                                                    color: Colors.black),
-                                              ),
-                                              Text(
-                                                currentUser.username.toString(),
-                                                style: const TextStyle(
-                                                    color: Colors.black),
-                                              ),
-                                            ]),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(
-                                        height: 5,
-                                      ),
-                                    ],
-                                  ),
-                                ));
-                          }),
-                          itemCount: snapshot.data.docs.length)
-                      : const Text(
-                          'Server problems',
-                          style: TextStyle(color: Colors.white),
-                        );
-                }),
-          ),
-          SizedBox(
-            height: height * 0.01,
-          ),
-          SizedBox(
-            height: 40,
-            child: RoundedLoadingButton(
-              onPressed: () {
-                setState(() {
-                  _handleStartParty(context);
-                });
-              },
-              controller: partyController,
-              successColor: mainGreen,
-              width: width * 0.80,
-              elevation: 0,
-              borderRadius: 25,
-              color: mainGreen,
-              child: Wrap(
-                children: const [
-                  Icon(
-                    FontAwesomeIcons.music,
-                    size: 20,
-                    color: Colors.white,
-                  ),
-                  SizedBox(
-                    width: 15,
-                  ),
-                  Text("Start the Party",
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w500)),
-                ],
+                                                        ),
+                                                      )
+                                                    : CircleAvatar(
+                                                        backgroundColor:
+                                                            Colors.white,
+                                                        maxRadius:
+                                                            height * 0.025,
+                                                        child: CircleAvatar(
+                                                            maxRadius:
+                                                                height * 0.022,
+                                                            backgroundColor:
+                                                                Color(currentUser
+                                                                    .image!),
+                                                            child: Text(
+                                                              currentUser
+                                                                  .username![0]
+                                                                  .toUpperCase(),
+                                                              textAlign:
+                                                                  TextAlign
+                                                                      .center,
+                                                              style: const TextStyle(
+                                                                  color: Colors
+                                                                      .black,
+                                                                  fontSize: 40,
+                                                                  fontStyle:
+                                                                      FontStyle
+                                                                          .italic),
+                                                            ))),
+                                                const Text(
+                                                  '   ',
+                                                  style: TextStyle(
+                                                      color: Colors.black),
+                                                ),
+                                                Text(
+                                                  currentUser.username
+                                                      .toString(),
+                                                  style: const TextStyle(
+                                                      color: Colors.black),
+                                                ),
+                                              ]),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(
+                                          height: 5,
+                                        ),
+                                      ],
+                                    ),
+                                  ));
+                            }),
+                            itemCount: snapshot.data.docs.length)
+                        : const Text(
+                            'Server problems',
+                            style: TextStyle(color: Colors.white),
+                          );
+                  }),
+            ),
+            SizedBox(
+              height: height * 0.01,
+            ),
+            SizedBox(
+              height: 40,
+              child: RoundedLoadingButton(
+                onPressed: () {
+                  setState(() {
+                    _handleStartParty(context);
+                  });
+                },
+                controller: partyController,
+                successColor: mainGreen,
+                width: width * 0.80,
+                elevation: 0,
+                borderRadius: 25,
+                color: mainGreen,
+                child: Wrap(
+                  children: const [
+                    Icon(
+                      FontAwesomeIcons.music,
+                      size: 20,
+                      color: Colors.white,
+                    ),
+                    SizedBox(
+                      width: 15,
+                    ),
+                    Text("Start the Party",
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500)),
+                  ],
+                ),
               ),
             ),
-          ),
-          const SizedBox(
-            height: 10,
-          ),
-        ],
+            const SizedBox(
+              height: 10,
+            ),
+          ],
+        ),
       ),
     );
   }

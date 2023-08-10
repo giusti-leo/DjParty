@@ -39,33 +39,28 @@ Future<void> main() async {
         findsOneWidget);
   });
 
-  // testWidgets('Sb Home Widget', (tester) async {
-  //   ZoomDrawerController drawerController = ZoomDrawerController();
-  //   Widget testWidget = MediaQuery(
-  //       data: MediaQueryData(),
-  //       child: MaterialApp(
-  //           home: Home(
-  //               loggedUser: user,
-  //               db: firestore,
-  //               drawerController: drawerController)));
+  testWidgets('Explore Admin Ranking Widget 2', (tester) async {
+    Widget testWidget = MediaQuery(
+        data: MediaQueryData(),
+        child: MaterialApp(
+            home: AdminRankingNotStarted(code: 'nx29B', db: firestore)));
 
-  //   await tester.pumpWidget(testWidget);
+    await tester.pumpWidget(testWidget);
 
-  //   //create the finders
-  //   final finder = find.byType(Scaffold);
+    //create the finders
+    final finder = find.byType(Center);
 
-  //   expect(finder, findsOneWidget);
+    expect(finder, findsNWidgets(4));
 
-  //   final stackFinder =
-  //       find.descendant(of: finder, matching: find.byType(Stack));
+    final columnFinder =
+        find.descendant(of: finder.first, matching: find.byType(Column));
 
-  //   final sbFinder = find.descendant(
-  //       of: finder, matching: find.byType(StreamBuilder<QuerySnapshot>));
+    final sboxFinder =
+        find.descendant(of: columnFinder, matching: find.byType(SizedBox));
 
-  //   final centerFinder = find.descendant(
-  //       of: finder, matching: find.byType(StreamBuilder<QuerySnapshot>));
+    // final sbFinder = find.descendant(
+    //     of: finder.first, matching: find.byType(StreamBuilder<QuerySnapshot>));
 
-  //   expect(find.descendant(of: centerFinder, matching: find.byType(RichText)),
-  //       findsOneWidget);
-  // });
+    expect(sboxFinder, findsOneWidget);
+  });
 }

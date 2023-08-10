@@ -91,7 +91,7 @@ class _GuestRankingNotStarted extends State<GuestRankingNotStarted> {
                                                   ? CircleAvatar(
                                                       backgroundColor:
                                                           Colors.white,
-                                                      maxRadius: height * 0.025,
+                                                      maxRadius: height * 0.020,
                                                       child: CircleAvatar(
                                                         backgroundColor:
                                                             Colors.white,
@@ -377,10 +377,10 @@ class _GuestRankingEnded extends State<GuestRankingEnded> {
     return Center(
       child: Column(children: [
         SizedBox(
-          height: height * 0.052,
+          height: height * 0.010,
         ),
         SizedBox(
-          height: height * 0.63,
+          height: height * 0.3,
           child: FutureBuilder(
               future: FirebaseFirestore.instance
                   .collection('parties')
