@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:djparty/page/Login.dart';
-import 'package:djparty/page/SignIn.dart';
+import 'package:djparty/page/auth/Login.dart';
+import 'package:djparty/page/auth/SignUp.dart';
 
 void main() {
   testWidgets('LoginPage has a title', (tester) async {

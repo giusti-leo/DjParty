@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:djparty/page/admin/AdminTabPage.dart';
+import 'package:djparty/page/partyAdmin/AdminTabPage.dart';
 import 'package:djparty/services/FirebaseRequests.dart';
 import 'package:djparty/services/InternetProvider.dart';
 import 'package:djparty/utils/nextScreen.dart';

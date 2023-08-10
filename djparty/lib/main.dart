@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:djparty/page/SplashScreen.dart';
+import 'package:djparty/page/auth/Login.dart';
 import 'package:djparty/services/FirebaseRequests.dart';
 import 'package:djparty/services/InternetProvider.dart';
 import 'package:djparty/services/SignInProvider.dart';
@@ -34,7 +34,9 @@ class Main extends StatelessWidget {
             create: ((context) => InternetProvider()),
           ),
           ChangeNotifierProvider(
-            create: ((context) => FirebaseRequests(db: FirebaseFirestore.instance, )),
+            create: ((context) => FirebaseRequests(
+                  db: FirebaseFirestore.instance,
+                )),
           ),
           ChangeNotifierProvider(
             create: ((context) => SpotifyRequests()),

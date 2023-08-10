@@ -1,6 +1,6 @@
 import 'package:djparty/Icons/c_d_icons.dart';
 import 'package:djparty/entities/Track.dart';
-import 'package:djparty/page/admin/AdminTabPage.dart';
+import 'package:djparty/page/partyAdmin/AdminTabPage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 

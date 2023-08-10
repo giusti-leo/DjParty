@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:djparty/page/SignIn.dart';
+import 'package:djparty/page/auth/SignUp.dart';
 import 'package:flutter_zoom_drawer/flutter_zoom_drawer.dart';
 
 Future<void> main() async {

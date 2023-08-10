@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:djparty/page/auth/Login.dart';
 import 'package:djparty/services/FirebaseAuthMethods.dart';
 import 'package:djparty/utils/nextScreen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -17,6 +18,9 @@ class SignInProvider extends ChangeNotifier {
   final FirebaseAuth firebaseAuth = FirebaseAuth.instance;
   final FacebookAuth facebookAuth = FacebookAuth.instance;
   final GoogleSignIn googleSignIn = GoogleSignIn();
+
+  final GlobalKey<ScaffoldMessengerState> _scaffoldMessengerKey =
+      GlobalKey<ScaffoldMessengerState>();
 
   bool _isSignedIn = false;
   bool get isSignedIn => _isSignedIn;
@@ -335,76 +339,112 @@ class SignInProvider extends ChangeNotifier {
 
   // sign in with facebook
   Future signInWithFacebook() async {
+    bool logged = false;
     try {
-      final LoginResult result = await facebookAuth.login();
+      final LoginResult loginResult = await facebookAuth.login();
 
       final graphResponse = await http.get(Uri.parse(
-          'https://graph.facebook.com/v2.12/me?fields=name,picture.width(800).height(800),first_name,last_name,email&access_token=${result.accessToken!.token}'));
+          'https://graph.facebook.com/v2.12/me?fields=name,picture.width(800).height(800),first_name,last_name,email&access_token=${loginResult.accessToken!.token}'));
 
-      final profile = jsonDecode(graphResponse.body);
+      Map<String, dynamic> profile = jsonDecode(graphResponse.body);
+      var email = profile['email'].toString();
 
-      if (result.status == LoginStatus.success) {
+      if (loginResult.status == LoginStatus.success) {
         final credential =
-            FacebookAuthProvider.credential(result.accessToken!.token);
+            FacebookAuthProvider.credential(loginResult.accessToken!.token);
 
-        final userDetails = (await firebaseAuth
-                .signInWithCredential(credential)
-                .catchError((e) async {
-          if (e.code == 'account-exists-with-different-credential') {
-            var email = profile["email"];
-            final signInMethods =
-                await FirebaseAuth.instance.fetchSignInMethodsForEmail(email);
-            if (signInMethods.contains("google.com")) {
-              final googleCredentials = await getGoogleCredentials();
+        final userCredential = (await firebaseAuth
+            .signInWithCredential(credential!)
+            .catchError((Object error) async {
+          if (error is FirebaseAuthException) {
+            switch (error.code) {
+              case 'account-exists-with-different-credential':
+                var pendingCred = error.credential;
 
-              final userDetails =
-                  (await firebaseAuth.signInWithCredential(googleCredentials!))
-                      .user!;
-              if (userDetails.email == e.email) {
-                await userDetails.linkWithCredential(e.credential);
-              }
+                if (email != '') {
+                  List<String> methods = await FirebaseAuth.instance
+                      .fetchSignInMethodsForEmail(email!);
+                  if (methods.contains('google.com')) {
+                    final googleUser = (await GoogleSignIn().signIn())!;
+                    final googleAuth = await googleUser.authentication;
+                    final credential = GoogleAuthProvider.credential(
+                      accessToken: googleAuth.accessToken,
+                      idToken: googleAuth.idToken,
+                    );
+                    var userCredential = await FirebaseAuth.instance
+                        .signInWithCredential(credential);
+                    userCredential.user!.linkWithCredential(pendingCred!);
+                  } else if (methods.contains('password')) {
+                    var prevUser = FirebaseAuth.instance.currentUser;
+                    prevUser!.linkWithCredential(pendingCred!);
+                  }
+                  logged = true;
+                  break;
+                }
+                break;
+              case 'invalid-credential':
+                showInSnackBar('Invalid credential.', _scaffoldMessengerKey);
+                logged = false;
+                break;
+              case 'user-not-found':
+                showInSnackBar('User not found.', _scaffoldMessengerKey);
+                logged = false;
+                break;
             }
           }
-        }))
-            .user;
+        }));
+        if (userCredential.additionalUserInfo!.isNewUser) {
+          //User logging in for the first time
+          var name = userCredential.user!.displayName;
+          var picture = userCredential.user!.photoURL;
+          var email = userCredential.user!.email;
+          var uid = userCredential.user!.uid;
+          String provider = 'Facebook';
 
-        // saving the values
-        _name = profile['name'];
-        _email = profile['email'];
-        _imageUrl = profile['picture']['data']['url'];
-        _uid = userDetails!.uid;
-        _hasError = false;
-        _provider = "FACEBOOK";
-        _description = '';
-        _image = const Color.fromARGB(255, 255, 255, 255).value;
-        _init = profile['email']![0];
-        _initColor = const Color.fromARGB(255, 0, 0, 0).value;
-        notifyListeners();
-      } else {
-        _errorCode = 'Stop';
-        notifyListeners();
+          // use in NetworkImage
+          print('$name $picture');
+          await _addUserToDB(uid, name!, email!, picture!, provider);
+        }
+        logged = true;
+      } else if (loginResult.status == LoginStatus.cancelled) {
+        logged = false;
+      } else if (loginResult.status == LoginStatus.failed) {
+        showInSnackBar(
+            'Login has failed. Try again later.', _scaffoldMessengerKey);
+        logged = false;
       }
-    } on FirebaseAuthException catch (e) {
-      switch (e.code) {
-        case "account-exists-with-different-credential":
-          _errorCode =
-              "You already have an account with us. Use correct provider";
-          _hasError = true;
-
-          notifyListeners();
-          break;
-
-        case "null":
-          _errorCode = "Some unexpected error while trying to sign in";
-          _hasError = true;
-          notifyListeners();
-          break;
-        default:
-          _errorCode = e.toString();
-          _hasError = true;
-          notifyListeners();
-      }
+    } on Exception catch (e) {
+      print('Error: $e');
+      logged = false;
     }
+    return logged;
+  }
+
+  void showInSnackBar(
+      String value, GlobalKey<ScaffoldMessengerState> _scaffoldMessengerKey,
+      {double height = 18.0}) {
+    _scaffoldMessengerKey.currentState!.hideCurrentSnackBar();
+    _scaffoldMessengerKey.currentState!.showSnackBar(isMobile
+        ? SnackBar(
+            content: Container(child: Text(value), height: height),
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.only(
+                topRight: Radius.circular(14),
+                topLeft: Radius.circular(14),
+              ),
+            ),
+          )
+        : SnackBar(
+            content: Container(
+              child: FittedBox(child: Text(value)),
+              height: 15,
+            ),
+            width: 300,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(14)),
+            ),
+          ));
   }
 
   // ENTRY FOR CLOUDFIRESTORE
@@ -438,6 +478,24 @@ class SignInProvider extends ChangeNotifier {
           notifyListeners();
       }
     }
+  }
+
+  Future _addUserToDB(String uid, String name, String email, String picture,
+      String provider) async {
+    final DocumentReference r =
+        FirebaseFirestore.instance.collection("users").doc(uid);
+    await r.set({
+      "email": email,
+      "uid": uid,
+      "username": name,
+      "image_url": picture,
+      'init': 0,
+      "description": '',
+      'image': Color(0x00000000).value,
+      'initColor': Color(0xFFFFFFFF).value,
+      "provider": provider,
+    });
+    notifyListeners();
   }
 
   Future saveDataToFirestore() async {
