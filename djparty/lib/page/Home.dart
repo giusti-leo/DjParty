@@ -59,7 +59,6 @@ class _HomeState extends State<Home> {
 
   final key = GlobalKey();
   File? file;
-  late int partiesLength;
 
   Future getData() async {
     final FirebaseRequests firebaseRequests = FirebaseRequests(db: widget.db);
@@ -68,11 +67,6 @@ class _HomeState extends State<Home> {
         parties = val;
       });
     });
-
-    partiesLength =
-        await firebaseRequests.getPartiesLength(uid: widget.loggedUser.uid);
-    print(widget.loggedUser.uid);
-    print(partiesLength);
   }
 
   @override
@@ -100,9 +94,7 @@ class _HomeState extends State<Home> {
               strokeWidth: 10,
             ));
           }
-          if (!snapshot.hasData ||
-              snapshot.data!.docs == null ||
-              partiesLength == 0) {
+          if (!snapshot.hasData || snapshot.data!.docs == null) {
             return Center(
                 child: RichText(
               text: TextSpan(
@@ -122,18 +114,10 @@ class _HomeState extends State<Home> {
               ),
             ));
           }
-          // if (snapshot.connectionState == ConnectionState.waiting) {
-          //   return Center(
-          //       child: CircularProgressIndicator(
-          //     color: mainGreen,
-          //     backgroundColor: backGround,
-          //     strokeWidth: 10,
-          //   ));
-          // }
 
-          return partiesLength > 0
+          return snapshot.data.docs.length > 0
               ? ListView.builder(
-                  itemCount: partiesLength,
+                  itemCount: snapshot.data.docs.length,
                   itemBuilder: (context, index) {
                     var tmp = snapshot.data.docs[index]['startDate'];
                     return Padding(

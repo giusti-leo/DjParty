@@ -1169,6 +1169,8 @@ class _AdminTabPage extends State<AdminTabPage>
               party = PartyStatus.getPartyFromFirestore(partySnap);
 
               if (party.isEnded!) {
+                pause();
+
                 return Column(
                   children: [
                     Row(

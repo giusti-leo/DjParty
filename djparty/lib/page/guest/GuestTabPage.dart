@@ -365,7 +365,7 @@ class _GuestTabPage extends State<GuestTabPage>
                   }
                 }),
             StreamBuilder(
-                stream: Stream.periodic(const Duration(seconds: 90)),
+                stream: Stream.periodic(const Duration(seconds: 75)),
                 builder: (context, snapshot) {
                   widget.db
                       .collection('parties')
@@ -376,7 +376,7 @@ class _GuestTabPage extends State<GuestTabPage>
                     Timestamp tmp = value.get('ping');
 
                     if ((Timestamp.now().millisecondsSinceEpoch -
-                            tmp.millisecondsSinceEpoch) >=
+                            tmp.millisecondsSinceEpoch) >
                         90000) {
                       fr.setPartyEnded(widget.code);
                     }

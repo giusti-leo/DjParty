@@ -43,7 +43,7 @@ class _GuestRankingNotStarted extends State<GuestRankingNotStarted> {
           SizedBox(
             height: height * 0.58,
             child: StreamBuilder(
-                stream: FirebaseFirestore.instance
+                stream: widget.db
                     .collection('parties')
                     .doc(widget.code)
                     .collection('members')
