@@ -2,7 +2,8 @@ import 'dart:ui';
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:djparty/page/HomePage.dart';
+import 'package:djparty/page/auth/Login.dart';
+import 'package:djparty/page/lobby/HomePage.dart';
 import 'package:djparty/services/FirebaseRequests.dart';
 import 'package:djparty/services/InternetProvider.dart';
 import 'package:djparty/services/SignInProvider.dart';
@@ -43,88 +44,80 @@ class _insertPartyName extends State<GeneratorScreen> {
   Color backGround = const Color.fromARGB(255, 35, 34, 34);
   Color alertColor = Colors.red;
 
+  final _formKey = GlobalKey<FormState>();
+
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        appBar: AppBar(
-          leading: GestureDetector(
-            child: const Icon(
-              Icons.arrow_back_ios_new,
-              color: Colors.white,
-            ),
-            onTap: () {
-              Navigator.pop(context);
-            },
+    return Scaffold(
+      appBar: AppBar(
+        leading: GestureDetector(
+          child: const Icon(
+            Icons.arrow_back_ios_new,
+            color: Colors.white,
           ),
-          backgroundColor: backGround,
-          title: const Text(
-            'Create Party',
-            style: TextStyle(
-                color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          centerTitle: true,
+          onTap: () {
+            Navigator.pop(context);
+          },
         ),
         backgroundColor: backGround,
-        body: SingleChildScrollView(
-          child: Center(
-            child: Column(
-              children: <Widget>[
-                const SizedBox(
-                  height: 20,
-                ),
-                SizedBox(
-                  height: MediaQuery.of(context).size.height / 15,
-                  width: MediaQuery.of(context).size.width / 1.2,
-                  child: TextFormField(
-                    toolbarOptions: const ToolbarOptions(
-                        copy: true, paste: true, selectAll: true, cut: true),
-                    cursorColor: mainGreen,
-                    controller: partyName,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20,
-                    ),
-                    decoration: InputDecoration(
-                      hintText: 'Party Name',
-                      hintStyle: const TextStyle(color: Colors.grey),
-                      focusedBorder: UnderlineInputBorder(
-                        borderSide: BorderSide(color: mainGreen),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(18),
-                        borderSide: BorderSide(
-                          color: mainGreen,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(
-                  height: 30,
-                ),
-                RoundedLoadingButton(
-                  onPressed: () {
-                    handleCreation();
-                  },
-                  controller: submitController,
-                  successColor: mainGreen,
-                  width: MediaQuery.of(context).size.width * 0.80,
-                  elevation: 0,
-                  borderRadius: 25,
-                  color: mainGreen,
-                  child: Wrap(
-                    children: const [
-                      Text(
-                        'Confirm',
-                        selectionColor: Colors.black,
-                        style: TextStyle(fontSize: 22, color: Colors.white),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+        title: const Text(
+          'Create Party',
+          style: TextStyle(
+              color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
+      ),
+      backgroundColor: backGround,
+      body: Align(
+        alignment: Alignment.center,
+        child: SizedBox(
+          width: isMobile ? MediaQuery.of(context).size.width * 0.8 : 600,
+          height: isMobile ? MediaQuery.of(context).size.height * 0.8 : 1000,
+          child: Form(key: _formKey, child: insertCode()),
+        ),
+      ),
+    );
+  }
+
+  Widget insertCode() {
+    return Center(
+      child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 25.0),
+          child: ListView(children: [
+            const SizedBox(height: 40.0),
+            boxNameField(),
+            const SizedBox(
+              height: 5,
+            ),
+            submitButton()
+          ])),
+    );
+  }
+
+  Widget boxNameField() {
+    return SizedBox(
+      height: 50,
+      width: MediaQuery.of(context).size.width / 1.2,
+      child: TextFormField(
+        toolbarOptions: const ToolbarOptions(
+            copy: true, paste: true, selectAll: true, cut: true),
+        cursorColor: mainGreen,
+        controller: partyName,
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+          fontSize: 20,
+        ),
+        decoration: InputDecoration(
+          hintText: 'Party Name',
+          hintStyle: const TextStyle(color: Colors.grey),
+          focusedBorder: UnderlineInputBorder(
+            borderSide: BorderSide(color: mainGreen),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(18),
+            borderSide: BorderSide(
+              color: mainGreen,
             ),
           ),
         ),
@@ -132,15 +125,32 @@ class _insertPartyName extends State<GeneratorScreen> {
     );
   }
 
+  Widget submitButton() {
+    return RoundedLoadingButton(
+      onPressed: () {
+        handleCreation();
+      },
+      controller: submitController,
+      successColor: mainGreen,
+      width: MediaQuery.of(context).size.width * 0.80,
+      elevation: 0,
+      borderRadius: 25,
+      color: mainGreen,
+      child: const Wrap(
+        children: [
+          Text(
+            'Confirm',
+            selectionColor: Colors.black,
+            style: TextStyle(fontSize: 22, color: Colors.white),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
-    getData();
-  }
-
-  Future getData() async {
-    final sp = context.read<SignInProvider>();
-    sp.getDataFromSharedPreferences();
   }
 
   Future<void> handleCreation() async {
@@ -183,8 +193,13 @@ class _insertPartyName extends State<GeneratorScreen> {
         return;
       }
       fr
-          .addParty(widget.loggedUser.uid, partyName.text, controller.text, 0,
-              widget.loggedUser.displayName!, widget.loggedUser.photoURL!)
+          .addParty(
+              widget.loggedUser.uid,
+              partyName.text,
+              controller.text,
+              0,
+              widget.loggedUser.displayName ?? ' ',
+              widget.loggedUser.photoURL ?? ' ')
           .then((value) {
         if (fr.hasError == true) {
           displayToastMessage(context, sp.errorCode.toString(), alertColor);

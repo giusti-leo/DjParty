@@ -2,8 +2,9 @@ import 'dart:ui';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:djparty/page/InsertCode.dart';
-import 'package:djparty/page/GenerateShare.dart';
+import 'package:djparty/page/lobby/InsertCode.dart';
+import 'package:djparty/page/lobby/GenerateShare.dart';
+import 'package:djparty/page/auth/Login.dart';
 import 'package:djparty/page/partyAdmin/AdminTabPage.dart';
 import 'package:djparty/page/partyGuest/GuestTabPage.dart';
 import 'package:djparty/services/FirebaseRequests.dart';
@@ -62,6 +63,7 @@ class _HomeState extends State<Home> {
 
   Future getData() async {
     final FirebaseRequests firebaseRequests = FirebaseRequests(db: widget.db);
+
     firebaseRequests.getParties(uid: widget.loggedUser.uid).then((val) {
       setState(() {
         parties = val;
@@ -78,9 +80,84 @@ class _HomeState extends State<Home> {
     super.didChangeDependencies();
   }
 
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+          colorScheme: ColorScheme.fromSwatch()
+              .copyWith(primary: mainGreen, secondary: backGround)),
+      home: Scaffold(
+        backgroundColor: backGround,
+        appBar: AppBar(
+          backgroundColor: backGround,
+          leading: InkWell(
+              child: Icon(Icons.menu),
+              onTap: (() => widget.drawerController.toggle!())),
+          title: const Text(
+            'DjParty',
+            style: TextStyle(
+                color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          centerTitle: false,
+          actions: [
+            IconButton(
+              onPressed: () {
+                nextScreen(
+                    context,
+                    GeneratorScreen(
+                      loggedUser: widget.loggedUser,
+                      db: widget.db,
+                    ));
+              },
+              icon: const Icon(
+                Icons.add_box_outlined,
+              ),
+            ),
+            IconButton(
+              onPressed: () {
+                nextScreen(
+                    context,
+                    InsertCode(
+                      loggedUser: widget.loggedUser,
+                      db: widget.db,
+                    ));
+              },
+              icon: const Icon(
+                Icons.search,
+              ),
+            ),
+            IconButton(
+              onPressed: () {
+                nextScreen(
+                    context,
+                    ScannerScreen(
+                      loggedUser: widget.loggedUser,
+                      db: widget.db,
+                    ));
+              },
+              icon: const Icon(
+                Icons.qr_code,
+              ),
+            )
+          ],
+        ),
+        body: Container(
+          padding: isMobile
+              ? const EdgeInsets.only(top: 5)
+              : const EdgeInsets.only(left: 20, right: 20),
+          child: Stack(
+            children: <Widget>[
+              streamParties(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   streamParties() {
     bool expandFlag = false;
-    final width = MediaQuery.of(context).size.width;
     final FirebaseRequests firebaseRequests = FirebaseRequests(db: widget.db);
 
     return StreamBuilder<QuerySnapshot>(
@@ -156,8 +233,8 @@ class _HomeState extends State<Home> {
                                           fontSize: 20,
                                         ),
                                       ),
-                                      Row(
-                                        children: const [
+                                      const Row(
+                                        children: [
                                           Divider(height: 32),
                                         ],
                                       ),
@@ -190,11 +267,24 @@ class _HomeState extends State<Home> {
                                                         ['code']);
                                               }
                                             },
-                                            width: width * 0.22,
+                                            width: (MediaQuery.of(context)
+                                                        .size
+                                                        .width >
+                                                    MediaQuery.of(context)
+                                                        .size
+                                                        .height)
+                                                ? MediaQuery.of(context)
+                                                        .size
+                                                        .height *
+                                                    0.2
+                                                : MediaQuery.of(context)
+                                                        .size
+                                                        .width *
+                                                    0.2,
                                             elevation: 0,
                                             borderRadius: 25,
-                                            child: Wrap(
-                                              children: const [
+                                            child: const Wrap(
+                                              children: [
                                                 Center(
                                                   child: Text("Exit",
                                                       style: TextStyle(
@@ -207,7 +297,20 @@ class _HomeState extends State<Home> {
                                             ),
                                           ),
                                           SizedBox(
-                                            width: width * .08,
+                                            width: (MediaQuery.of(context)
+                                                        .size
+                                                        .width >
+                                                    MediaQuery.of(context)
+                                                        .size
+                                                        .height)
+                                                ? MediaQuery.of(context)
+                                                        .size
+                                                        .height *
+                                                    0.07
+                                                : MediaQuery.of(context)
+                                                        .size
+                                                        .width *
+                                                    0.07,
                                           ),
                                           RoundedLoadingButton(
                                             onPressed: () async {
@@ -219,12 +322,25 @@ class _HomeState extends State<Home> {
                                             },
                                             controller: shareController,
                                             successColor: mainGreen,
-                                            width: width * 0.22,
+                                            width: (MediaQuery.of(context)
+                                                        .size
+                                                        .width >
+                                                    MediaQuery.of(context)
+                                                        .size
+                                                        .height)
+                                                ? MediaQuery.of(context)
+                                                        .size
+                                                        .height *
+                                                    0.2
+                                                : MediaQuery.of(context)
+                                                        .size
+                                                        .width *
+                                                    0.2,
                                             elevation: 0,
                                             borderRadius: 25,
                                             color: mainGreen,
-                                            child: Wrap(
-                                              children: const [
+                                            child: const Wrap(
+                                              children: [
                                                 Center(
                                                   child: Text("Share",
                                                       style: TextStyle(
@@ -239,7 +355,20 @@ class _HomeState extends State<Home> {
                                           Row(
                                             children: [
                                               SizedBox(
-                                                width: width * 0.08,
+                                                width: (MediaQuery.of(context)
+                                                            .size
+                                                            .width >
+                                                        MediaQuery.of(context)
+                                                            .size
+                                                            .height)
+                                                    ? MediaQuery.of(context)
+                                                            .size
+                                                            .height *
+                                                        0.07
+                                                    : MediaQuery.of(context)
+                                                            .size
+                                                            .width *
+                                                        0.07,
                                               )
                                             ],
                                           ),
@@ -251,12 +380,25 @@ class _HomeState extends State<Home> {
                                             },
                                             controller: partyController,
                                             successColor: mainGreen,
-                                            width: width * 0.22,
+                                            width: (MediaQuery.of(context)
+                                                        .size
+                                                        .width >
+                                                    MediaQuery.of(context)
+                                                        .size
+                                                        .height)
+                                                ? MediaQuery.of(context)
+                                                        .size
+                                                        .height *
+                                                    0.2
+                                                : MediaQuery.of(context)
+                                                        .size
+                                                        .width *
+                                                    0.2,
                                             elevation: 0,
                                             borderRadius: 25,
                                             color: mainGreen,
-                                            child: Wrap(
-                                              children: const [
+                                            child: const Wrap(
+                                              children: [
                                                 Center(
                                                   child: Text("Join Party",
                                                       style: TextStyle(
@@ -273,8 +415,8 @@ class _HomeState extends State<Home> {
                                           ),
                                         ],
                                       ),
-                                      Row(
-                                        children: const [
+                                      const Row(
+                                        children: [
                                           Divider(height: 32),
                                         ],
                                       ),
@@ -331,79 +473,6 @@ class _HomeState extends State<Home> {
       shareController.reset();
       return;
     }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final Size size = MediaQuery.of(context).size;
-
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-          colorScheme: ColorScheme.fromSwatch()
-              .copyWith(primary: mainGreen, secondary: backGround)),
-      home: Scaffold(
-        backgroundColor: backGround,
-        appBar: AppBar(
-          backgroundColor: backGround,
-          leading: InkWell(
-              child: Icon(Icons.menu),
-              onTap: (() => widget.drawerController.toggle!())),
-          title: const Text(
-            'DjParty',
-            style: TextStyle(
-                color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          centerTitle: false,
-          actions: [
-            IconButton(
-              onPressed: () {
-                nextScreen(
-                    context,
-                    GeneratorScreen(
-                      loggedUser: widget.loggedUser,
-                      db: widget.db,
-                    ));
-              },
-              icon: const Icon(
-                Icons.add_box_outlined,
-              ),
-            ),
-            IconButton(
-              onPressed: () {
-                nextScreen(
-                    context,
-                    InsertCode(
-                      loggedUser: widget.loggedUser,
-                      db: widget.db,
-                    ));
-              },
-              icon: const Icon(
-                Icons.search,
-              ),
-            ),
-            IconButton(
-              onPressed: () {
-                nextScreen(
-                    context,
-                    ScannerScreen(
-                      loggedUser: widget.loggedUser,
-                      db: widget.db,
-                    ));
-              },
-              icon: const Icon(
-                Icons.qr_code,
-              ),
-            )
-          ],
-        ),
-        body: Stack(
-          children: <Widget>[
-            streamParties(),
-          ],
-        ),
-      ),
-    );
   }
 
   handleAfterLogout() {

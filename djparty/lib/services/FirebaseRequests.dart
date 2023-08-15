@@ -1114,9 +1114,8 @@ class FirebaseRequests extends ChangeNotifier {
   Future<void> setPartyEnded(String code) async {
     try {
       DateTime now = DateTime.now();
-      await db.collection('parties').doc(code).update({
-        'endTime': DateTime.now(),
-      });
+      await db.collection('parties').doc(code).update(
+          {'endTime': DateTime.now(), 'reason': 'admin lose connection'});
       await db
           .collection('parties')
           .doc(code)

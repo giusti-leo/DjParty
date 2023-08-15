@@ -385,10 +385,14 @@ class SignInProvider extends ChangeNotifier {
               case 'invalid-credential':
                 showInSnackBar('Invalid credential.', _scaffoldMessengerKey);
                 logged = false;
+                _hasError = true;
+
                 break;
               case 'user-not-found':
                 showInSnackBar('User not found.', _scaffoldMessengerKey);
                 logged = false;
+                _hasError = true;
+
                 break;
             }
           }
@@ -412,10 +416,12 @@ class SignInProvider extends ChangeNotifier {
         showInSnackBar(
             'Login has failed. Try again later.', _scaffoldMessengerKey);
         logged = false;
+        _hasError = true;
       }
     } on Exception catch (e) {
       print('Error: $e');
       logged = false;
+      _hasError = true;
     }
     return logged;
   }

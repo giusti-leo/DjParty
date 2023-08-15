@@ -39,9 +39,9 @@ class _GuestRankingNotStarted extends State<GuestRankingNotStarted> {
     return Center(
       child: Column(
         children: [
-          SizedBox(height: height * 0.02),
+          const SizedBox(height: 20),
           SizedBox(
-            height: height * 0.58,
+            height: 500,
             child: StreamBuilder(
                 stream: widget.db
                     .collection('parties')
@@ -83,32 +83,31 @@ class _GuestRankingNotStarted extends State<GuestRankingNotStarted> {
                                         crossAxisAlignment:
                                             CrossAxisAlignment.center,
                                         children: [
-                                          SizedBox(width: width * 0.02),
+                                          const SizedBox(width: 20),
                                           SizedBox(
-                                            width: width * 0.4,
                                             child: Row(children: [
-                                              (currentUser.imageUrl != '')
+                                              (currentUser.imageUrl != '' &&
+                                                      currentUser.imageUrl !=
+                                                          ' ')
                                                   ? CircleAvatar(
                                                       backgroundColor:
                                                           Colors.white,
-                                                      maxRadius: height * 0.020,
+                                                      maxRadius: 22,
                                                       child: CircleAvatar(
                                                         backgroundColor:
                                                             Colors.white,
                                                         backgroundImage:
                                                             NetworkImage(
                                                                 '${currentUser.imageUrl}'),
-                                                        maxRadius:
-                                                            height * 0.022,
+                                                        maxRadius: 21,
                                                       ),
                                                     )
                                                   : CircleAvatar(
                                                       backgroundColor:
                                                           Colors.white,
-                                                      maxRadius: height * 0.025,
+                                                      maxRadius: 22,
                                                       child: CircleAvatar(
-                                                          maxRadius:
-                                                              height * 0.022,
+                                                          maxRadius: 21,
                                                           backgroundColor:
                                                               Color(currentUser
                                                                   .image!),

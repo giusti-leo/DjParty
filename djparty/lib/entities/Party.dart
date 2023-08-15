@@ -59,14 +59,12 @@ class Party {
   String admin;
   String code;
   String name;
+  String reason;
 
-  Party(this.code, this.name, this.admin);
+  Party(this.code, this.name, this.admin, this.reason);
 
   factory Party.getPartyFromFirestore(dynamic party) {
     return Party(
-      party["code"],
-      party["partyName"],
-      party["admin"],
-    );
+        party["code"], party["partyName"], party["admin"], party["reason"]);
   }
 }

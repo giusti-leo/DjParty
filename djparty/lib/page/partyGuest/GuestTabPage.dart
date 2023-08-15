@@ -4,10 +4,13 @@ import 'dart:ui';
 
 import 'package:djparty/entities/Party.dart';
 import 'package:djparty/entities/Track.dart';
-import 'package:djparty/page/HomePage.dart';
-import 'package:djparty/page/QueueSearch.dart';
+import 'package:djparty/page/auth/Login.dart';
+import 'package:djparty/page/lobby/HomePage.dart';
+import 'package:djparty/page/party/QueueSearch.dart';
 import 'package:djparty/page/partyGuest/GuestPlayer.dart';
 import 'package:djparty/page/partyGuest/GuestRanking.dart';
+import 'package:djparty/page/utils/Spotify.dart';
+import 'package:djparty/page/utils/TabPageWidgets.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_countdown_timer/flutter_countdown_timer.dart';
@@ -96,14 +99,12 @@ class _GuestTabPage extends State<GuestTabPage>
 
   String partyTitle = 'title';
 
-  Party party = Party('code', 'name', 'admin');
+  Party party = Party('code', 'name', 'admin', 'reason');
   Future getData() async {
     final FirebaseRequests firebaseRequests = FirebaseRequests(db: widget.db);
     final sr = context.read<SpotifyRequests>();
 
     firebaseRequests.getPartyDataFromFirestore(widget.code);
-    // firebaseRequests.saveDataToSharedPreferences();
-    // firebaseRequests.getDataFromSharedPreferences();
 
     sr.getUserId();
     sr.getAuthToken();
@@ -192,8 +193,8 @@ class _GuestTabPage extends State<GuestTabPage>
                         handleShare(widget.code);
                         Navigator.of(context).pop();
                       },
-                      child: Row(
-                        children: const [
+                      child: const Row(
+                        children: [
                           Icon(Icons.share),
                           SizedBox(
                             width: 8,
@@ -214,446 +215,290 @@ class _GuestTabPage extends State<GuestTabPage>
         ),
         body: LayoutBuilder(
             builder: (BuildContext context, BoxConstraints constraints) {
-          if (constraints.maxWidth < 600) {
-            return SingleChildScrollView(
-              child: SizedBox(
-                child: Column(
-                  children: [
-                    SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.78,
-                      child: StreamBuilder(
-                          stream: widget.db
-                              .collection('parties')
-                              .doc(widget.code)
-                              .collection('Party')
-                              .doc('PartyStatus')
-                              .snapshots(),
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState ==
-                                    ConnectionState.waiting ||
-                                !snapshot.hasData) {
-                              return Center(
-                                  child: CircularProgressIndicator(
-                                color: mainGreen,
-                                backgroundColor: backGround,
-                                strokeWidth: 10,
-                              ));
-                            }
-
-                            final partySnap = snapshot.data!.data();
-                            PartyStatus partyStatus;
-                            partyStatus =
-                                PartyStatus.getPartyFromFirestore(partySnap);
-
-                            if (!partyStatus.isStarted!) {
-                              return LayoutBuilder(builder:
-                                  (BuildContext context,
-                                      BoxConstraints constraints) {
-                                return Column(children: [
-                                  Align(
-                                      alignment: Alignment.center,
-                                      child: TabBar(
-                                          controller: tabController,
-                                          isScrollable: true,
-                                          labelPadding: const EdgeInsets.only(
-                                              left: 20, right: 20),
-                                          labelColor: Colors.white,
-                                          unselectedLabelColor: Colors.grey,
-                                          indicator: CircleTabIndicator(
-                                              color: mainGreen, radius: 4),
-                                          tabs: const [
-                                            Tab(text: "Party"),
-                                            Tab(text: "Player"),
-                                            Tab(text: "Queue"),
-                                          ])),
-                                  SizedBox(
-                                    width: double.maxFinite,
-                                    height: constraints.maxHeight - 58,
-                                    child: TabBarView(
-                                      controller: tabController,
-                                      children: [
-                                        GuestRankingNotStarted(
-                                          db: widget.db,
-                                          code: widget.code,
-                                        ),
-                                        const GuestPlayerNotStarted(),
-                                        QueueSearch(
-                                          loggedUser: widget.loggedUser,
-                                          db: widget.db,
-                                          code: widget.code,
-                                        )
-                                      ],
-                                    ),
-                                  ),
-                                ]);
-                              });
-                            } else if (partyStatus.isStarted! &&
-                                !partyStatus.isEnded!) {
-                              return LayoutBuilder(builder:
-                                  (BuildContext context,
-                                      BoxConstraints constraints) {
-                                return Column(children: [
-                                  Align(
-                                    alignment: Alignment.center,
-                                    child: TabBar(
-                                        controller: tabController,
-                                        isScrollable: true,
-                                        labelPadding: const EdgeInsets.only(
-                                            left: 20, right: 20),
-                                        labelColor: Colors.white,
-                                        unselectedLabelColor: Colors.grey,
-                                        indicator: CircleTabIndicator(
-                                            color: mainGreen, radius: 4),
-                                        tabs: const [
-                                          Tab(text: "Party"),
-                                          Tab(text: "Player"),
-                                          Tab(text: "Queue"),
-                                        ]),
-                                  ),
-                                  SizedBox(
-                                      width: double.maxFinite,
-                                      height: constraints.maxHeight - 58,
-                                      child: TabBarView(
-                                        controller: tabController,
-                                        children: [
-                                          GuestRankingStarted(
-                                            db: widget.db,
-                                            code: widget.code,
-                                          ),
-                                          GuestPlayerSongRunning(
-                                            code: widget.code,
-                                          ),
-                                          QueueSearch(
-                                            loggedUser: widget.loggedUser,
-                                            db: widget.db,
-                                            code: widget.code,
-                                          )
-                                        ],
-                                      )),
-                                ]);
-                              });
-                            } else {
-                              timerController1.reset();
-
-                              return LayoutBuilder(builder:
-                                  (BuildContext context,
-                                      BoxConstraints constraints) {
-                                return Column(children: [
-                                  Align(
-                                    alignment: Alignment.center,
-                                    child: TabBar(
-                                        controller: tabController,
-                                        isScrollable: true,
-                                        labelPadding: const EdgeInsets.only(
-                                            left: 20, right: 20),
-                                        labelColor: Colors.white,
-                                        unselectedLabelColor: Colors.grey,
-                                        indicator: CircleTabIndicator(
-                                            color: mainGreen, radius: 4),
-                                        tabs: const [
-                                          Tab(text: "Party"),
-                                          Tab(text: "Player"),
-                                          Tab(text: "Queue"),
-                                        ]),
-                                  ),
-                                  SizedBox(
-                                    width: double.maxFinite,
-                                    height: constraints.maxHeight - 58,
-                                    child: TabBarView(
-                                      controller: tabController,
-                                      children: [
-                                        GuestRankingEnded(
-                                          db: widget.db,
-                                          code: widget.code,
-                                        ),
-                                        GuestPlayerEnded(
-                                          code: widget.code,
-                                        ),
-                                        SongLists(
-                                          loggedUser: widget.loggedUser,
-                                          db: widget.db,
-                                          code: widget.code,
-                                        )
-                                      ],
-                                    ),
-                                  ),
-                                ]);
-                              });
-                            }
-                          }),
-                    ),
-
-                    // Handle disconnection to Spotify
-                    StreamBuilder(
-                        stream: SpotifySdk.subscribeConnectionStatus(),
-                        builder: (context, snapshot) {
-                          if (!snapshot.hasData) {
-                            return Container();
-                          }
-                          if (snapshot.data!.connected == true) {
-                            return Container();
-                          } else {
-                            final sr = context.read<SpotifyRequests>();
-
-                            sr.getUserId();
-                            sr.getAuthToken();
-                            sr.connectToSpotify();
-                            return Container();
-                          }
-                        }),
-                    StreamBuilder(
-                        stream: Stream.periodic(const Duration(seconds: 75)),
-                        builder: (context, snapshot) {
-                          widget.db
-                              .collection('parties')
-                              .doc(widget.code)
-                              .snapshots()
-                              .first
-                              .then((value) {
-                            Timestamp tmp = value.get('ping');
-
-                            if ((Timestamp.now().millisecondsSinceEpoch -
-                                    tmp.millisecondsSinceEpoch) >
-                                90000) {
-                              fr.setPartyEnded(widget.code);
-                            }
-                          });
-                          return Container();
-                        }),
-                  ],
-                ),
-              ),
-            );
-          } else {
-            return SingleChildScrollView(
-              child: SizedBox(
-                child: Column(
-                  children: [
-                    SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.78,
-                      child: StreamBuilder(
-                          stream: widget.db
-                              .collection('parties')
-                              .doc(widget.code)
-                              .collection('Party')
-                              .doc('PartyStatus')
-                              .snapshots(),
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState ==
-                                    ConnectionState.waiting ||
-                                !snapshot.hasData) {
-                              return Center(
-                                  child: CircularProgressIndicator(
-                                color: mainGreen,
-                                backgroundColor: backGround,
-                                strokeWidth: 10,
-                              ));
-                            }
-
-                            final partySnap = snapshot.data!.data();
-                            PartyStatus partyStatus;
-                            partyStatus =
-                                PartyStatus.getPartyFromFirestore(partySnap);
-
-                            if (!partyStatus.isStarted!) {
-                              return Column(children: [
-                                Row(
-                                  children: [
-                                    Align(
-                                        alignment: Alignment.center,
-                                        child: RotatedBox(
-                                          quarterTurns: 1,
-                                          child: TabBar(
-                                              controller: tabController,
-                                              isScrollable: true,
-                                              labelPadding:
-                                                  const EdgeInsets.only(
-                                                      left: 20, right: 20),
-                                              labelColor: Colors.white,
-                                              unselectedLabelColor: Colors.grey,
-                                              indicator: CircleTabIndicator(
-                                                  color: mainGreen, radius: 4),
-                                              tabs: const [
-                                                Tab(text: "Party"),
-                                                Tab(text: "Player"),
-                                                Tab(text: "Queue"),
-                                              ]),
-                                        )),
-                                    Flexible(
-                                      child: SizedBox(
-                                        width: double.maxFinite,
-                                        height: constraints.maxHeight - 58,
-                                        child: TabBarView(
-                                          controller: tabController,
-                                          children: [
-                                            GuestRankingNotStarted(
-                                              db: widget.db,
-                                              code: widget.code,
-                                            ),
-                                            const GuestPlayerNotStarted(),
-                                            QueueSearch(
-                                              loggedUser: widget.loggedUser,
-                                              db: widget.db,
-                                              code: widget.code,
-                                            )
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                )
-                              ]);
-                            } else if (partyStatus.isStarted! &&
-                                !partyStatus.isEnded!) {
-                              return Column(children: [
-                                Row(
-                                  children: [
-                                    Align(
-                                      alignment: Alignment.center,
-                                      child: RotatedBox(
-                                        quarterTurns: 1,
-                                        child: TabBar(
-                                            controller: tabController,
-                                            isScrollable: true,
-                                            labelPadding: const EdgeInsets.only(
-                                                left: 20, right: 20),
-                                            labelColor: Colors.white,
-                                            unselectedLabelColor: Colors.grey,
-                                            indicator: CircleTabIndicator(
-                                                color: mainGreen, radius: 4),
-                                            tabs: const [
-                                              Tab(text: "Party"),
-                                              Tab(text: "Player"),
-                                              Tab(text: "Queue"),
-                                            ]),
-                                      ),
-                                    ),
-                                    Flexible(
-                                      child: SizedBox(
-                                          width: double.maxFinite,
-                                          height: constraints.maxHeight - 58,
-                                          child: TabBarView(
-                                            controller: tabController,
-                                            children: [
-                                              GuestRankingStarted(
-                                                db: widget.db,
-                                                code: widget.code,
-                                              ),
-                                              GuestPlayerSongRunning(
-                                                code: widget.code,
-                                              ),
-                                              QueueSearch(
-                                                loggedUser: widget.loggedUser,
-                                                db: widget.db,
-                                                code: widget.code,
-                                              )
-                                            ],
-                                          )),
-                                    ),
-                                  ],
-                                )
-                              ]);
-                            } else {
-                              timerController1.reset();
-                              return Column(children: [
-                                Row(
-                                  children: [
-                                    Align(
-                                      alignment: Alignment.center,
-                                      child: RotatedBox(
-                                        quarterTurns: 1,
-                                        child: TabBar(
-                                            controller: tabController,
-                                            isScrollable: true,
-                                            labelPadding: const EdgeInsets.only(
-                                                left: 20, right: 20),
-                                            labelColor: Colors.white,
-                                            unselectedLabelColor: Colors.grey,
-                                            indicator: CircleTabIndicator(
-                                                color: mainGreen, radius: 4),
-                                            tabs: const [
-                                              Tab(text: "Party"),
-                                              Tab(text: "Player"),
-                                              Tab(text: "Queue"),
-                                            ]),
-                                      ),
-                                    ),
-                                    Flexible(
-                                      child: SizedBox(
-                                        width: double.maxFinite,
-                                        height: constraints.maxHeight - 58,
-                                        child: TabBarView(
-                                          controller: tabController,
-                                          children: [
-                                            GuestRankingEnded(
-                                              db: widget.db,
-                                              code: widget.code,
-                                            ),
-                                            GuestPlayerEnded(
-                                              code: widget.code,
-                                            ),
-                                            SongLists(
-                                              loggedUser: widget.loggedUser,
-                                              db: widget.db,
-                                              code: widget.code,
-                                            )
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                )
-                              ]);
-                            }
-                          }),
-                    ),
-
-                    // Handle disconnection to Spotify
-                    StreamBuilder(
-                        stream: SpotifySdk.subscribeConnectionStatus(),
-                        builder: (context, snapshot) {
-                          if (!snapshot.hasData) {
-                            return Container();
-                          }
-                          if (snapshot.data!.connected == true) {
-                            return Container();
-                          } else {
-                            final sr = context.read<SpotifyRequests>();
-
-                            sr.getUserId();
-                            sr.getAuthToken();
-                            sr.connectToSpotify();
-                            return Container();
-                          }
-                        }),
-                    StreamBuilder(
-                        stream: Stream.periodic(const Duration(seconds: 75)),
-                        builder: (context, snapshot) {
-                          widget.db
-                              .collection('parties')
-                              .doc(widget.code)
-                              .snapshots()
-                              .first
-                              .then((value) {
-                            Timestamp tmp = value.get('ping');
-
-                            if ((Timestamp.now().millisecondsSinceEpoch -
-                                    tmp.millisecondsSinceEpoch) >
-                                90000) {
-                              fr.setPartyEnded(widget.code);
-                            }
-                          });
-                          return Container();
-                        }),
-                  ],
-                ),
-              ),
-            );
-          }
+          return ListView(
+            children: [
+              (isMobile)
+                  ? mobileLayoutBuilder(context, constraints)
+                  : tabletLayoutBuilder(context, constraints),
+              // Handle disconnection to Spotify
+              getConnection(),
+              checkPing()
+            ],
+          );
         }),
         bottomNavigationBar: _buildBottomBar(context),
       ),
     );
+  }
+
+  Widget tabletLayoutBuilder(BuildContext context, BoxConstraints constraints) {
+    return StreamBuilder(
+        stream: widget.db
+            .collection('parties')
+            .doc(widget.code)
+            .collection('Party')
+            .doc('PartyStatus')
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting ||
+              !snapshot.hasData) {
+            return Center(
+                child: CircularProgressIndicator(
+              color: mainGreen,
+              backgroundColor: backGround,
+              strokeWidth: 10,
+            ));
+          }
+
+          final partySnap = snapshot.data!.data();
+          PartyStatus partyStatus;
+          partyStatus = PartyStatus.getPartyFromFirestore(partySnap);
+
+          if (!partyStatus.isStarted!) {
+            return Column(children: [
+              Row(
+                children: [
+                  tabletStructTabs(tabController),
+                  Flexible(
+                    child: SizedBox(
+                      width: double.maxFinite,
+                      height: constraints.maxHeight - 58,
+                      child: TabBarView(
+                        controller: tabController,
+                        children: [
+                          GuestRankingNotStarted(
+                            db: widget.db,
+                            code: widget.code,
+                          ),
+                          const GuestPlayerNotStarted(),
+                          QueueSearch(
+                            loggedUser: widget.loggedUser,
+                            db: widget.db,
+                            code: widget.code,
+                          )
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            ]);
+          } else if (partyStatus.isStarted! && !partyStatus.isEnded!) {
+            return Column(children: [
+              Row(
+                children: [
+                  tabletStructTabs(tabController),
+                  Flexible(
+                    child: SizedBox(
+                        width: double.maxFinite,
+                        height: constraints.maxHeight - 58,
+                        child: TabBarView(
+                          controller: tabController,
+                          children: [
+                            GuestRankingStarted(
+                              db: widget.db,
+                              code: widget.code,
+                            ),
+                            GuestPlayerSongRunning(
+                              code: widget.code,
+                            ),
+                            QueueSearch(
+                              loggedUser: widget.loggedUser,
+                              db: widget.db,
+                              code: widget.code,
+                            )
+                          ],
+                        )),
+                  ),
+                ],
+              )
+            ]);
+          } else {
+            timerController1.reset();
+            return Column(children: [
+              Row(
+                children: [
+                  tabletStructTabs(tabController),
+                  Flexible(
+                    child: SizedBox(
+                      width: double.maxFinite,
+                      height: constraints.maxHeight - 58,
+                      child: TabBarView(
+                        controller: tabController,
+                        children: [
+                          GuestRankingEnded(
+                            db: widget.db,
+                            code: widget.code,
+                          ),
+                          GuestPlayerEnded(
+                            code: widget.code,
+                          ),
+                          SongLists(
+                            loggedUser: widget.loggedUser,
+                            db: widget.db,
+                            code: widget.code,
+                          )
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            ]);
+          }
+        });
+  }
+
+  Widget mobileLayoutBuilder(BuildContext context, BoxConstraints constraints) {
+    return SizedBox(
+      height: constraints.maxHeight - 58,
+      child: StreamBuilder(
+          stream: widget.db
+              .collection('parties')
+              .doc(widget.code)
+              .collection('Party')
+              .doc('PartyStatus')
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting ||
+                !snapshot.hasData) {
+              return Center(
+                  child: CircularProgressIndicator(
+                color: mainGreen,
+                backgroundColor: backGround,
+                strokeWidth: 10,
+              ));
+            }
+
+            final partySnap = snapshot.data!.data();
+            PartyStatus partyStatus;
+            partyStatus = PartyStatus.getPartyFromFirestore(partySnap);
+
+            if (!partyStatus.isStarted!) {
+              return LayoutBuilder(
+                  builder: (BuildContext context, BoxConstraints constraints) {
+                return Column(children: [
+                  mobileStructTabs(tabController),
+                  SizedBox(
+                    height: constraints.maxHeight - 58,
+                    child: TabBarView(
+                      controller: tabController,
+                      children: [
+                        GuestRankingNotStarted(
+                          db: widget.db,
+                          code: widget.code,
+                        ),
+                        const GuestPlayerNotStarted(),
+                        QueueSearch(
+                          loggedUser: widget.loggedUser,
+                          db: widget.db,
+                          code: widget.code,
+                        )
+                      ],
+                    ),
+                  ),
+                ]);
+              });
+            } else if (partyStatus.isStarted! && !partyStatus.isEnded!) {
+              return LayoutBuilder(
+                  builder: (BuildContext context, BoxConstraints constraints) {
+                return Column(children: [
+                  mobileStructTabs(tabController),
+                  SizedBox(
+                      width: double.maxFinite,
+                      height: constraints.maxHeight - 58,
+                      child: TabBarView(
+                        controller: tabController,
+                        children: [
+                          GuestRankingStarted(
+                            db: widget.db,
+                            code: widget.code,
+                          ),
+                          GuestPlayerSongRunning(
+                            code: widget.code,
+                          ),
+                          QueueSearch(
+                            loggedUser: widget.loggedUser,
+                            db: widget.db,
+                            code: widget.code,
+                          )
+                        ],
+                      )),
+                ]);
+              });
+            } else {
+              timerController1.reset();
+
+              return LayoutBuilder(
+                  builder: (BuildContext context, BoxConstraints constraints) {
+                return Column(children: [
+                  mobileStructTabs(tabController),
+                  SizedBox(
+                    width: double.maxFinite,
+                    height: constraints.maxHeight - 58,
+                    child: TabBarView(
+                      controller: tabController,
+                      children: [
+                        GuestRankingEnded(
+                          db: widget.db,
+                          code: widget.code,
+                        ),
+                        GuestPlayerEnded(
+                          code: widget.code,
+                        ),
+                        SongLists(
+                          loggedUser: widget.loggedUser,
+                          db: widget.db,
+                          code: widget.code,
+                        )
+                      ],
+                    ),
+                  ),
+                ]);
+              });
+            }
+          }),
+    );
+  }
+
+  Widget checkPing() {
+    final FirebaseRequests fr = FirebaseRequests(db: widget.db);
+
+    return StreamBuilder(
+        stream: Stream.periodic(const Duration(seconds: 75)),
+        builder: (context, snapshot) {
+          widget.db
+              .collection('parties')
+              .doc(widget.code)
+              .collection('Party')
+              .doc('PartyStatus')
+              .get()
+              .then((value) {
+            if (value.data()!['isStarted']) {
+              widget.db
+                  .collection('parties')
+                  .doc(widget.code)
+                  .snapshots()
+                  .first
+                  .then((value) {
+                Timestamp tmp = value.get('ping');
+
+                print('Ping:' + tmp.toString());
+
+                print('Now:' + Timestamp.now().toString());
+
+                if ((Timestamp.now().millisecondsSinceEpoch -
+                        tmp.millisecondsSinceEpoch) >
+                    100000) {
+                  print('Stop');
+                  fr.setPartyEnded(widget.code);
+                }
+              });
+            }
+          });
+
+          return Container();
+        });
   }
 
   Future handleShare(String string) async {
@@ -709,11 +554,11 @@ class _GuestTabPage extends State<GuestTabPage>
 
               if (party.isEnded!) {
                 return Column(
-                  children: [
+                  children: const [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.center,
-                      children: const [
+                      children: [
                         Text('Party status : ended',
                             style: TextStyle(
                                 color: Colors.white,
@@ -731,11 +576,11 @@ class _GuestTabPage extends State<GuestTabPage>
                   ],
                 );
               } else if (!party.isStarted!) {
-                return Column(children: [
+                return Column(children: const [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,
-                    children: const [
+                    children: [
                       Text('Party status : not started',
                           style: TextStyle(
                               color: Colors.white,
@@ -1021,33 +866,4 @@ Future<void> pause() async {
 
 void setStatus(String code, {String? message}) {
   var text = message ?? '';
-}
-
-class CircleTabIndicator extends Decoration {
-  final Color color;
-  double radius;
-
-  CircleTabIndicator({required this.color, required this.radius});
-
-  @override
-  BoxPainter createBoxPainter([VoidCallback? onChanged]) {
-    return _CirclePainter(color: color, radius: radius);
-  }
-}
-
-class _CirclePainter extends BoxPainter {
-  final double radius;
-  late Color color;
-
-  _CirclePainter({required this.color, required this.radius});
-
-  @override
-  void paint(Canvas canvas, Offset offset, ImageConfiguration cfg) {
-    late Paint paint;
-    paint = Paint()..color = color;
-    paint = paint..isAntiAlias = true;
-    final Offset circleOffset =
-        offset + Offset(cfg.size!.width / 2, cfg.size!.height - radius);
-    canvas.drawCircle(circleOffset, radius, paint);
-  }
 }

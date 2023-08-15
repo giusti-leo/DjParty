@@ -1,6 +1,6 @@
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:djparty/page/HomePage.dart';
+import 'package:djparty/page/lobby/HomePage.dart';
 import 'package:djparty/page/auth/Login.dart';
 import 'package:djparty/page/auth/ResetPassword.dart';
 import 'package:djparty/services/InternetProvider.dart';
@@ -164,7 +164,7 @@ class _SignInState extends State<SignIn> {
             color: mainGreen,
           ),
           filled: true,
-          fillColor: const Color.fromARGB(128, 53, 74, 62),
+          fillColor: backGround,
           hintStyle: const TextStyle(color: Colors.black),
           enabledBorder: OutlineInputBorder(
             borderSide: BorderSide(color: mainGreen, width: 1),
@@ -203,7 +203,7 @@ class _SignInState extends State<SignIn> {
                 });
               }),
           filled: true,
-          fillColor: const Color.fromARGB(128, 53, 74, 62),
+          fillColor: backGround,
           hintStyle: TextStyle(color: mainGreen),
           enabledBorder: OutlineInputBorder(
             borderRadius: const BorderRadius.all(Radius.circular(5.0)),
@@ -245,7 +245,7 @@ class _SignInState extends State<SignIn> {
                 });
               }),
           filled: true,
-          fillColor: const Color.fromARGB(128, 53, 74, 62),
+          fillColor: backGround,
           hintStyle: const TextStyle(color: Colors.white54),
           enabledBorder: OutlineInputBorder(
             borderRadius: const BorderRadius.all(Radius.circular(5.0)),

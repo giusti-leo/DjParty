@@ -1,6 +1,6 @@
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:djparty/page/HomePage.dart';
+import 'package:djparty/page/lobby/HomePage.dart';
 import 'package:djparty/page/auth/ResetPassword.dart';
 import 'package:djparty/page/auth/SignUp.dart';
 import 'package:djparty/services/InternetProvider.dart';
@@ -16,6 +16,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 
 import 'package:rounded_loading_button/rounded_loading_button.dart';
+
+import '../../utils/formFactor.dart';
 
 DatabaseReference dbRef = FirebaseDatabase.instance.ref();
 final FirebaseAuth auth = FirebaseAuth.instance;
@@ -39,6 +41,11 @@ StreamBuilder redirectHomeOrLogin() {
   return StreamBuilder<User?>(
     stream: FirebaseAuth.instance.authStateChanges(),
     builder: (context, snapshot) {
+      ScreenType screenType = getFormFactor(context);
+      if (screenType == ScreenType.Handset) {
+        portraitModeOnly();
+        isMobile = true;
+      }
       if (snapshot.connectionState != ConnectionState.active) {
         return const Center(child: CircularProgressIndicator());
       }
@@ -88,8 +95,8 @@ class _LoginState extends State<Login> {
       GlobalKey<ScaffoldMessengerState>();
   final _formKey = GlobalKey<FormState>();
 
-  TextStyle styleHeading1 =
-      const TextStyle(fontSize: 50.0, fontWeight: FontWeight.bold);
+  TextStyle styleHeading1 = const TextStyle(
+      fontSize: 50.0, fontWeight: FontWeight.bold, color: Colors.white);
 
   @override
   Widget build(BuildContext context) {
@@ -128,8 +135,7 @@ class _LoginState extends State<Login> {
             child: isMobile
                 ? Stack(
                     children: [
-                      heading1('Dj', 0.0, 0.0),
-                      heading1('Party', 25.0, 75.0),
+                      heading1('Dj Party', 0.0, 75.0),
                     ],
                   )
                 : const Stack(
@@ -442,12 +448,20 @@ class _LoginState extends State<Login> {
         }
         if (value == true) {
           // user exists
-          await sp.getUserDataFromFirestore((loggedUser.uid)).then((value) => sp
-              .saveDataToSharedPreferences()
-              .then((value) => sp.setSignIn().then((value) {
-                    facebookController.success();
-                    handleAfterSignIn();
-                  })));
+          await sp
+              .getUserDataFromFirestore((loggedUser.uid))
+              .then((value) => sp.saveDataToSharedPreferences().then((value) {
+                    sp.setSignIn().then((value) {
+                      if (sp.hasError == true) {
+                        showInSnackBar(
+                            context, sp.errorCode.toString(), Colors.red);
+                        facebookController.reset();
+                        return;
+                      }
+                      facebookController.success();
+                      handleAfterSignIn();
+                    });
+                  }));
         } else {
           // user does not exist
           sp.saveDataToFirestore().then((value) => sp

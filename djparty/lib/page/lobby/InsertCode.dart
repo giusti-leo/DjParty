@@ -1,7 +1,9 @@
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:djparty/page/HomePage.dart';
+import 'package:djparty/entities/Entities.dart';
+import 'package:djparty/page/auth/Login.dart';
+import 'package:djparty/page/lobby/HomePage.dart';
 import 'package:djparty/services/FirebaseRequests.dart';
 import 'package:djparty/services/InternetProvider.dart';
 import 'package:djparty/services/SignInProvider.dart';
@@ -30,21 +32,17 @@ class _InsertCodeState extends State<InsertCode> {
   Color backGround = const Color.fromARGB(255, 35, 34, 34);
   Color alertColor = Colors.red;
 
+  final _formKey = GlobalKey<FormState>();
+
   @override
   void dispose() {
     textController.dispose();
     super.dispose();
   }
 
-  Future getData() async {
-    final sp = context.read<SignInProvider>();
-    sp.getDataFromSharedPreferences();
-  }
-
   @override
   void initState() {
     super.initState();
-    getData();
   }
 
   @override
@@ -70,29 +68,25 @@ class _InsertCodeState extends State<InsertCode> {
         centerTitle: true,
       ),
       backgroundColor: backGround,
-      body: SingleChildScrollView(
-          child: Center(
-        child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const SizedBox(
-                height: 20,
-              ),
-              const Text(
-                'Enter a Party Code',
-                style: TextStyle(
-                    fontSize: 25,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white),
-              ),
-              const SizedBox(
-                height: 20,
-              ),
-              buildTextField(context),
-            ]),
-      )),
+      body: Align(
+        alignment: Alignment.center,
+        child: SizedBox(
+          width: isMobile ? MediaQuery.of(context).size.width * 0.8 : 600,
+          height: isMobile ? MediaQuery.of(context).size.height * 0.8 : 1000,
+          child: Form(key: _formKey, child: insertCode()),
+        ),
+      ),
     ));
+  }
+
+  Widget insertCode() {
+    return Center(
+        child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 25.0),
+            child: ListView(children: [
+              const SizedBox(height: 40.0),
+              buildTextField(context),
+            ])));
   }
 
   Widget buildTextField(BuildContext context) => SizedBox(
@@ -175,12 +169,15 @@ class _InsertCodeState extends State<InsertCode> {
                           return;
                         }
 
+                        Person person =
+                            Person.getTrackFromFirestore(widget.loggedUser.uid);
+
                         fp
                             .userJoinParty(
                                 widget.loggedUser.uid,
                                 textController.text,
-                                widget.loggedUser.displayName!,
-                                widget.loggedUser.photoURL!,
+                                person.username!,
+                                person.imageUrl!,
                                 0)
                             .then((value) {
                           if (fp.hasError) {
