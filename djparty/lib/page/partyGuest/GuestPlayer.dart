@@ -280,191 +280,227 @@ class _GuestPlayerEnded extends State<GuestPlayerEnded>
         SizedBox(
           height: height * 0.051,
         ),
-        Column(
-          children: [
-            FutureBuilder(
-              future: widget.db.collection('parties').doc(widget.code).get(),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return Container();
-                }
+        SizedBox(
+          width: width * .8,
+          child: Column(
+            children: [
+              FutureBuilder(
+                future: widget.db
+                    .collection('parties')
+                    .doc(widget.code)
+                    .collection('Party')
+                    .doc('PartyStatus')
+                    .get(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return Container();
+                  }
 
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(
-                      child: CircularProgressIndicator(
-                    color: mainGreen,
-                    backgroundColor: backGround,
-                    strokeWidth: 10,
-                  ));
-                }
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(
+                        child: CircularProgressIndicator(
+                      color: mainGreen,
+                      backgroundColor: backGround,
+                      strokeWidth: 10,
+                    ));
+                  }
 
-                Timestamp endTime = snapshot.data!.data()!['endTime'];
-                Timestamp startTime = snapshot.data!.data()!['startTime'];
+                  Timestamp endTime = snapshot.data!.data()!['endTime'];
+                  Timestamp startTime = snapshot.data!.data()!['startTime'];
 
-                int duration =
-                    endTime.toDate().difference(startTime.toDate()).inMinutes;
+                  int duration =
+                      endTime.toDate().difference(startTime.toDate()).inMinutes;
 
-                return SizedBox(
-                  height: 30,
-                  child: Text('The party lasted $duration min',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                      )),
-                );
-              },
-            ),
-            const SizedBox(
-              height: 5,
-            ),
-            FutureBuilder(
-              future: widget.db
-                  .collection('parties')
-                  .doc(widget.code)
-                  .collection('members')
-                  .orderBy('points', descending: true)
-                  .limit(1)
-                  .get(),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return Container();
-                }
-
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(
-                      child: CircularProgressIndicator(
-                    color: mainGreen,
-                    backgroundColor: backGround,
-                    strokeWidth: 10,
-                  ));
-                }
-
-                String username = snapshot.data!.docs[0]['username'];
-                String imageUrl = snapshot.data!.docs[0]['image_url'];
-
-                return SizedBox(
-                  height: height * 0.3,
-                  child: Column(
-                    children: [
-                      const Text('And the King of the Party is...',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
-                          )),
-                      (imageUrl != '')
-                          ? CircleAvatar(
-                              backgroundColor: Colors.white,
-                              maxRadius: height * 0.025,
-                              child: CircleAvatar(
-                                backgroundColor: Colors.white,
-                                backgroundImage: NetworkImage('${imageUrl}'),
-                                maxRadius: height * 0.022,
-                              ),
-                            )
-                          : CircleAvatar(
-                              backgroundColor: Colors.white,
-                              maxRadius: height * 0.025,
-                              child: CircleAvatar(
-                                  maxRadius: height * 0.022,
-                                  backgroundColor: Colors.black,
-                                  child: Text(
-                                    username[0].toUpperCase(),
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(
-                                        color: Colors.black,
-                                        fontSize: 40,
-                                        fontStyle: FontStyle.italic),
-                                  ))),
-                      const SizedBox(
-                        height: 5,
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-            const SizedBox(
-              height: 5,
-            ),
-            FutureBuilder(
-              future: widget.db
-                  .collection('parties')
-                  .doc(widget.code)
-                  .collection('queue')
-                  .orderBy('likes', descending: true)
-                  .limit(1)
-                  .get(),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return Container();
-                }
-
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(
-                      child: CircularProgressIndicator(
-                    color: mainGreen,
-                    backgroundColor: backGround,
-                    strokeWidth: 10,
-                  ));
-                }
-
-                Track song =
-                    Track.getTrackFromFirestore(snapshot.data!.docs[0]);
-
-                return SizedBox(
-                  height: height * 0.2,
-                  child: Column(
-                    children: [
-                      const Text('The most voted song was: ',
-                          style: TextStyle(
+                  return SizedBox(
+                    height: 20,
+                    child: RichText(
+                      text: TextSpan(
+                        text: 'The party lasted ',
+                        style: const TextStyle(
+                            fontWeight: FontWeight.normal,
                             fontSize: 16,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
-                          )),
-                      const SizedBox(
-                        height: 10,
-                      ),
-                      Row(
-                        children: [
-                          SizedBox(
-                              width: 250,
-                              height: 250,
-                              child: Image.network(song.images)),
-                          const SizedBox(
-                            width: 10,
-                          ),
-                          Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Text(
-                                  song.name,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 18,
-                                  ),
-                                ),
-                                const SizedBox(
-                                  height: 10,
-                                ),
-                                Text(
-                                  song.artists.first,
-                                  style: const TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ]),
+                            color: Colors.white),
+                        children: <TextSpan>[
+                          TextSpan(
+                              text: '$duration',
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 20,
+                                  color: Colors.white)),
+                          const TextSpan(
+                              text: ' min',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.normal,
+                                  fontSize: 16,
+                                  color: Colors.white)),
                         ],
-                      )
-                    ],
-                  ),
-                );
-              },
-            )
-          ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+              SizedBox(
+                height: height * 0.1,
+              ),
+              FutureBuilder(
+                future: widget.db
+                    .collection('parties')
+                    .doc(widget.code)
+                    .collection('members')
+                    .orderBy('points', descending: true)
+                    .limit(1)
+                    .get(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return Container();
+                  }
+
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(
+                        child: CircularProgressIndicator(
+                      color: mainGreen,
+                      backgroundColor: backGround,
+                      strokeWidth: 10,
+                    ));
+                  }
+
+                  String username = snapshot.data!.docs[0]['username'];
+                  String imageUrl = snapshot.data!.docs[0]['image_url'];
+
+                  return SizedBox(
+                    height: height * 0.3,
+                    child: Column(
+                      children: [
+                        const Text('And the King of the Party is...',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.normal,
+                              color: Colors.white,
+                            )),
+                        SizedBox(
+                          height: height * 0.05,
+                        ),
+                        (imageUrl != '')
+                            ? CircleAvatar(
+                                backgroundColor: Colors.white,
+                                maxRadius: height * 0.025,
+                                child: CircleAvatar(
+                                  backgroundColor: Colors.white,
+                                  backgroundImage: NetworkImage('${imageUrl}'),
+                                  maxRadius: height * 0.022,
+                                ),
+                              )
+                            : CircleAvatar(
+                                backgroundColor: Colors.white,
+                                maxRadius: height * 0.025,
+                                child: CircleAvatar(
+                                    maxRadius: height * 0.022,
+                                    backgroundColor: Colors.black,
+                                    child: Text(
+                                      username[0].toUpperCase(),
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 40,
+                                          fontStyle: FontStyle.italic),
+                                    ))),
+                        SizedBox(
+                          height: height * 0.01,
+                        ),
+                        Text('$username',
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                color: Colors.white))
+                      ],
+                    ),
+                  );
+                },
+              ),
+              SizedBox(
+                height: height * 0.2,
+                child: FutureBuilder(
+                  future: widget.db
+                      .collection('parties')
+                      .doc(widget.code)
+                      .collection('queue')
+                      .orderBy('likes', descending: true)
+                      .limit(1)
+                      .get(),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) {
+                      return Container();
+                    }
+
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return Center(
+                          child: CircularProgressIndicator(
+                        color: mainGreen,
+                        backgroundColor: backGround,
+                        strokeWidth: 10,
+                      ));
+                    }
+
+                    Track song =
+                        Track.getTrackFromFirestore(snapshot.data!.docs[0]);
+
+                    return SizedBox(
+                      height: height * 0.15,
+                      width: width * 0.7,
+                      child: Column(
+                        children: [
+                          const Text('The most voted song was: ',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.normal,
+                                color: Colors.white,
+                              )),
+                          const SizedBox(
+                            height: 10,
+                          ),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              SizedBox(
+                                  width: height * 0.1,
+                                  height: height * 0.1,
+                                  child: Image.network(song.images)),
+                              const SizedBox(
+                                width: 10,
+                              ),
+                              Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      song.name,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 18,
+                                      ),
+                                    ),
+                                    const SizedBox(
+                                      height: 10,
+                                    ),
+                                    Text(
+                                      song.artists.first,
+                                      style: const TextStyle(
+                                        color: Colors.grey,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ]),
+                            ],
+                          )
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              )
+            ],
+          ),
         )
       ],
     );

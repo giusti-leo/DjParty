@@ -341,110 +341,107 @@ class _AdminTabPage extends State<AdminTabPage>
   Widget mobileLayoutBuilder(BuildContext context, BoxConstraints constraints) {
     final FirebaseRequests fr = FirebaseRequests(db: widget.db);
 
-    return SizedBox(
-      height: constraints.maxHeight - 58,
-      child: StreamBuilder(
-          stream: widget.db
-              .collection('parties')
-              .doc(widget.code)
-              .collection('Party')
-              .doc('PartyStatus')
-              .snapshots(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting ||
-                !snapshot.hasData) {
-              return Center(
-                  child: CircularProgressIndicator(
-                color: mainGreen,
-                backgroundColor: backGround,
-                strokeWidth: 10,
-              ));
-            }
+    return StreamBuilder(
+        stream: widget.db
+            .collection('parties')
+            .doc(widget.code)
+            .collection('Party')
+            .doc('PartyStatus')
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting ||
+              !snapshot.hasData) {
+            return Center(
+                child: CircularProgressIndicator(
+              color: mainGreen,
+              backgroundColor: backGround,
+              strokeWidth: 10,
+            ));
+          }
 
-            final partySnap = snapshot.data!.data();
-            PartyStatus partyStatus;
-            partyStatus = PartyStatus.getPartyFromFirestore(partySnap);
+          final partySnap = snapshot.data!.data();
+          PartyStatus partyStatus;
+          partyStatus = PartyStatus.getPartyFromFirestore(partySnap);
 
-            if (!partyStatus.isStarted!) {
-              return Column(children: [
-                mobileStructTabs(tabController),
-                SizedBox(
+          if (!partyStatus.isStarted!) {
+            return Column(children: [
+              mobileStructTabs(tabController),
+              SizedBox(
+                width: double.maxFinite,
+                height: constraints.maxHeight - 110,
+                child: TabBarView(
+                  controller: tabController,
+                  children: [
+                    AdminRankingNotStarted(
+                      db: widget.db,
+                      code: widget.code,
+                    ),
+                    const AdminPlayerNotStarted(),
+                    QueueSearch(
+                      loggedUser: widget.loggedUser,
+                      db: widget.db,
+                      code: widget.code,
+                    )
+                  ],
+                ),
+              ),
+            ]);
+          } else if (partyStatus.isStarted! && !partyStatus.isEnded!) {
+            return Column(children: [
+              mobileStructTabs(tabController),
+              SizedBox(
                   width: double.maxFinite,
-                  height: constraints.maxHeight - 58,
+                  height: constraints.maxHeight - 110,
                   child: TabBarView(
                     controller: tabController,
                     children: [
-                      AdminRankingNotStarted(
+                      AdminRankingStarted(
                         db: widget.db,
                         code: widget.code,
                       ),
-                      const AdminPlayerNotStarted(),
+                      AdminPlayerSongRunning(
+                        tabController: tabController,
+                        db: widget.db,
+                        code: widget.code,
+                      ),
                       QueueSearch(
                         loggedUser: widget.loggedUser,
                         db: widget.db,
                         code: widget.code,
                       )
                     ],
-                  ),
+                  )),
+            ]);
+          } else {
+            timerController1.reset();
+            return Column(children: [
+              mobileStructTabs(tabController),
+              SizedBox(
+                width: double.maxFinite,
+                height: constraints.maxHeight - 110,
+                child: TabBarView(
+                  controller: tabController,
+                  children: [
+                    AdminRankingEnded(
+                      db: widget.db,
+                      code: widget.code,
+                    ),
+                    AdminPlayerEnded(
+                      loggedUser: widget.loggedUser,
+                      db: widget.db,
+                      code: widget.code,
+                    ),
+                    SongLists(
+                      loggedUser: widget.loggedUser,
+                      db: widget.db,
+                      code: widget.code,
+                    )
+                  ],
                 ),
-              ]);
-            } else if (partyStatus.isStarted! && !partyStatus.isEnded!) {
-              return Column(children: [
-                mobileStructTabs(tabController),
-                SizedBox(
-                    width: double.maxFinite,
-                    height: constraints.maxHeight - 58,
-                    child: TabBarView(
-                      controller: tabController,
-                      children: [
-                        AdminRankingStarted(
-                          db: widget.db,
-                          code: widget.code,
-                        ),
-                        AdminPlayerSongRunning(
-                          tabController: tabController,
-                          db: widget.db,
-                          code: widget.code,
-                        ),
-                        QueueSearch(
-                          loggedUser: widget.loggedUser,
-                          db: widget.db,
-                          code: widget.code,
-                        )
-                      ],
-                    )),
-              ]);
-            } else {
-              timerController1.reset();
-              return Column(children: [
-                mobileStructTabs(tabController),
-                SizedBox(
-                  width: double.maxFinite,
-                  height: constraints.maxHeight - 58,
-                  child: TabBarView(
-                    controller: tabController,
-                    children: [
-                      AdminRankingEnded(
-                        db: widget.db,
-                        code: widget.code,
-                      ),
-                      AdminPlayerEnded(
-                        loggedUser: widget.loggedUser,
-                        db: widget.db,
-                        code: widget.code,
-                      ),
-                      SongLists(
-                        loggedUser: widget.loggedUser,
-                        db: widget.db,
-                        code: widget.code,
-                      )
-                    ],
-                  ),
-                ),
-              ]);
-            }
-          }),
-    );
+              ),
+            ]);
+          }
+        });
   }
 
   Widget tabletLayoutBuilder(BuildContext context, BoxConstraints constraints) {

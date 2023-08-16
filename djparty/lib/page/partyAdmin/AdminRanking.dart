@@ -54,6 +54,8 @@ class _AdminRankingNotStarted extends State<AdminRankingNotStarted> {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+
     return Center(
       child: ListView(
         children: [
@@ -97,61 +99,66 @@ class _AdminRankingNotStarted extends State<AdminRankingNotStarted> {
                                       const SizedBox(
                                         height: 5,
                                       ),
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.start,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.center,
-                                        children: [
-                                          const SizedBox(width: 5),
-                                          Row(children: [
-                                            (currentUser.imageUrl != '')
-                                                ? CircleAvatar(
-                                                    backgroundColor:
-                                                        Colors.white,
-                                                    maxRadius: 22,
-                                                    child: CircleAvatar(
+                                      SizedBox(
+                                        width: width * 0.8,
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.start,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.center,
+                                          children: [
+                                            const SizedBox(width: 5),
+                                            Row(children: [
+                                              (currentUser.imageUrl != '')
+                                                  ? CircleAvatar(
                                                       backgroundColor:
                                                           Colors.white,
-                                                      backgroundImage: NetworkImage(
-                                                          '${currentUser.imageUrl}'),
-                                                      maxRadius: 21,
-                                                    ),
-                                                  )
-                                                : CircleAvatar(
-                                                    backgroundColor:
-                                                        Colors.white,
-                                                    maxRadius: 22,
-                                                    child: CircleAvatar(
+                                                      maxRadius: 22,
+                                                      child: CircleAvatar(
+                                                        backgroundColor:
+                                                            Colors.white,
+                                                        backgroundImage:
+                                                            NetworkImage(
+                                                                '${currentUser.imageUrl}'),
                                                         maxRadius: 21,
-                                                        backgroundColor: Color(
-                                                            currentUser.image!),
-                                                        child: Text(
-                                                          currentUser
-                                                              .username![0]
-                                                              .toUpperCase(),
-                                                          textAlign:
-                                                              TextAlign.center,
-                                                          style: const TextStyle(
-                                                              color:
-                                                                  Colors.black,
-                                                              fontSize: 40,
-                                                              fontStyle:
-                                                                  FontStyle
-                                                                      .italic),
-                                                        ))),
-                                            const Text(
-                                              '   ',
-                                              style: TextStyle(
-                                                  color: Colors.black),
-                                            ),
-                                            Text(
-                                              currentUser.username.toString(),
-                                              style: const TextStyle(
-                                                  color: Colors.black),
-                                            ),
-                                          ]),
-                                        ],
+                                                      ),
+                                                    )
+                                                  : CircleAvatar(
+                                                      backgroundColor:
+                                                          Colors.white,
+                                                      maxRadius: 22,
+                                                      child: CircleAvatar(
+                                                          maxRadius: 21,
+                                                          backgroundColor:
+                                                              Color(currentUser
+                                                                  .image!),
+                                                          child: Text(
+                                                            currentUser
+                                                                .username![0]
+                                                                .toUpperCase(),
+                                                            textAlign: TextAlign
+                                                                .center,
+                                                            style: const TextStyle(
+                                                                color: Colors
+                                                                    .black,
+                                                                fontSize: 40,
+                                                                fontStyle:
+                                                                    FontStyle
+                                                                        .italic),
+                                                          ))),
+                                              const Text(
+                                                '   ',
+                                                style: TextStyle(
+                                                    color: Colors.black),
+                                              ),
+                                              Text(
+                                                currentUser.username.toString(),
+                                                style: const TextStyle(
+                                                    color: Colors.black),
+                                              ),
+                                            ]),
+                                          ],
+                                        ),
                                       ),
                                       const SizedBox(
                                         height: 5,
@@ -448,7 +455,8 @@ class _AdminRankingStarted extends State<AdminRankingStarted> {
             height: height * 0.01,
           ),
           SizedBox(
-            height: 40,
+            width: MediaQuery.of(context).size.height * .3,
+            height: MediaQuery.of(context).size.height * .05,
             child: RoundedLoadingButton(
               onPressed: () {
                 showDataAlert(context);
@@ -459,8 +467,11 @@ class _AdminRankingStarted extends State<AdminRankingStarted> {
               elevation: 0,
               borderRadius: 25,
               color: mainGreen,
-              child: Wrap(
-                children: const [
+              child: const Wrap(
+                children: [
+                  SizedBox(
+                    width: 15,
+                  ),
                   Icon(
                     FontAwesomeIcons.music,
                     size: 20,
@@ -474,6 +485,9 @@ class _AdminRankingStarted extends State<AdminRankingStarted> {
                           color: Colors.white,
                           fontSize: 15,
                           fontWeight: FontWeight.w500)),
+                  SizedBox(
+                    width: 15,
+                  )
                 ],
               ),
             ),
@@ -659,7 +673,7 @@ class _AdminRankingEnded extends State<AdminRankingEnded> {
             height: height * 0.052,
           ),
           SizedBox(
-            height: height * 0.63,
+            height: height * 0.55,
             child: FutureBuilder(
                 future: FirebaseFirestore.instance
                     .collection('parties')

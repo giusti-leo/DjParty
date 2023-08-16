@@ -738,28 +738,26 @@ class _GuestTabPage extends State<GuestTabPage>
               Song song = Song.getPartyFromFirestore(partySnap);
               if (song.tmp != null) {
                 if (song.duration! > 5000) {
-                  timer = song.duration!;
-                }
-
-                return Column(children: [
-                  SizedBox(
-                    height: 3,
-                    width: width * 0.8,
-                    child: LinearTimer(
-                      duration: Duration(milliseconds: timer),
-                      color: mainGreen,
-                      backgroundColor: Colors.grey[800],
-                      controller: timerController1,
-                      onTimerEnd: () {
-                        SchedulerBinding.instance.addPostFrameCallback((_) {
-                          if (mounted) {
-                            timerController1.reset();
-                          }
-                        });
-                      },
+                  return Column(children: [
+                    SizedBox(
+                      height: 3,
+                      width: width * 0.8,
+                      child: LinearTimer(
+                        duration: Duration(milliseconds: song.duration!),
+                        color: mainGreen,
+                        backgroundColor: Colors.grey[800],
+                        controller: timerController1,
+                        onTimerEnd: () {
+                          SchedulerBinding.instance.addPostFrameCallback((_) {
+                            if (mounted) {
+                              timerController1.reset();
+                            }
+                          });
+                        },
+                      ),
                     ),
-                  ),
-                ]);
+                  ]);
+                }
               }
               return Container();
             }));

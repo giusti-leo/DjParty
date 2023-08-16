@@ -36,16 +36,19 @@ List<Widget> mobileTabs = const [
 ];
 
 Widget mobileStructTabs(TabController tabController) {
-  return Align(
-      alignment: Alignment.center,
-      child: TabBar(
-          controller: tabController,
-          isScrollable: true,
-          labelPadding: const EdgeInsets.only(left: 20, right: 20),
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.grey,
-          indicator: CircleTabIndicator(color: mainGreen, radius: 4),
-          tabs: mobileTabs));
+  return SizedBox(
+    height: 20,
+    child: Align(
+        alignment: Alignment.center,
+        child: TabBar(
+            controller: tabController,
+            isScrollable: true,
+            labelPadding: const EdgeInsets.only(left: 20, right: 20),
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.grey,
+            indicator: CircleTabIndicator(color: mainGreen, radius: 4),
+            tabs: mobileTabs)),
+  );
 }
 
 Widget tabletStructTabs(TabController tabController) {

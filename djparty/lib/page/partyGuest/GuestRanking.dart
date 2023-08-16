@@ -383,7 +383,7 @@ class _GuestRankingEnded extends State<GuestRankingEnded> {
           height: height * 0.010,
         ),
         SizedBox(
-          height: height * 0.3,
+          height: height * 0.6,
           child: FutureBuilder(
               future: FirebaseFirestore.instance
                   .collection('parties')

@@ -779,8 +779,7 @@ class _SongLists extends State<SongLists> {
                                     SizedBox(
                                       width: 10,
                                     ),
-                                    Text(
-                                        "Get the Spotify Playlist of the Party!",
+                                    Text("Get the Spotify Playlist!",
                                         style: TextStyle(
                                             color: Colors.white,
                                             fontSize: 15,
@@ -925,20 +924,20 @@ class _SongLists extends State<SongLists> {
           displayToastMessage(context,
               'Playlist DjParty_${widget.code} already created!', alertColor);
           partyController.reset();
+        } else {
+          sr.createPlaylist('DjParty_${widget.code}', sr.userId);
+
+          Future.delayed(const Duration(seconds: 1), () {
+            sr.addSongsToPlaylist(widget.code);
+          });
+
+          await fr.addPlaylist(widget.loggedUser.uid, widget.code);
+
+          partyController.reset();
+
+          displayToastMessage(context,
+              'Playlist name  DjParty_${widget.code} created!', mainGreen);
         }
-
-        sr.createPlaylist('DjParty_${widget.code}', sr.userId);
-
-        Future.delayed(const Duration(seconds: 1), () {
-          sr.addSongsToPlaylist(widget.code);
-        });
-
-        await fr.addPlaylist(widget.loggedUser.uid, widget.code);
-
-        partyController.reset();
-
-        displayToastMessage(context,
-            'Playlist name  DjParty_${widget.code} created!', mainGreen);
       },
     );
   }
