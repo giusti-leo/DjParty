@@ -169,26 +169,31 @@ class _InsertCodeState extends State<InsertCode> {
                           return;
                         }
 
-                        Person person =
-                            Person.getTrackFromFirestore(widget.loggedUser.uid);
-
-                        fp
-                            .userJoinParty(
-                                widget.loggedUser.uid,
-                                textController.text,
-                                person.username!,
-                                person.imageUrl!,
-                                0)
+                        widget.db
+                            .collection("users")
+                            .doc(uid)
+                            .get()
                             .then((value) {
-                          if (fp.hasError) {
-                            showInSnackBar(
-                                context, sp.errorCode.toString(), alertColor);
+                          Person person = Person.getTrackFromFirestore(value);
+
+                          fp
+                              .userJoinParty(
+                                  widget.loggedUser.uid,
+                                  textController.text,
+                                  person.username!,
+                                  person.imageUrl!,
+                                  0)
+                              .then((value) {
+                            if (fp.hasError) {
+                              showInSnackBar(
+                                  context, sp.errorCode.toString(), alertColor);
+                              return;
+                            }
+                            displayToastMessage(
+                                context, 'You join the party', mainGreen);
+                            handleAfterSubmit();
                             return;
-                          }
-                          displayToastMessage(
-                              context, 'You join the party', mainGreen);
-                          handleAfterSubmit();
-                          return;
+                          });
                         });
                       })));
             }

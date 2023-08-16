@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:djparty/Icons/c_d_icons.dart';
 import 'package:djparty/entities/Party.dart';
 import 'package:djparty/entities/Track.dart';
 import 'package:djparty/services/FirebaseRequests.dart';
@@ -14,6 +15,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 import 'package:djparty/services/SpotifyRequests.dart';
+import 'package:rounded_loading_button/rounded_loading_button.dart';
 
 class QueueSearch extends StatefulWidget {
   static String routeName = 'SearchItemScreen';
@@ -50,11 +52,11 @@ class _QueueSearch extends State<QueueSearch> {
 
   final _formKey = GlobalKey<FormState>();
 
+  final key = GlobalKey();
+
   Color mainGreen = const Color.fromARGB(228, 53, 191, 101);
   Color backGround = const Color.fromARGB(255, 35, 34, 34);
   Color alertColor = Colors.red;
-
-  final key = GlobalKey();
 
   Future getData() async {
     await _getSongs(widget.code);
@@ -137,7 +139,6 @@ class _QueueSearch extends State<QueueSearch> {
         home: Scaffold(
           backgroundColor: backGround,
           body: SizedBox(
-            width: MediaQuery.of(context).size.width * 0.9,
             child: ListView(
               key: key,
               children: [
@@ -695,6 +696,9 @@ class SongLists extends StatefulWidget {
 }
 
 class _SongLists extends State<SongLists> {
+  final RoundedLoadingButtonController partyController =
+      RoundedLoadingButtonController();
+
   Color mainGreen = const Color.fromARGB(228, 53, 191, 101);
   Color backGround = const Color.fromARGB(255, 35, 34, 34);
   Color alertColor = Colors.red;
@@ -707,6 +711,7 @@ class _SongLists extends State<SongLists> {
   @override
   Widget build(BuildContext context) {
     final height = MediaQuery.of(context).size.height;
+    final width = MediaQuery.of(context).size.width;
 
     return MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -719,12 +724,91 @@ class _SongLists extends State<SongLists> {
               SizedBox(
                 height: height * 0.018,
               ),
+              SizedBox(
+                height: height * 0.2,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    FutureBuilder(
+                        future: FirebaseFirestore.instance
+                            .collection('parties')
+                            .doc(widget.code)
+                            .collection('members')
+                            .doc(widget.loggedUser.uid)
+                            .get(),
+                        builder: (context, snapshot) {
+                          if (!snapshot.hasData) {
+                            return Container();
+                          }
+
+                          bool spotifyPlaylist =
+                              snapshot.data!.data()!['playlistSpotify'];
+
+                          if (spotifyPlaylist) {
+                            return const SizedBox(
+                              height: 40,
+                              child: Text("Playlist already added to Spotify!",
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w500)),
+                            );
+                          } else {
+                            return SizedBox(
+                              height: height * 0.05,
+                              width: width * 0.70,
+                              child: RoundedLoadingButton(
+                                onPressed: () {
+                                  _handleCreatePlaylist(context);
+                                },
+                                controller: partyController,
+                                successColor: mainGreen,
+                                elevation: 0,
+                                borderRadius: 25,
+                                color: mainGreen,
+                                child: const Wrap(
+                                  children: [
+                                    SizedBox(
+                                      width: 10,
+                                    ),
+                                    Icon(
+                                      CD.spotify,
+                                      size: 20,
+                                      color: Colors.white,
+                                    ),
+                                    SizedBox(
+                                      width: 10,
+                                    ),
+                                    Text(
+                                        "Get the Spotify Playlist of the Party!",
+                                        style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w500)),
+                                    SizedBox(
+                                      width: 10,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }
+                        }),
+                  ],
+                ),
+              ),
+              const SizedBox(
+                height: 20,
+              ),
               Expanded(flex: 1, child: fullSongList(context)),
             ])));
   }
 
   Widget fullSongList(BuildContext context) {
     final FirebaseRequests fr = FirebaseRequests(db: widget.db);
+
+    final height = MediaQuery.of(context).size.height;
+    final width = MediaQuery.of(context).size.width;
 
     return SizedBox(
       height: 1,
@@ -773,53 +857,89 @@ class _SongLists extends State<SongLists> {
                 ),
               ));
             } else {
-              return SizedBox(
-                  height: 1,
+              return Center(
                   child: Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          child: ListView.builder(
-                              itemCount: snap1.data.docs.length,
-                              itemBuilder: (BuildContext context, int index) {
-                                final track = snap1.data.docs[index];
-                                Track currentTrack =
-                                    Track.getTrackFromFirestore(track);
-                                return Column(
-                                  children: [
-                                    ListTile(
-                                      tileColor: backGround,
-                                      title: Text(currentTrack.name,
-                                          style: const TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w800,
-                                            color: Colors.white,
-                                          )),
-                                      subtitle: Text(currentTrack.artists[0],
-                                          style: const TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w800,
-                                            color: Color.fromARGB(
-                                                255, 134, 132, 132),
-                                          )),
-                                      leading: Image.network(
-                                        currentTrack.images,
-                                        fit: BoxFit.cover,
-                                        height: 60,
-                                        width: 60,
-                                      ),
+                    Expanded(
+                      child: ListView.builder(
+                          itemCount: snap1.data.docs.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            final track = snap1.data.docs[index];
+                            Track currentTrack =
+                                Track.getTrackFromFirestore(track);
+                            return SizedBox(
+                              child: Column(
+                                children: [
+                                  ListTile(
+                                    tileColor: backGround,
+                                    title: Text(currentTrack.name,
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w800,
+                                          color: Colors.white,
+                                        )),
+                                    subtitle: Text(currentTrack.artists[0],
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w800,
+                                          color: Color.fromARGB(
+                                              255, 134, 132, 132),
+                                        )),
+                                    leading: Image.network(
+                                      currentTrack.images,
+                                      fit: BoxFit.cover,
+                                      height: 60,
+                                      width: 60,
                                     ),
-                                    const Divider(
-                                      color: Colors.white24,
-                                      height: 1,
-                                    ),
-                                  ],
-                                );
-                              }),
-                        )
-                      ]));
+                                  ),
+                                  const Divider(
+                                    color: Colors.white24,
+                                    height: 1,
+                                  ),
+                                ],
+                              ),
+                            );
+                          }),
+                    )
+                  ]));
             }
           }),
+    );
+  }
+
+  void _handleCreatePlaylist(BuildContext context) async {
+    final sr = context.read<SpotifyRequests>();
+    final FirebaseRequests fr = FirebaseRequests(db: widget.db);
+
+    FirebaseFirestore.instance
+        .collection('parties')
+        .doc(widget.code)
+        .collection('members')
+        .doc(widget.loggedUser.uid)
+        .get()
+        .then(
+      (value) async {
+        if (value.data()!['playlistSpotify'] == true) {
+          displayToastMessage(context,
+              'Playlist DjParty_${widget.code} already created!', alertColor);
+          partyController.reset();
+        }
+
+        sr.createPlaylist('DjParty_${widget.code}', sr.userId);
+
+        Future.delayed(const Duration(seconds: 1), () {
+          sr.addSongsToPlaylist(widget.code);
+        });
+
+        await fr.addPlaylist(widget.loggedUser.uid, widget.code);
+
+        partyController.reset();
+
+        displayToastMessage(context,
+            'Playlist name  DjParty_${widget.code} created!', mainGreen);
+      },
     );
   }
 }

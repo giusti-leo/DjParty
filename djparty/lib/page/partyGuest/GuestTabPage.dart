@@ -9,8 +9,8 @@ import 'package:djparty/page/lobby/HomePage.dart';
 import 'package:djparty/page/party/QueueSearch.dart';
 import 'package:djparty/page/partyGuest/GuestPlayer.dart';
 import 'package:djparty/page/partyGuest/GuestRanking.dart';
-import 'package:djparty/page/utils/Spotify.dart';
-import 'package:djparty/page/utils/TabPageWidgets.dart';
+import 'package:djparty/utils/Spotify.dart';
+import 'package:djparty/utils/TabPageWidgets.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_countdown_timer/flutter_countdown_timer.dart';
@@ -332,6 +332,7 @@ class _GuestTabPage extends State<GuestTabPage>
                           ),
                           GuestPlayerEnded(
                             code: widget.code,
+                            db: widget.db,
                           ),
                           SongLists(
                             loggedUser: widget.loggedUser,
@@ -445,6 +446,7 @@ class _GuestTabPage extends State<GuestTabPage>
                         ),
                         GuestPlayerEnded(
                           code: widget.code,
+                          db: widget.db,
                         ),
                         SongLists(
                           loggedUser: widget.loggedUser,
@@ -465,7 +467,7 @@ class _GuestTabPage extends State<GuestTabPage>
     final FirebaseRequests fr = FirebaseRequests(db: widget.db);
 
     return StreamBuilder(
-        stream: Stream.periodic(const Duration(seconds: 75)),
+        stream: Stream.periodic(const Duration(seconds: 70)),
         builder: (context, snapshot) {
           widget.db
               .collection('parties')
@@ -473,23 +475,22 @@ class _GuestTabPage extends State<GuestTabPage>
               .collection('Party')
               .doc('PartyStatus')
               .get()
-              .then((value) {
-            if (value.data()!['isStarted']) {
-              widget.db
+              .then((value) async {
+            if (value.data()!['isStarted'] && !value.data()!['isEnded']) {
+              await widget.db
                   .collection('parties')
                   .doc(widget.code)
-                  .snapshots()
-                  .first
+                  .get()
                   .then((value) {
-                Timestamp tmp = value.get('ping');
+                Timestamp tmp = value.data()!['ping'];
 
-                print('Ping:' + tmp.toString());
+                print('Ping:' + tmp.toDate().toString());
 
-                print('Now:' + Timestamp.now().toString());
+                print('Now:' + Timestamp.now().toDate().toString());
 
-                if ((Timestamp.now().millisecondsSinceEpoch -
-                        tmp.millisecondsSinceEpoch) >
-                    100000) {
+                if (Timestamp.now().millisecondsSinceEpoch -
+                        tmp.millisecondsSinceEpoch >
+                    120000) {
                   print('Stop');
                   fr.setPartyEnded(widget.code);
                 }
@@ -553,8 +554,11 @@ class _GuestTabPage extends State<GuestTabPage>
               party = PartyStatus.getPartyFromFirestore(partySnap);
 
               if (party.isEnded!) {
-                return Column(
-                  children: const [
+                return const Column(
+                  children: [
+                    SizedBox(
+                      width: 30,
+                    ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.center,
@@ -576,11 +580,14 @@ class _GuestTabPage extends State<GuestTabPage>
                   ],
                 );
               } else if (!party.isStarted!) {
-                return Column(children: const [
+                return const Column(children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
+                      SizedBox(
+                        width: 30,
+                      ),
                       Text('Party status : not started',
                           style: TextStyle(
                               color: Colors.white,
@@ -681,6 +688,9 @@ class _GuestTabPage extends State<GuestTabPage>
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
+                            const SizedBox(
+                              width: 30,
+                            ),
                             Text(
                                 !votingStatus.voting!
                                     ? "Next voting in : "

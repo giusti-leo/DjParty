@@ -263,10 +263,10 @@ class _AdminPlayerSongRunning extends State<AdminPlayerSongRunning>
                           ),
                         ),
                       ])
-                : Column(
+                : const Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,
-                    children: const [
+                    children: [
                         Text(
                           'No Music in reprodution',
                           style: TextStyle(
@@ -495,81 +495,191 @@ class _AdminPlayerEnded extends State<AdminPlayerEnded>
         SizedBox(
           height: height * 0.051,
         ),
-        SizedBox(
-          height: height * 0.6,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const SizedBox(
-                height: 10,
-              ),
-              StreamBuilder(
-                  stream: FirebaseFirestore.instance
-                      .collection('parties')
-                      .doc(widget.code)
-                      .collection('members')
-                      .doc(widget.loggedUser.uid)
-                      .snapshots(),
-                  builder: (context, snapshot) {
-                    if (!snapshot.hasData) {
-                      return Container();
-                    }
+        Column(
+          children: [
+            FutureBuilder(
+              future: widget.db.collection('parties').doc(widget.code).get(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return Container();
+                }
 
-                    bool spotifyPlaylist =
-                        snapshot.data!.get('playlistSpotify');
-                    if (spotifyPlaylist) {
-                      return const SizedBox(
-                        height: 40,
-                        child: Text(
-                            "Playlist of the party already added to Spotify!",
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 15,
-                                fontWeight: FontWeight.w500)),
-                      );
-                    } else {
-                      return SizedBox(
-                        height: height * 0.05,
-                        width: width * 0.70,
-                        child: RoundedLoadingButton(
-                          onPressed: () {
-                            _handleCreatePlaylist(context);
-                          },
-                          controller: partyController,
-                          successColor: mainGreen,
-                          elevation: 0,
-                          borderRadius: 25,
-                          color: mainGreen,
-                          child: Wrap(
-                            children: const [
-                              SizedBox(
-                                width: 10,
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(
+                      child: CircularProgressIndicator(
+                    color: mainGreen,
+                    backgroundColor: backGround,
+                    strokeWidth: 10,
+                  ));
+                }
+
+                DateTime endTime = snapshot.data!.data()!['endTime'];
+                DateTime startTime = snapshot.data!.data()!['startTime'];
+
+                int duration = endTime.difference(startTime).inMinutes;
+
+                return SizedBox(
+                  height: 30,
+                  child: Text('The party lasted $duration min',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      )),
+                );
+              },
+            ),
+            const SizedBox(
+              height: 5,
+            ),
+            FutureBuilder(
+              future: widget.db
+                  .collection('parties')
+                  .doc(widget.code)
+                  .collection('members')
+                  .orderBy('points', descending: true)
+                  .limit(1)
+                  .get(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return Container();
+                }
+
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(
+                      child: CircularProgressIndicator(
+                    color: mainGreen,
+                    backgroundColor: backGround,
+                    strokeWidth: 10,
+                  ));
+                }
+
+                String username = snapshot.data!.docs[0]['username'];
+                String imageUrl = snapshot.data!.docs[0]['image_url'];
+
+                return SizedBox(
+                  height: height * 0.3,
+                  child: Column(
+                    children: [
+                      const Text('And the King of the Party is...',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                          )),
+                      (imageUrl != '')
+                          ? CircleAvatar(
+                              backgroundColor: Colors.white,
+                              maxRadius: height * 0.025,
+                              child: CircleAvatar(
+                                backgroundColor: Colors.white,
+                                backgroundImage: NetworkImage('${imageUrl}'),
+                                maxRadius: height * 0.022,
                               ),
-                              Icon(
-                                CD.spotify,
-                                size: 20,
-                                color: Colors.white,
-                              ),
-                              SizedBox(
-                                width: 10,
-                              ),
-                              Text("Get the Spotify Playlist of the Party!",
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w500)),
-                              SizedBox(
-                                width: 10,
-                              ),
-                            ],
+                            )
+                          : CircleAvatar(
+                              backgroundColor: Colors.white,
+                              maxRadius: height * 0.025,
+                              child: CircleAvatar(
+                                  maxRadius: height * 0.022,
+                                  backgroundColor: Colors.black,
+                                  child: Text(
+                                    username[0].toUpperCase(),
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                        color: Colors.black,
+                                        fontSize: 40,
+                                        fontStyle: FontStyle.italic),
+                                  ))),
+                      const SizedBox(
+                        height: 5,
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+            const SizedBox(
+              height: 5,
+            ),
+            FutureBuilder(
+              future: widget.db
+                  .collection('parties')
+                  .doc(widget.code)
+                  .collection('queue')
+                  .orderBy('likes', descending: true)
+                  .limit(1)
+                  .get(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return Container();
+                }
+
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(
+                      child: CircularProgressIndicator(
+                    color: mainGreen,
+                    backgroundColor: backGround,
+                    strokeWidth: 10,
+                  ));
+                }
+
+                Track song =
+                    Track.getTrackFromFirestore(snapshot.data!.docs[0]);
+
+                return SizedBox(
+                  height: height * 0.2,
+                  child: Column(
+                    children: [
+                      const Text('The most voted song was: ',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                          )),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      Row(
+                        children: [
+                          SizedBox(
+                              width: 250,
+                              height: 250,
+                              child: Image.network(song.images)),
+                          const SizedBox(
+                            width: 10,
                           ),
-                        ),
-                      );
-                    }
-                  }),
-            ],
-          ),
-        ),
+                          Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Text(
+                                  song.name,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                  ),
+                                ),
+                                const SizedBox(
+                                  height: 10,
+                                ),
+                                Text(
+                                  song.artists.first,
+                                  style: const TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ]),
+                        ],
+                      )
+                    ],
+                  ),
+                );
+              },
+            )
+          ],
+        )
       ],
     );
   }
@@ -578,6 +688,22 @@ class _AdminPlayerEnded extends State<AdminPlayerEnded>
     final sr = context.read<SpotifyRequests>();
     final FirebaseRequests fr = FirebaseRequests(db: widget.db);
 
+    FirebaseFirestore.instance
+        .collection('parties')
+        .doc(widget.code)
+        .collection('members')
+        .doc(widget.loggedUser.uid)
+        .get()
+        .then(
+      (value) {
+        if (value.data()!['playlistSpotify'] == true) {
+          displayToastMessage(context,
+              'Playlist DjParty_${widget.code} already created!', alertColor);
+          partyController.reset();
+        }
+      },
+    );
+
     sr.createPlaylist('DjParty_${widget.code}', sr.userId);
 
     Future.delayed(const Duration(seconds: 1), () {
@@ -585,6 +711,8 @@ class _AdminPlayerEnded extends State<AdminPlayerEnded>
     });
 
     await fr.addPlaylist(widget.loggedUser.uid, widget.code);
+
+    partyController.reset();
 
     displayToastMessage(
         context, 'Playlist name  DjParty_${widget.code} created!', mainGreen);

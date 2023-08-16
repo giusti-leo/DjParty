@@ -119,6 +119,7 @@ class FirebaseRequests extends ChangeNotifier {
         .doc(code)
         .collection("members")
         .orderBy("points", descending: true)
+        .limit(100)
         .snapshots();
   }
 
@@ -1121,7 +1122,10 @@ class FirebaseRequests extends ChangeNotifier {
           .doc(code)
           .collection('Party')
           .doc('PartyStatus')
-          .update({'isEnded': true});
+          .update({
+        'isEnded': true,
+        'endTime': DateTime.now(),
+      });
     } on FirebaseException catch (e) {
       switch (e.code) {
         default:

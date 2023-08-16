@@ -209,10 +209,10 @@ class _GuestPlayerSongRunning extends State<GuestPlayerSongRunning>
                           ),
                         ),
                       ])
-                : Column(
+                : const Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,
-                    children: const [
+                    children: [
                         Text(
                           'No Music in reprodution',
                           style: TextStyle(
@@ -235,8 +235,10 @@ class GuestPlayerEnded extends StatefulWidget {
   static String routeName = 'SpotifyPlayer';
 
   String code;
+  FirebaseFirestore db;
 
-  GuestPlayerEnded({Key? key, required this.code}) : super(key: key);
+  GuestPlayerEnded({Key? key, required this.code, required this.db})
+      : super(key: key);
 
   @override
   _GuestPlayerEnded createState() => _GuestPlayerEnded();
@@ -270,56 +272,200 @@ class _GuestPlayerEnded extends State<GuestPlayerEnded>
   }
 
   Widget _endParty(BuildContext context) {
-    bool pressed = false;
-
     final height = MediaQuery.of(context).size.height;
+    final width = MediaQuery.of(context).size.height;
 
     return Column(
       children: [
         SizedBox(
-          height: height * 0.010,
+          height: height * 0.051,
         ),
-        SizedBox(
-          height: height * 0.4,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const SizedBox(
-                height: 10,
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  if (pressed) {
-                    displayToastMessage(
-                        context,
-                        'Playlist named DjParty_${widget.code} already added!',
-                        mainGreen);
-                  } else {
-                    _handleCreatePlaylist(context);
-                    pressed = true;
-                  }
-                },
-                child: Wrap(
-                  children: const [
-                    Icon(
-                      CD.spotify,
-                      size: 20,
-                      color: Colors.white,
-                    ),
-                    SizedBox(
-                      width: 15,
-                    ),
-                    Text("Get the Spotify Playlist of the Party!",
-                        style: TextStyle(
+        Column(
+          children: [
+            FutureBuilder(
+              future: widget.db.collection('parties').doc(widget.code).get(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return Container();
+                }
+
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(
+                      child: CircularProgressIndicator(
+                    color: mainGreen,
+                    backgroundColor: backGround,
+                    strokeWidth: 10,
+                  ));
+                }
+
+                Timestamp endTime = snapshot.data!.data()!['endTime'];
+                Timestamp startTime = snapshot.data!.data()!['startTime'];
+
+                int duration =
+                    endTime.toDate().difference(startTime.toDate()).inMinutes;
+
+                return SizedBox(
+                  height: 30,
+                  child: Text('The party lasted $duration min',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      )),
+                );
+              },
+            ),
+            const SizedBox(
+              height: 5,
+            ),
+            FutureBuilder(
+              future: widget.db
+                  .collection('parties')
+                  .doc(widget.code)
+                  .collection('members')
+                  .orderBy('points', descending: true)
+                  .limit(1)
+                  .get(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return Container();
+                }
+
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(
+                      child: CircularProgressIndicator(
+                    color: mainGreen,
+                    backgroundColor: backGround,
+                    strokeWidth: 10,
+                  ));
+                }
+
+                String username = snapshot.data!.docs[0]['username'];
+                String imageUrl = snapshot.data!.docs[0]['image_url'];
+
+                return SizedBox(
+                  height: height * 0.3,
+                  child: Column(
+                    children: [
+                      const Text('And the King of the Party is...',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
                             color: Colors.white,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w500)),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
+                          )),
+                      (imageUrl != '')
+                          ? CircleAvatar(
+                              backgroundColor: Colors.white,
+                              maxRadius: height * 0.025,
+                              child: CircleAvatar(
+                                backgroundColor: Colors.white,
+                                backgroundImage: NetworkImage('${imageUrl}'),
+                                maxRadius: height * 0.022,
+                              ),
+                            )
+                          : CircleAvatar(
+                              backgroundColor: Colors.white,
+                              maxRadius: height * 0.025,
+                              child: CircleAvatar(
+                                  maxRadius: height * 0.022,
+                                  backgroundColor: Colors.black,
+                                  child: Text(
+                                    username[0].toUpperCase(),
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                        color: Colors.black,
+                                        fontSize: 40,
+                                        fontStyle: FontStyle.italic),
+                                  ))),
+                      const SizedBox(
+                        height: 5,
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+            const SizedBox(
+              height: 5,
+            ),
+            FutureBuilder(
+              future: widget.db
+                  .collection('parties')
+                  .doc(widget.code)
+                  .collection('queue')
+                  .orderBy('likes', descending: true)
+                  .limit(1)
+                  .get(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return Container();
+                }
+
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(
+                      child: CircularProgressIndicator(
+                    color: mainGreen,
+                    backgroundColor: backGround,
+                    strokeWidth: 10,
+                  ));
+                }
+
+                Track song =
+                    Track.getTrackFromFirestore(snapshot.data!.docs[0]);
+
+                return SizedBox(
+                  height: height * 0.2,
+                  child: Column(
+                    children: [
+                      const Text('The most voted song was: ',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                          )),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      Row(
+                        children: [
+                          SizedBox(
+                              width: 250,
+                              height: 250,
+                              child: Image.network(song.images)),
+                          const SizedBox(
+                            width: 10,
+                          ),
+                          Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Text(
+                                  song.name,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                  ),
+                                ),
+                                const SizedBox(
+                                  height: 10,
+                                ),
+                                Text(
+                                  song.artists.first,
+                                  style: const TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ]),
+                        ],
+                      )
+                    ],
+                  ),
+                );
+              },
+            )
+          ],
+        )
       ],
     );
   }

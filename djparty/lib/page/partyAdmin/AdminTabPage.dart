@@ -11,8 +11,8 @@ import 'package:djparty/page/partyAdmin/PartySettings.dart';
 import 'package:djparty/page/party/QueueSearch.dart';
 import 'package:djparty/page/partyAdmin/AdminPlayer.dart';
 import 'package:djparty/page/partyAdmin/AdminRanking.dart';
-import 'package:djparty/page/utils/Spotify.dart';
-import 'package:djparty/page/utils/TabPageWidgets.dart';
+import 'package:djparty/utils/Spotify.dart';
+import 'package:djparty/utils/TabPageWidgets.dart';
 import 'package:djparty/services/Connectivity.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
@@ -452,6 +452,7 @@ class _AdminTabPage extends State<AdminTabPage>
 
     return SizedBox(
       height: constraints.maxHeight - 58,
+      width: isMobile ? MediaQuery.of(context).size.width * .9 : 600,
       child: StreamBuilder(
           stream: widget.db
               .collection('parties')
@@ -476,80 +477,91 @@ class _AdminTabPage extends State<AdminTabPage>
 
             if (!partyStatus.isStarted!) {
               return Column(children: [
-                tabletStructTabs(tabController),
-                SizedBox(
-                  width: double.maxFinite,
-                  height: constraints.maxHeight - 58,
-                  child: TabBarView(
-                    controller: tabController,
-                    children: [
-                      AdminRankingNotStarted(
-                        db: widget.db,
-                        code: widget.code,
-                      ),
-                      const AdminPlayerNotStarted(),
-                      QueueSearch(
-                        loggedUser: widget.loggedUser,
-                        db: widget.db,
-                        code: widget.code,
-                      )
-                    ],
-                  ),
-                ),
-              ]);
-            } else if (partyStatus.isStarted! && !partyStatus.isEnded!) {
-              return Column(children: [
-                tabletStructTabs(tabController),
-                SizedBox(
+                Row(children: [
+                  tabletStructTabs(tabController),
+                  Flexible(
+                      child: SizedBox(
                     width: double.maxFinite,
                     height: constraints.maxHeight - 58,
                     child: TabBarView(
                       controller: tabController,
                       children: [
-                        AdminRankingStarted(
+                        AdminRankingNotStarted(
                           db: widget.db,
                           code: widget.code,
                         ),
-                        AdminPlayerSongRunning(
-                          tabController: tabController,
-                          db: widget.db,
-                          code: widget.code,
-                        ),
+                        const AdminPlayerNotStarted(),
                         QueueSearch(
                           loggedUser: widget.loggedUser,
                           db: widget.db,
                           code: widget.code,
                         )
                       ],
-                    )),
+                    ),
+                  ))
+                ])
+              ]);
+            } else if (partyStatus.isStarted! && !partyStatus.isEnded!) {
+              return Column(children: [
+                Row(children: [
+                  tabletStructTabs(tabController),
+                  Flexible(
+                    child: SizedBox(
+                        width: double.maxFinite,
+                        height: constraints.maxHeight - 58,
+                        child: TabBarView(
+                          controller: tabController,
+                          children: [
+                            AdminRankingStarted(
+                              db: widget.db,
+                              code: widget.code,
+                            ),
+                            AdminPlayerSongRunning(
+                              tabController: tabController,
+                              db: widget.db,
+                              code: widget.code,
+                            ),
+                            QueueSearch(
+                              loggedUser: widget.loggedUser,
+                              db: widget.db,
+                              code: widget.code,
+                            )
+                          ],
+                        )),
+                  )
+                ])
               ]);
             } else {
               timerController1.reset();
               return Column(children: [
-                tabletStructTabs(tabController),
-                SizedBox(
-                  width: double.maxFinite,
-                  height: constraints.maxHeight - 58,
-                  child: TabBarView(
-                    controller: tabController,
-                    children: [
-                      AdminRankingEnded(
-                        db: widget.db,
-                        code: widget.code,
+                Row(children: [
+                  tabletStructTabs(tabController),
+                  Flexible(
+                    child: SizedBox(
+                      width: double.maxFinite,
+                      height: constraints.maxHeight - 58,
+                      child: TabBarView(
+                        controller: tabController,
+                        children: [
+                          AdminRankingEnded(
+                            db: widget.db,
+                            code: widget.code,
+                          ),
+                          AdminPlayerEnded(
+                            loggedUser: widget.loggedUser,
+                            db: widget.db,
+                            code: widget.code,
+                          ),
+                          SongLists(
+                            loggedUser: widget.loggedUser,
+                            db: widget.db,
+                            code: widget.code,
+                          )
+                        ],
                       ),
-                      AdminPlayerEnded(
-                        loggedUser: widget.loggedUser,
-                        db: widget.db,
-                        code: widget.code,
-                      ),
-                      SongLists(
-                        loggedUser: widget.loggedUser,
-                        db: widget.db,
-                        code: widget.code,
-                      )
-                    ],
+                    ),
                   ),
-                ),
+                ])
               ]);
             }
           }),
@@ -614,6 +626,9 @@ class _AdminTabPage extends State<AdminTabPage>
         stream: Stream.periodic(const Duration(seconds: 30)),
         builder: (context, snapshot) {
           fr.setPing(widget.code);
+
+          print('Ping: ' + DateTime.now().toString());
+
           return Container();
         });
   }
@@ -1230,12 +1245,15 @@ class _AdminTabPage extends State<AdminTabPage>
               if (party.isEnded!) {
                 pause();
 
-                return Column(
+                return const Column(
                   children: [
+                    SizedBox(
+                      width: 30,
+                    ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.center,
-                      children: const [
+                      children: [
                         Text('Party status : ended',
                             style: TextStyle(
                                 color: Colors.white,
@@ -1253,11 +1271,14 @@ class _AdminTabPage extends State<AdminTabPage>
                   ],
                 );
               } else if (!party.isStarted!) {
-                return Column(children: [
+                return const Column(children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,
-                    children: const [
+                    children: [
+                      SizedBox(
+                        width: 30,
+                      ),
                       Text('Party status : not started',
                           style: TextStyle(
                               color: Colors.white,
@@ -1351,6 +1372,9 @@ class _AdminTabPage extends State<AdminTabPage>
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
+                            const SizedBox(
+                              width: 30,
+                            ),
                             Text(
                                 !votingStatus.voting!
                                     ? "Next voting in : "

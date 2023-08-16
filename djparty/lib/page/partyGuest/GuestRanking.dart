@@ -47,6 +47,8 @@ class _GuestRankingNotStarted extends State<GuestRankingNotStarted> {
                     .collection('parties')
                     .doc(widget.code)
                     .collection('members')
+                    .orderBy('username', descending: true)
+                    .limit(100)
                     .snapshots(),
                 builder: (context, AsyncSnapshot snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting ||
@@ -213,6 +215,8 @@ class _GuestRankingStarted extends State<GuestRankingStarted> {
                   .collection('parties')
                   .doc(widget.code)
                   .collection('members')
+                  .orderBy('points', descending: true)
+                  .limit(100)
                   .snapshots(),
               builder: (context, AsyncSnapshot snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting ||
@@ -385,7 +389,7 @@ class _GuestRankingEnded extends State<GuestRankingEnded> {
                   .collection('parties')
                   .doc(widget.code)
                   .collection('members')
-                  .orderBy('points')
+                  .orderBy('points', descending: true)
                   .limit(50)
                   .get(),
               builder: (context, AsyncSnapshot snapshot) {

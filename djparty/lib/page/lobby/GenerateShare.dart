@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:djparty/entities/Entities.dart';
 import 'package:djparty/page/auth/Login.dart';
 import 'package:djparty/page/lobby/HomePage.dart';
 import 'package:djparty/services/FirebaseRequests.dart';
@@ -192,23 +193,33 @@ class _insertPartyName extends State<GeneratorScreen> {
             context, 'The user data does not exists', alertColor);
         return;
       }
-      fr
-          .addParty(
-              widget.loggedUser.uid,
-              partyName.text,
-              controller.text,
-              0,
-              widget.loggedUser.displayName ?? ' ',
-              widget.loggedUser.photoURL ?? ' ')
+      widget.db
+          .collection("users")
+          .doc(widget.loggedUser.uid)
+          .get()
           .then((value) {
-        if (fr.hasError == true) {
-          displayToastMessage(context, sp.errorCode.toString(), alertColor);
-          submitController.reset();
-          return;
-        }
-        submitController.success();
-        displayToastMessage(context, 'Party Created', mainGreen);
-        handleAfterSubmit();
+        Person person = Person.getTrackFromFirestore(value);
+        fr
+            .addParty(
+          widget.loggedUser.uid,
+          partyName.text,
+          controller.text,
+          0,
+          (person.username != null) ? person.username! : 'anon',
+          (person.imageUrl != null)
+              ? person.imageUrl!
+              : 'https://image.freepik.com/icone-gratis/nota-musicale-contorno_318-32582.jpg',
+        )
+            .then((value) {
+          if (fr.hasError == true) {
+            displayToastMessage(context, sp.errorCode.toString(), alertColor);
+            submitController.reset();
+            return;
+          }
+          submitController.success();
+          displayToastMessage(context, 'Party Created', mainGreen);
+          handleAfterSubmit();
+        });
       });
     });
   }

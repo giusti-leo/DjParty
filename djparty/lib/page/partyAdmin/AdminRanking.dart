@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:djparty/entities/User.dart';
+import 'package:djparty/page/auth/Login.dart';
 import 'package:djparty/services/FirebaseRequests.dart';
 import 'package:djparty/services/InternetProvider.dart';
 import 'package:djparty/services/SignInProvider.dart';
@@ -58,13 +59,13 @@ class _AdminRankingNotStarted extends State<AdminRankingNotStarted> {
         children: [
           const SizedBox(height: 20),
           SizedBox(
-            height: 500,
+            height: MediaQuery.of(context).size.height * .6,
             child: StreamBuilder(
                 stream: widget.db
                     .collection('parties')
                     .doc(widget.code)
                     .collection("members")
-                    .orderBy("points", descending: true)
+                    .orderBy("username", descending: true)
                     .limit(100)
                     .snapshots(),
                 builder: (context, AsyncSnapshot snapshot) {
@@ -103,58 +104,53 @@ class _AdminRankingNotStarted extends State<AdminRankingNotStarted> {
                                             CrossAxisAlignment.center,
                                         children: [
                                           const SizedBox(width: 5),
-                                          SizedBox(
-                                            width: 50,
-                                            child: Row(children: [
-                                              (currentUser.imageUrl != '')
-                                                  ? CircleAvatar(
+                                          Row(children: [
+                                            (currentUser.imageUrl != '')
+                                                ? CircleAvatar(
+                                                    backgroundColor:
+                                                        Colors.white,
+                                                    maxRadius: 22,
+                                                    child: CircleAvatar(
                                                       backgroundColor:
                                                           Colors.white,
-                                                      maxRadius: 22,
-                                                      child: CircleAvatar(
-                                                        backgroundColor:
-                                                            Colors.white,
-                                                        backgroundImage:
-                                                            NetworkImage(
-                                                                '${currentUser.imageUrl}'),
+                                                      backgroundImage: NetworkImage(
+                                                          '${currentUser.imageUrl}'),
+                                                      maxRadius: 21,
+                                                    ),
+                                                  )
+                                                : CircleAvatar(
+                                                    backgroundColor:
+                                                        Colors.white,
+                                                    maxRadius: 22,
+                                                    child: CircleAvatar(
                                                         maxRadius: 21,
-                                                      ),
-                                                    )
-                                                  : CircleAvatar(
-                                                      backgroundColor:
-                                                          Colors.white,
-                                                      maxRadius: 22,
-                                                      child: CircleAvatar(
-                                                          maxRadius: 21,
-                                                          backgroundColor:
-                                                              Color(currentUser
-                                                                  .image!),
-                                                          child: Text(
-                                                            currentUser
-                                                                .username![0]
-                                                                .toUpperCase(),
-                                                            textAlign: TextAlign
-                                                                .center,
-                                                            style: const TextStyle(
-                                                                color: Colors
-                                                                    .black,
-                                                                fontSize: 40,
-                                                                fontStyle:
-                                                                    FontStyle
-                                                                        .italic),
-                                                          ))),
-                                              const Text(
-                                                '   ',
-                                                style: TextStyle(
-                                                    color: Colors.black),
-                                              ),
-                                              Text(
-                                                currentUser.username.toString(),
-                                                style: const TextStyle(
-                                                    color: Colors.black),
-                                              ),
-                                            ]),
-                                          ),
+                                                        backgroundColor: Color(
+                                                            currentUser.image!),
+                                                        child: Text(
+                                                          currentUser
+                                                              .username![0]
+                                                              .toUpperCase(),
+                                                          textAlign:
+                                                              TextAlign.center,
+                                                          style: const TextStyle(
+                                                              color:
+                                                                  Colors.black,
+                                                              fontSize: 40,
+                                                              fontStyle:
+                                                                  FontStyle
+                                                                      .italic),
+                                                        ))),
+                                            const Text(
+                                              '   ',
+                                              style: TextStyle(
+                                                  color: Colors.black),
+                                            ),
+                                            Text(
+                                              currentUser.username.toString(),
+                                              style: const TextStyle(
+                                                  color: Colors.black),
+                                            ),
+                                          ]),
                                         ],
                                       ),
                                       const SizedBox(
@@ -175,7 +171,8 @@ class _AdminRankingNotStarted extends State<AdminRankingNotStarted> {
             height: 5,
           ),
           SizedBox(
-            height: 50,
+            width: MediaQuery.of(context).size.height * .3,
+            height: MediaQuery.of(context).size.height * .05,
             child: RoundedLoadingButton(
               onPressed: () {
                 setState(() {
@@ -190,6 +187,9 @@ class _AdminRankingNotStarted extends State<AdminRankingNotStarted> {
               color: mainGreen,
               child: const Wrap(
                 children: [
+                  SizedBox(
+                    width: 15,
+                  ),
                   Icon(
                     FontAwesomeIcons.music,
                     size: 20,
@@ -203,6 +203,9 @@ class _AdminRankingNotStarted extends State<AdminRankingNotStarted> {
                           color: Colors.white,
                           fontSize: 15,
                           fontWeight: FontWeight.w500)),
+                  SizedBox(
+                    width: 15,
+                  ),
                 ],
               ),
             ),
@@ -489,9 +492,8 @@ class _AdminRankingStarted extends State<AdminRankingStarted> {
         .doc(widget.code)
         .collection('Party')
         .doc('PartyStatus')
-        .update({
-      'isEnded': true,
-    }).onError((error, stackTrace) {
+        .update({'isEnded': true, 'endTime': DateTime.now()}).onError(
+            (error, stackTrace) {
       displayToastMessage(context, error.toString(), alertColor);
       return;
     });
