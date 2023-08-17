@@ -37,13 +37,13 @@ List<Widget> mobileTabs = const [
 
 Widget mobileStructTabs(TabController tabController) {
   return SizedBox(
-    height: 20,
+    height: 35,
     child: Align(
         alignment: Alignment.center,
         child: TabBar(
             controller: tabController,
             isScrollable: true,
-            labelPadding: const EdgeInsets.only(left: 20, right: 20),
+            labelPadding: const EdgeInsets.only(left: 30, right: 30),
             labelColor: Colors.white,
             unselectedLabelColor: Colors.grey,
             indicator: CircleTabIndicator(color: mainGreen, radius: 4),

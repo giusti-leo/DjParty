@@ -7,8 +7,8 @@ import 'package:djparty/entities/Track.dart';
 import 'package:djparty/page/auth/Login.dart';
 import 'package:djparty/page/lobby/HomePage.dart';
 import 'package:djparty/page/party/QueueSearch.dart';
-import 'package:djparty/page/partyGuest/GuestPlayer.dart';
-import 'package:djparty/page/partyGuest/GuestRanking.dart';
+import 'package:djparty/page/party/partyGuest/GuestPlayer.dart';
+import 'package:djparty/page/party/partyGuest/GuestRanking.dart';
 import 'package:djparty/utils/Spotify.dart';
 import 'package:djparty/utils/TabPageWidgets.dart';
 import 'package:flutter/scheduler.dart';
@@ -506,8 +506,8 @@ class _GuestTabPage extends State<GuestTabPage>
     try {
       var image = await QrPainter(
         data: string,
-        version: 1,
-        gapless: false,
+        version: 2,
+        gapless: true,
         color: const Color(0x00000000),
         emptyColor: const Color(0xFFFFFFFF),
       ).toImage(300);

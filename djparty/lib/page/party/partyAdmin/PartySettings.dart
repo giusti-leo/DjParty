@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:djparty/page/partyAdmin/AdminTabPage.dart';
+import 'package:djparty/page/party/partyAdmin/AdminTabPage.dart';
 import 'package:djparty/services/FirebaseRequests.dart';
 import 'package:djparty/services/InternetProvider.dart';
 import 'package:djparty/utils/nextScreen.dart';
@@ -47,6 +47,7 @@ class _PartySettingsState extends State<PartySettings> {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
+    final height = MediaQuery.of(context).size.height;
 
     return MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -82,99 +83,99 @@ class _PartySettingsState extends State<PartySettings> {
               ),
             ),
             body: SingleChildScrollView(
+              child: SizedBox(
                 child: Column(children: [
-              const SizedBox(
-                height: 50,
-              ),
-              const Text('Select Timer',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w500)),
-              const SizedBox(
-                height: 10,
-              ),
-              NumberPicker(
-                value: _currentTimer,
-                minValue: 1,
-                maxValue: 100,
-                step: 1,
-                itemHeight: 100,
-                axis: Axis.horizontal,
-                textStyle: const TextStyle(
-                    color: Colors.blueGrey,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w500),
-                selectedTextStyle: TextStyle(
+                  SizedBox(
+                    height: height * 0.1,
+                  ),
+                  const Text('Select Timer',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w500)),
+                  SizedBox(
+                    height: height * 0.05,
+                  ),
+                  NumberPicker(
+                    value: _currentTimer,
+                    minValue: 1,
+                    maxValue: 100,
+                    step: 1,
+                    itemHeight: 100,
+                    axis: Axis.horizontal,
+                    textStyle: const TextStyle(
+                        color: Colors.blueGrey,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w500),
+                    selectedTextStyle: TextStyle(
+                        color: mainGreen,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w500),
+                    onChanged: (value) => setState(() {
+                      _currentTimer = value;
+                    }),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.white),
+                    ),
+                  ),
+                  SizedBox(
+                    height: height * 0.1,
+                  ),
+                  const Text('Select Interval',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w500)),
+                  SizedBox(
+                    height: height * 0.05,
+                  ),
+                  NumberPicker(
+                    value: _currentInterval,
+                    minValue: 1,
+                    maxValue: 100,
+                    step: 1,
+                    itemHeight: 100,
+                    axis: Axis.horizontal,
+                    textStyle: const TextStyle(
+                        color: Colors.blueGrey,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w500),
+                    selectedTextStyle: TextStyle(
+                        color: mainGreen,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w500),
+                    onChanged: (value) => setState(() {
+                      _currentInterval = value;
+                    }),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.white),
+                    ),
+                  ),
+                  SizedBox(
+                    height: height * 0.1,
+                  ),
+                  RoundedLoadingButton(
+                    onPressed: () {
+                      _handleUpdate();
+                    },
+                    controller: submitController,
+                    successColor: mainGreen,
+                    height: height * 0.05,
+                    width: width * 0.15,
+                    elevation: 0,
+                    borderRadius: 25,
                     color: mainGreen,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w500),
-                onChanged: (value) => setState(() {
-                  _currentTimer = value;
-                }),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.white),
-                ),
-              ),
-              const SizedBox(
-                height: 50,
-              ),
-              const Text('Select Interval',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w500)),
-              const SizedBox(
-                height: 10,
-              ),
-              NumberPicker(
-                value: _currentInterval,
-                minValue: 1,
-                maxValue: 100,
-                step: 1,
-                itemHeight: 100,
-                axis: Axis.horizontal,
-                textStyle: const TextStyle(
-                    color: Colors.blueGrey,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w500),
-                selectedTextStyle: TextStyle(
-                    color: mainGreen,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w500),
-                onChanged: (value) => setState(() {
-                  _currentInterval = value;
-                }),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.white),
-                ),
-              ),
-              const SizedBox(
-                height: 10,
-              ),
-              RoundedLoadingButton(
-                onPressed: () {
-                  _handleUpdate();
-                },
-                controller: submitController,
-                successColor: mainGreen,
-                width: width * 0.80,
-                elevation: 0,
-                borderRadius: 25,
-                color: mainGreen,
-                child: Wrap(
-                  children: const [
-                    Text("Save",
+                    child: const Text("Save",
                         style: TextStyle(
                             color: Colors.white,
                             fontSize: 20,
                             fontWeight: FontWeight.w500)),
-                  ],
-                ),
-              )
-            ]))));
+                  )
+                ]),
+              ),
+            )));
   }
 
   Future _handleUpdate() async {

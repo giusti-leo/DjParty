@@ -7,10 +7,10 @@ import 'package:djparty/entities/Party.dart';
 import 'package:djparty/entities/Track.dart';
 import 'package:djparty/page/auth/Login.dart';
 import 'package:djparty/page/lobby/HomePage.dart';
-import 'package:djparty/page/partyAdmin/PartySettings.dart';
+import 'package:djparty/page/party/partyAdmin/PartySettings.dart';
 import 'package:djparty/page/party/QueueSearch.dart';
-import 'package:djparty/page/partyAdmin/AdminPlayer.dart';
-import 'package:djparty/page/partyAdmin/AdminRanking.dart';
+import 'package:djparty/page/party/partyAdmin/AdminPlayer.dart';
+import 'package:djparty/page/party/partyAdmin/AdminRanking.dart';
 import 'package:djparty/utils/Spotify.dart';
 import 'package:djparty/utils/TabPageWidgets.dart';
 import 'package:djparty/services/Connectivity.dart';
@@ -943,8 +943,8 @@ class _AdminTabPage extends State<AdminTabPage>
     try {
       var image = await QrPainter(
         data: string,
-        version: 1,
-        gapless: false,
+        version: 2,
+        gapless: true,
         color: const Color(0x00000000),
         emptyColor: const Color(0xFFFFFFFF),
       ).toImage(300);
@@ -958,8 +958,8 @@ class _AdminTabPage extends State<AdminTabPage>
       await Share.shareFiles(
         [file!.path],
         mimeTypes: ["image/png"],
-        text:
-            "Scan this Qr-Code to join my DjParty! Or insert this code: $string",
+        text: "Scan this Qr-Code to join my DjParty!" +
+            " Or insert this code: $string",
       );
 
       Future.delayed(const Duration(milliseconds: 1000));

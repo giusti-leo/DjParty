@@ -131,6 +131,9 @@ class _QueueSearch extends State<QueueSearch> {
 
   @override
   Widget build(BuildContext context) {
+    final height = MediaQuery.of(context).size.height;
+    final width = MediaQuery.of(context).size.width;
+
     return MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
@@ -138,145 +141,156 @@ class _QueueSearch extends State<QueueSearch> {
                 .copyWith(primary: mainGreen, secondary: mainGreen)),
         home: Scaffold(
           backgroundColor: backGround,
-          body: SizedBox(
-            child: ListView(
-              key: key,
-              children: [
-                const SizedBox(
-                  height: 20,
-                ),
-                SizedBox(
-                  height: 100,
-                  child: Form(key: _formKey, child: searchBuilder(context)),
-                ),
-                _showSearch
-                    ? SizedBox(
-                        height: 500,
-                        child: Column(
-                          children: [
-                            (_tracks.toString() != '[]')
-                                ? Expanded(
-                                    child: ListView.builder(
-                                        itemCount: _tracks.length,
-                                        itemBuilder:
-                                            (BuildContext context, int index) {
-                                          Track track = _tracks[index];
-                                          return GestureDetector(
-                                              onTapDown: (details) {
-                                                _getTapPosition(details);
-                                                setState(() {
-                                                  selectedIndex = 100;
-                                                });
-                                              },
-                                              onPanCancel: () => setState(() {
-                                                    selectedIndex = 100;
-                                                  }),
-                                              onTap: () {
-                                                setState(() {
-                                                  selectedIndex = index;
-                                                });
-                                                _showContextMenu(
-                                                    context, track);
-                                              },
-                                              child: Column(
-                                                children: [
-                                                  ListTile(
-                                                    contentPadding:
-                                                        const EdgeInsets.all(
-                                                            10.0),
-                                                    title: Text(track.name,
-                                                        style: TextStyle(
-                                                          fontSize: 16,
-                                                          fontWeight:
-                                                              FontWeight.w800,
-                                                          color: myColor,
-                                                        )),
-                                                    tileColor:
-                                                        selectedIndex == index
-                                                            ? mainGreen
-                                                            : null,
-                                                    subtitle: Text(
-                                                        printArtists(
-                                                            track.artists),
-                                                        style: const TextStyle(
-                                                          fontSize: 12,
-                                                          fontWeight:
-                                                              FontWeight.w800,
-                                                          color: Color.fromARGB(
-                                                              255,
-                                                              134,
-                                                              132,
-                                                              132),
-                                                        )),
-                                                    leading: Image.network(
-                                                      track.images,
-                                                      fit: BoxFit.cover,
-                                                      height: 60,
-                                                      width: 60,
-                                                    ),
-                                                  ),
-                                                  const Divider(
-                                                    color: Colors.white24,
-                                                    height: 1,
-                                                  )
-                                                ],
-                                              ));
-                                        }))
-                                : Container()
-                          ],
-                        ))
-                    : SizedBox(
-                        height: 500,
-                        child: FutureBuilder(
-                            future: widget.db
-                                .collection('parties')
-                                .doc(widget.code)
-                                .collection('queue')
-                                .where('inQueue', isEqualTo: true)
-                                .orderBy('votes')
-                                .limit(100)
-                                .get(),
-                            builder: (context, snapshot) {
-                              if (!snapshot.hasData) {
-                                return Container();
-                              }
-                              if (snapshot.data!.docs.isNotEmpty) {
-                                songs.clear();
-                                queueLength = 0;
-                                for (var element
-                                    in snapshot.data!.docs.reversed) {
-                                  Track currentTrack =
-                                      Track.getTrackFromFirestore(element);
-                                  songs.add(currentTrack);
-                                  queueLength = queueLength + 1;
-                                }
-                              }
-
-                              return StreamBuilder(
-                                  stream: widget.db
-                                      .collection('parties')
-                                      .doc(widget.code)
-                                      .collection('Party')
-                                      .doc('Voting')
-                                      .snapshots(),
-                                  builder: (context, snapshot) {
-                                    if (!snapshot.hasData) {
-                                      return Container();
+          body: Center(
+            child: SizedBox(
+              width: width * 0.7,
+              child: Align(
+                child: ListView(
+                  key: key,
+                  children: [
+                    SizedBox(
+                      height: height * 0.05,
+                    ),
+                    Form(key: _formKey, child: searchBuilder(context)),
+                    SizedBox(
+                      height: height * 0.001,
+                    ),
+                    _showSearch
+                        ? SizedBox(
+                            height: height * 0.8,
+                            child: Column(
+                              children: [
+                                (_tracks.toString() != '[]')
+                                    ? Expanded(
+                                        child: ListView.builder(
+                                            itemCount: _tracks.length,
+                                            itemBuilder: (BuildContext context,
+                                                int index) {
+                                              Track track = _tracks[index];
+                                              return GestureDetector(
+                                                  onTapDown: (details) {
+                                                    _getTapPosition(details);
+                                                    setState(() {
+                                                      selectedIndex = 100;
+                                                    });
+                                                  },
+                                                  onPanCancel: () =>
+                                                      setState(() {
+                                                        selectedIndex = 100;
+                                                      }),
+                                                  onTap: () {
+                                                    setState(() {
+                                                      selectedIndex = index;
+                                                    });
+                                                    _showContextMenu(
+                                                        context, track);
+                                                  },
+                                                  child: Column(
+                                                    children: [
+                                                      ListTile(
+                                                        contentPadding:
+                                                            const EdgeInsets
+                                                                .all(10.0),
+                                                        title: Text(track.name,
+                                                            style: TextStyle(
+                                                              fontSize: 16,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w800,
+                                                              color: myColor,
+                                                            )),
+                                                        tileColor:
+                                                            selectedIndex ==
+                                                                    index
+                                                                ? mainGreen
+                                                                : null,
+                                                        subtitle: Text(
+                                                            printArtists(
+                                                                track.artists),
+                                                            style:
+                                                                const TextStyle(
+                                                              fontSize: 12,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w800,
+                                                              color: Color
+                                                                  .fromARGB(
+                                                                      255,
+                                                                      134,
+                                                                      132,
+                                                                      132),
+                                                            )),
+                                                        leading: Image.network(
+                                                          track.images,
+                                                          fit: BoxFit.cover,
+                                                          height: 60,
+                                                          width: 60,
+                                                        ),
+                                                      ),
+                                                      const Divider(
+                                                        color: Colors.white24,
+                                                        height: 1,
+                                                      )
+                                                    ],
+                                                  ));
+                                            }))
+                                    : Container()
+                              ],
+                            ))
+                        : SizedBox(
+                            height: height * 0.5,
+                            child: FutureBuilder(
+                                future: widget.db
+                                    .collection('parties')
+                                    .doc(widget.code)
+                                    .collection('queue')
+                                    .where('inQueue', isEqualTo: true)
+                                    .orderBy('votes')
+                                    .limit(100)
+                                    .get(),
+                                builder: (context, snapshot) {
+                                  if (!snapshot.hasData) {
+                                    return Container();
+                                  }
+                                  if (snapshot.data!.docs.isNotEmpty) {
+                                    songs.clear();
+                                    queueLength = 0;
+                                    for (var element
+                                        in snapshot.data!.docs.reversed) {
+                                      Track currentTrack =
+                                          Track.getTrackFromFirestore(element);
+                                      songs.add(currentTrack);
+                                      queueLength = queueLength + 1;
                                     }
+                                  }
 
-                                    final partySnap = snapshot.data!.data();
-                                    VotingStatus votingStatus;
-                                    votingStatus =
-                                        VotingStatus.getPartyFromFirestore(
-                                            partySnap);
-                                    if (!votingStatus.voting!) {
-                                      return queueListSong(context);
-                                    } else {
-                                      return queueVoteSong(context);
-                                    }
-                                  });
-                            }))
-              ],
+                                  return StreamBuilder(
+                                      stream: widget.db
+                                          .collection('parties')
+                                          .doc(widget.code)
+                                          .collection('Party')
+                                          .doc('Voting')
+                                          .snapshots(),
+                                      builder: (context, snapshot) {
+                                        if (!snapshot.hasData) {
+                                          return Container();
+                                        }
+
+                                        final partySnap = snapshot.data!.data();
+                                        VotingStatus votingStatus;
+                                        votingStatus =
+                                            VotingStatus.getPartyFromFirestore(
+                                                partySnap);
+                                        if (!votingStatus.voting!) {
+                                          return queueListSong(context);
+                                        } else {
+                                          return queueVoteSong(context);
+                                        }
+                                      });
+                                }))
+                  ],
+                ),
+              ),
             ),
           ),
         ));
@@ -285,66 +299,72 @@ class _QueueSearch extends State<QueueSearch> {
   Widget searchBuilder(BuildContext context) {
     final sr = context.read<SpotifyRequests>();
 
-    return TextField(
-        textAlign: TextAlign.start,
-        controller: textController,
-        cursorColor: Colors.white,
-        autocorrect: false,
-        style: const TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.bold,
-          fontSize: 20,
-        ),
-        onChanged: (input) async {
-          await _updateTracks(input, sr.myToken, widget.loggedUser.uid);
-        },
-        onTap: () async {
-          setState(() {
-            _showSearch = true;
-          });
-          await _getSongs(widget.code);
-        },
-        onEditingComplete: () async {
-          await _getSongs(widget.code);
-        },
-        decoration: InputDecoration(
-          fillColor: Colors.white,
-          hintText: 'Search add a track',
-          hintStyle: const TextStyle(color: Colors.grey),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(18),
-            borderSide: const BorderSide(color: Colors.white, width: 2),
+    final height = MediaQuery.of(context).size.height;
+    final width = MediaQuery.of(context).size.width;
+
+    return SizedBox(
+      width: width * .7,
+      child: TextField(
+          textAlign: TextAlign.start,
+          controller: textController,
+          cursorColor: Colors.white,
+          autocorrect: false,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
           ),
-          disabledBorder: const OutlineInputBorder(
-            borderSide: BorderSide(color: Colors.white, width: 2),
-          ),
-          suffixIcon: (_showSearch == true)
-              ? IconButton(
-                  color: Colors.white,
-                  icon: const Icon(
-                    Icons.expand,
-                    size: 30,
+          onChanged: (input) async {
+            await _updateTracks(input, sr.myToken, widget.loggedUser.uid);
+          },
+          onTap: () async {
+            setState(() {
+              _showSearch = true;
+            });
+            await _getSongs(widget.code);
+          },
+          onEditingComplete: () async {
+            await _getSongs(widget.code);
+          },
+          decoration: InputDecoration(
+            fillColor: Colors.white,
+            hintText: 'Search a track',
+            hintStyle: const TextStyle(color: Colors.grey),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(18),
+              borderSide: const BorderSide(color: Colors.white, width: 2),
+            ),
+            disabledBorder: const OutlineInputBorder(
+              borderSide: BorderSide(color: Colors.white, width: 2),
+            ),
+            suffixIcon: (_showSearch == true)
+                ? IconButton(
                     color: Colors.white,
-                  ),
-                  onPressed: () async {
-                    setState(() {
-                      _showSearch = false;
-                    });
-                    await _getSongs(widget.code);
-                  },
-                )
-              : IconButton(
-                  color: Colors.white,
-                  icon: const Icon(
-                    Icons.search,
-                    size: 30,
+                    icon: const Icon(
+                      Icons.expand,
+                      size: 30,
+                      color: Colors.white,
+                    ),
+                    onPressed: () async {
+                      setState(() {
+                        _showSearch = false;
+                      });
+                      await _getSongs(widget.code);
+                    },
+                  )
+                : IconButton(
                     color: Colors.white,
+                    icon: const Icon(
+                      Icons.search,
+                      size: 30,
+                      color: Colors.white,
+                    ),
+                    onPressed: () => setState(() {
+                      _showSearch = true;
+                    }),
                   ),
-                  onPressed: () => setState(() {
-                    _showSearch = true;
-                  }),
-                ),
-        ));
+          )),
+    );
   }
 
   Widget queueVoteSong(BuildContext context) {

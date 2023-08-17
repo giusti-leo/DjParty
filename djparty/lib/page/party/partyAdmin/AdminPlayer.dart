@@ -1,6 +1,6 @@
 import 'package:djparty/Icons/c_d_icons.dart';
 import 'package:djparty/entities/Track.dart';
-import 'package:djparty/page/partyAdmin/AdminTabPage.dart';
+import 'package:djparty/page/party/partyAdmin/AdminTabPage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -188,9 +188,7 @@ class _AdminPlayerSongRunning extends State<AdminPlayerSongRunning>
             ),
             SizedBox(
               width: width * .8,
-              child: Expanded(
-                child: _playerWidget(context),
-              ),
+              child: _playerWidget(context),
             ),
           ]),
         );
@@ -498,11 +496,13 @@ class _AdminPlayerEnded extends State<AdminPlayerEnded>
     return Column(
       children: [
         SizedBox(
-          height: height * 0.051,
+          height: height * 0.035,
         ),
         SizedBox(
           width: width * .8,
+          height: height * 0.60,
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               FutureBuilder(
                 future: widget.db
@@ -560,7 +560,7 @@ class _AdminPlayerEnded extends State<AdminPlayerEnded>
                 },
               ),
               SizedBox(
-                height: height * 0.1,
+                height: height * 0.05,
               ),
               FutureBuilder(
                 future: widget.db
@@ -588,7 +588,7 @@ class _AdminPlayerEnded extends State<AdminPlayerEnded>
                   String imageUrl = snapshot.data!.docs[0]['image_url'];
 
                   return SizedBox(
-                    height: height * 0.3,
+                    height: height * 0.25,
                     child: Column(
                       children: [
                         const Text('And the King of the Party is...',
@@ -615,14 +615,16 @@ class _AdminPlayerEnded extends State<AdminPlayerEnded>
                                 maxRadius: height * 0.025,
                                 child: CircleAvatar(
                                     maxRadius: height * 0.022,
-                                    backgroundColor: Colors.black,
-                                    child: Text(
-                                      username[0].toUpperCase(),
-                                      textAlign: TextAlign.center,
-                                      style: const TextStyle(
-                                          color: Colors.black,
-                                          fontSize: 40,
-                                          fontStyle: FontStyle.italic),
+                                    backgroundColor: Colors.white,
+                                    child: Center(
+                                      child: Text(
+                                        username[0].toUpperCase(),
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(
+                                            color: Colors.black,
+                                            fontSize: 40,
+                                            fontStyle: FontStyle.italic),
+                                      ),
                                     ))),
                         SizedBox(
                           height: height * 0.01,

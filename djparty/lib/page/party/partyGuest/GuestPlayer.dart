@@ -127,13 +127,15 @@ class _GuestPlayerSongRunning extends State<GuestPlayerSongRunning>
   @override
   Widget build(BuildContext context) {
     final height = MediaQuery.of(context).size.height;
+    final width = MediaQuery.of(context).size.width;
 
     return Center(
       child: Column(children: [
         SizedBox(
           height: height * 0.052,
         ),
-        Expanded(
+        SizedBox(
+          width: width * .8,
           child: _playerWidget(context),
         ),
       ]),
@@ -273,15 +275,16 @@ class _GuestPlayerEnded extends State<GuestPlayerEnded>
 
   Widget _endParty(BuildContext context) {
     final height = MediaQuery.of(context).size.height;
-    final width = MediaQuery.of(context).size.height;
+    final width = MediaQuery.of(context).size.width;
 
     return Column(
       children: [
         SizedBox(
-          height: height * 0.051,
+          height: height * 0.035,
         ),
         SizedBox(
           width: width * .8,
+          height: height * 0.60,
           child: Column(
             children: [
               FutureBuilder(
@@ -340,7 +343,7 @@ class _GuestPlayerEnded extends State<GuestPlayerEnded>
                 },
               ),
               SizedBox(
-                height: height * 0.1,
+                height: height * 0.05,
               ),
               FutureBuilder(
                 future: widget.db
@@ -368,7 +371,7 @@ class _GuestPlayerEnded extends State<GuestPlayerEnded>
                   String imageUrl = snapshot.data!.docs[0]['image_url'];
 
                   return SizedBox(
-                    height: height * 0.3,
+                    height: height * 0.25,
                     child: Column(
                       children: [
                         const Text('And the King of the Party is...',
@@ -395,14 +398,16 @@ class _GuestPlayerEnded extends State<GuestPlayerEnded>
                                 maxRadius: height * 0.025,
                                 child: CircleAvatar(
                                     maxRadius: height * 0.022,
-                                    backgroundColor: Colors.black,
-                                    child: Text(
-                                      username[0].toUpperCase(),
-                                      textAlign: TextAlign.center,
-                                      style: const TextStyle(
-                                          color: Colors.black,
-                                          fontSize: 40,
-                                          fontStyle: FontStyle.italic),
+                                    backgroundColor: Colors.white,
+                                    child: Center(
+                                      child: Text(
+                                        username[0].toUpperCase(),
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(
+                                            color: Colors.black,
+                                            fontSize: 40,
+                                            fontStyle: FontStyle.italic),
+                                      ),
                                     ))),
                         SizedBox(
                           height: height * 0.01,
