@@ -138,7 +138,7 @@ class _UserProfileState extends State<UserProfile> {
           height: 10,
         ),
         SizedBox(
-          width: MediaQuery.of(context).size.width * .8,
+          width: MediaQuery.of(context).size.width * .6,
           height: MediaQuery.of(context).size.height * .1,
           child: TextField(
             controller: _description,
@@ -152,11 +152,11 @@ class _UserProfileState extends State<UserProfile> {
               ),
               filled: true,
               fillColor: Colors.black12,
-              enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: mainGreen, width: 1),
+              enabledBorder: const OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.white, width: 1),
               ),
-              focusedBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: mainGreen, width: 1),
+              focusedBorder: const OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.white, width: 1),
               ),
               labelStyle: const TextStyle(
                   color: Color.fromRGBO(30, 215, 96, 0.9), fontSize: 16),
@@ -181,7 +181,7 @@ class _UserProfileState extends State<UserProfile> {
           height: 10,
         ),
         SizedBox(
-          width: MediaQuery.of(context).size.width * .8,
+          width: MediaQuery.of(context).size.width * .6,
           height: MediaQuery.of(context).size.height * .1,
           child: TextField(
             controller: _username,
@@ -192,11 +192,11 @@ class _UserProfileState extends State<UserProfile> {
               hintText: utente.username,
               fillColor: Colors.black12,
               hintStyle: const TextStyle(color: Colors.white, fontSize: 14),
-              enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: mainGreen, width: 1),
+              enabledBorder: const OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.white, width: 1),
               ),
-              focusedBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: mainGreen, width: 1),
+              focusedBorder: const OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.white, width: 1),
               ),
               labelStyle: const TextStyle(
                   color: Color.fromRGBO(30, 215, 96, 0.9), fontSize: 16),
@@ -208,34 +208,62 @@ class _UserProfileState extends State<UserProfile> {
   }
 
   Widget roundedImage(Person utente) {
+    final width = MediaQuery.of(context).size.width;
+    final height = MediaQuery.of(context).size.height;
+
     return Row(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           (utente.imageUrl != '' && utente.imageUrl != ' ')
-              ? CircleAvatar(
-                  backgroundColor: Colors.white,
-                  maxRadius: MediaQuery.of(context).size.width * 0.15,
-                  child: CircleAvatar(
-                    backgroundColor: Colors.white,
-                    backgroundImage: NetworkImage(utente.imageUrl!),
-                    maxRadius: MediaQuery.of(context).size.width * 0.15 - 2,
-                  ),
-                )
-              : CircleAvatar(
-                  backgroundColor: Colors.white,
-                  maxRadius: MediaQuery.of(context).size.width * 0.15,
-                  child: CircleAvatar(
-                      maxRadius: MediaQuery.of(context).size.width * 0.15 - 2,
-                      backgroundColor: Colors.black,
-                      child: Text(
-                        utente.username![0].toUpperCase(),
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            color: mainGreen,
-                            fontSize: 40,
-                            fontStyle: FontStyle.normal),
-                      ))),
+              ? (height > width)
+                  ? CircleAvatar(
+                      backgroundColor: Colors.white,
+                      maxRadius: width * 0.15,
+                      child: CircleAvatar(
+                        backgroundColor: Colors.white,
+                        backgroundImage: NetworkImage(utente.imageUrl!),
+                        maxRadius: width * 0.15 - 2,
+                      ),
+                    )
+                  : CircleAvatar(
+                      backgroundColor: Colors.white,
+                      maxRadius: height * 0.15,
+                      child: CircleAvatar(
+                        backgroundColor: Colors.white,
+                        backgroundImage: NetworkImage(utente.imageUrl!),
+                        maxRadius: height * 0.15 - 2,
+                      ),
+                    )
+              : (height > width)
+                  ? CircleAvatar(
+                      backgroundColor: Colors.white,
+                      maxRadius: width * 0.15,
+                      child: CircleAvatar(
+                          maxRadius: width * 0.15 - 2,
+                          backgroundColor: Colors.black,
+                          child: Text(
+                            utente.username![0].toUpperCase(),
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                color: mainGreen,
+                                fontSize: 40,
+                                fontStyle: FontStyle.normal),
+                          )))
+                  : CircleAvatar(
+                      backgroundColor: Colors.white,
+                      maxRadius: height * 0.15,
+                      child: CircleAvatar(
+                          maxRadius: height * 0.15 - 2,
+                          backgroundColor: Colors.black,
+                          child: Text(
+                            utente.username![0].toUpperCase(),
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                color: mainGreen,
+                                fontSize: 40,
+                                fontStyle: FontStyle.normal),
+                          ))),
         ]);
   }
 
@@ -246,24 +274,16 @@ class _UserProfileState extends State<UserProfile> {
       },
       controller: updateController,
       successColor: mainGreen,
-      width: MediaQuery.of(context).size.width * 0.80,
+      width: MediaQuery.of(context).size.width * 0.3,
       elevation: 0,
       borderRadius: 25,
       color: mainGreen,
       child: const Wrap(
         children: [
-          Icon(
-            FontAwesomeIcons.user,
-            size: 20,
-            color: Colors.white,
-          ),
-          SizedBox(
-            width: 20,
-          ),
           Text("Save",
               style: TextStyle(
                   color: Colors.white,
-                  fontSize: 15,
+                  fontSize: 20,
                   fontWeight: FontWeight.w500)),
         ],
       ),
