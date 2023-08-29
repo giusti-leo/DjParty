@@ -38,8 +38,9 @@ class _SignInState extends State<SignIn> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
+
   TextStyle styleHeading1 =
-      const TextStyle(fontSize: 50.0, fontWeight: FontWeight.bold);
+      const TextStyle(fontSize: 50.0, fontWeight: FontWeight.bold, color: Colors.white);
 
   @override
   void initState() {

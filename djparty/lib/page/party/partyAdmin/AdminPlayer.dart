@@ -1,5 +1,6 @@
 import 'package:djparty/Icons/c_d_icons.dart';
 import 'package:djparty/entities/Track.dart';
+import 'package:djparty/page/auth/Login.dart';
 import 'package:djparty/page/party/partyAdmin/AdminTabPage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -680,41 +681,81 @@ class _AdminPlayerEnded extends State<AdminPlayerEnded>
                           const SizedBox(
                             height: 10,
                           ),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              SizedBox(
-                                  width: height * 0.1,
-                                  height: height * 0.1,
-                                  child: Image.network(song.images)),
-                              const SizedBox(
-                                width: 10,
-                              ),
-                              Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
+                          (isMobile)
+                              ? Column(
                                   crossAxisAlignment: CrossAxisAlignment.center,
+                                  mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Text(
-                                      song.name,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 18,
-                                      ),
-                                    ),
+                                    SizedBox(
+                                        width: height * 0.1,
+                                        height: height * 0.1,
+                                        child: Image.network(song.images)),
                                     const SizedBox(
-                                      height: 10,
+                                      width: 10,
                                     ),
-                                    Text(
-                                      song.artists.first,
-                                      style: const TextStyle(
-                                        color: Colors.grey,
-                                        fontSize: 14,
-                                      ),
+                                    Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            song.name,
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 18,
+                                            ),
+                                          ),
+                                          const SizedBox(
+                                            height: 10,
+                                          ),
+                                          Text(
+                                            song.artists.first,
+                                            style: const TextStyle(
+                                              color: Colors.grey,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                        ]),
+                                  ],
+                                )
+                              : Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    SizedBox(
+                                        width: height * 0.1,
+                                        height: height * 0.1,
+                                        child: Image.network(song.images)),
+                                    const SizedBox(
+                                      width: 10,
                                     ),
-                                  ]),
-                            ],
-                          )
+                                    Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            song.name,
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 18,
+                                            ),
+                                          ),
+                                          const SizedBox(
+                                            height: 10,
+                                          ),
+                                          Text(
+                                            song.artists.first,
+                                            style: const TextStyle(
+                                              color: Colors.grey,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                        ]),
+                                  ],
+                                )
                         ],
                       ),
                     );

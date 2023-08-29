@@ -465,24 +465,24 @@ class _HomeState extends State<Home> {
                                         widget.loggedUser.uid)
                                     ? const Icon(
                                         Icons.emoji_people,
-                                        size: 30,
+                                        size: 20,
                                       )
                                     : const Icon(
                                         Icons.people,
-                                        size: 30,
+                                        size: 20,
                                       ),
                                 title: Text(
                                   snapshot.data.docs[index]['PartyName'],
                                   style: const TextStyle(
                                     color: Colors.black,
-                                    fontSize: 24,
+                                    fontSize: 20,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
                                 subtitle: Text(
                                   "${tmp.toDate().day}/${tmp.toDate().month}/${tmp.toDate().year}",
                                   style: const TextStyle(
-                                      color: Colors.blueGrey, fontSize: 20),
+                                      color: Colors.blueGrey, fontSize: 16),
                                 ),
                                 children: [
                                   Stack(
@@ -504,7 +504,7 @@ class _HomeState extends State<Home> {
                                                   style: const TextStyle(
                                                       fontWeight:
                                                           FontWeight.normal,
-                                                      fontSize: 18,
+                                                      fontSize: 14,
                                                       color: Colors.black),
                                                   children: <TextSpan>[
                                                     TextSpan(
@@ -514,7 +514,7 @@ class _HomeState extends State<Home> {
                                                             fontWeight:
                                                                 FontWeight.bold,
                                                             color: Colors.black,
-                                                            fontSize: 18)),
+                                                            fontSize: 14)),
                                                   ],
                                                 ),
                                               ),
@@ -563,11 +563,11 @@ class _HomeState extends State<Home> {
                                                       ? MediaQuery.of(context)
                                                               .size
                                                               .height *
-                                                          0.05
+                                                          0.03
                                                       : MediaQuery.of(context)
                                                               .size
                                                               .width *
-                                                          0.05,
+                                                          0.03,
                                                   width: (MediaQuery.of(context)
                                                               .size
                                                               .width >
@@ -577,11 +577,11 @@ class _HomeState extends State<Home> {
                                                       ? MediaQuery.of(context)
                                                               .size
                                                               .height *
-                                                          0.02
+                                                          0.015
                                                       : MediaQuery.of(context)
                                                               .size
                                                               .width *
-                                                          0.02,
+                                                          0.015,
                                                   elevation: 0,
                                                   borderRadius: 25,
                                                   child: Wrap(
@@ -599,12 +599,12 @@ class _HomeState extends State<Home> {
                                                                         context)
                                                                     .size
                                                                     .height *
-                                                                0.02
+                                                                0.015
                                                             : MediaQuery.of(
                                                                         context)
                                                                     .size
                                                                     .width *
-                                                                0.02,
+                                                                0.015,
                                                       ),
                                                       const Center(
                                                         child: Icon(
@@ -626,12 +626,12 @@ class _HomeState extends State<Home> {
                                                                         context)
                                                                     .size
                                                                     .height *
-                                                                0.02
+                                                                0.015
                                                             : MediaQuery.of(
                                                                         context)
                                                                     .size
                                                                     .width *
-                                                                0.02,
+                                                                0.015,
                                                       )
                                                     ],
                                                   ),
@@ -675,11 +675,11 @@ class _HomeState extends State<Home> {
                                                       ? MediaQuery.of(context)
                                                               .size
                                                               .height *
-                                                          0.05
+                                                          0.03
                                                       : MediaQuery.of(context)
                                                               .size
                                                               .width *
-                                                          0.05,
+                                                          0.03,
                                                   width: (MediaQuery.of(context)
                                                               .size
                                                               .width >
@@ -689,11 +689,11 @@ class _HomeState extends State<Home> {
                                                       ? MediaQuery.of(context)
                                                               .size
                                                               .height *
-                                                          0.02
+                                                          0.015
                                                       : MediaQuery.of(context)
                                                               .size
                                                               .width *
-                                                          0.02,
+                                                          0.015,
                                                   elevation: 0,
                                                   borderRadius: 25,
                                                   color: mainGreen,
@@ -712,12 +712,12 @@ class _HomeState extends State<Home> {
                                                                         context)
                                                                     .size
                                                                     .height *
-                                                                0.02
+                                                                0.015
                                                             : MediaQuery.of(
                                                                         context)
                                                                     .size
                                                                     .width *
-                                                                0.02,
+                                                                0.015,
                                                       ),
                                                       const Center(
                                                         child: Icon(
@@ -739,12 +739,12 @@ class _HomeState extends State<Home> {
                                                                         context)
                                                                     .size
                                                                     .height *
-                                                                0.02
+                                                                0.015
                                                             : MediaQuery.of(
                                                                         context)
                                                                     .size
                                                                     .width *
-                                                                0.02,
+                                                                0.015,
                                                       )
                                                     ],
                                                   ),
@@ -764,7 +764,7 @@ class _HomeState extends State<Home> {
                                                                       context)
                                                                   .size
                                                                   .height *
-                                                              0.02
+                                                              0.015
                                                           : MediaQuery.of(
                                                                       context)
                                                                   .size
@@ -792,11 +792,11 @@ class _HomeState extends State<Home> {
                                                       ? MediaQuery.of(context)
                                                               .size
                                                               .height *
-                                                          0.05
+                                                          0.03
                                                       : MediaQuery.of(context)
                                                               .size
                                                               .width *
-                                                          0.05,
+                                                          0.03,
                                                   width: (MediaQuery.of(context)
                                                               .size
                                                               .width >
@@ -806,11 +806,11 @@ class _HomeState extends State<Home> {
                                                       ? MediaQuery.of(context)
                                                               .size
                                                               .height *
-                                                          0.02
+                                                          0.015
                                                       : MediaQuery.of(context)
                                                               .size
                                                               .width *
-                                                          0.02,
+                                                          0.015,
                                                   elevation: 0,
                                                   borderRadius: 25,
                                                   color: mainGreen,
@@ -829,12 +829,12 @@ class _HomeState extends State<Home> {
                                                                         context)
                                                                     .size
                                                                     .height *
-                                                                0.02
+                                                                0.015
                                                             : MediaQuery.of(
                                                                         context)
                                                                     .size
                                                                     .width *
-                                                                0.02,
+                                                                0.015,
                                                       ),
                                                       const Center(
                                                         child: Icon(
@@ -856,12 +856,12 @@ class _HomeState extends State<Home> {
                                                                         context)
                                                                     .size
                                                                     .height *
-                                                                0.02
+                                                                0.015
                                                             : MediaQuery.of(
                                                                         context)
                                                                     .size
                                                                     .width *
-                                                                0.02,
+                                                                0.015,
                                                       )
                                                     ],
                                                   ),

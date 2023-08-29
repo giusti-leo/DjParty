@@ -27,7 +27,7 @@ class _ResetPasswordState extends State<ResetPassword> {
   Color backGround = const Color.fromARGB(255, 35, 34, 34);
 
   TextStyle styleHeading1 =
-      const TextStyle(fontSize: 50.0, fontWeight: FontWeight.bold);
+      const TextStyle(fontSize: 50.0, fontWeight: FontWeight.bold, color: Colors.white);
 
   final TextEditingController _emailidController = TextEditingController();
 
