@@ -175,7 +175,7 @@ class MenuScreen extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(10),
       child: InkWell(
-        child: const Row(children: [
+        child: Row(children: [
           Icon(
             Icons.exit_to_app,
             color: Colors.white,

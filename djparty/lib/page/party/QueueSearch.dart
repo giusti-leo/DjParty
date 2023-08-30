@@ -786,7 +786,7 @@ class _SongLists extends State<SongLists> {
                                 elevation: 0,
                                 borderRadius: 25,
                                 color: mainGreen,
-                                child: const Wrap(
+                                child: Wrap(
                                   children: [
                                     SizedBox(
                                       width: 10,

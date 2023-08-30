@@ -267,7 +267,7 @@ class _AdminPlayerSongRunning extends State<AdminPlayerSongRunning>
                           ),
                         ),
                       ])
-                : const Column(
+                : Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
@@ -497,9 +497,6 @@ class _AdminPlayerEnded extends State<AdminPlayerEnded>
     return Column(
       children: [
         SizedBox(
-          height: height * 0.035,
-        ),
-        SizedBox(
           width: width * .8,
           height: height * 0.60,
           child: Column(
@@ -561,7 +558,7 @@ class _AdminPlayerEnded extends State<AdminPlayerEnded>
                 },
               ),
               SizedBox(
-                height: height * 0.05,
+                height: height * 0.035,
               ),
               FutureBuilder(
                 future: widget.db
@@ -588,55 +585,52 @@ class _AdminPlayerEnded extends State<AdminPlayerEnded>
                   String username = snapshot.data!.docs[0]['username'];
                   String imageUrl = snapshot.data!.docs[0]['image_url'];
 
-                  return SizedBox(
-                    height: height * 0.25,
-                    child: Column(
-                      children: [
-                        const Text('And the King of the Party is...',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.normal,
-                              color: Colors.white,
-                            )),
-                        SizedBox(
-                          height: height * 0.05,
-                        ),
-                        (imageUrl != '')
-                            ? CircleAvatar(
+                  return Column(
+                    children: [
+                      const Text('And the King of the Party is...',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.normal,
+                            color: Colors.white,
+                          )),
+                      SizedBox(
+                        height: height * 0.05,
+                      ),
+                      (imageUrl != '')
+                          ? CircleAvatar(
+                              backgroundColor: Colors.white,
+                              maxRadius: height * 0.025,
+                              child: CircleAvatar(
                                 backgroundColor: Colors.white,
-                                maxRadius: height * 0.025,
-                                child: CircleAvatar(
-                                  backgroundColor: Colors.white,
-                                  backgroundImage: NetworkImage('${imageUrl}'),
+                                backgroundImage: NetworkImage('${imageUrl}'),
+                                maxRadius: height * 0.022,
+                              ),
+                            )
+                          : CircleAvatar(
+                              backgroundColor: Colors.white,
+                              maxRadius: height * 0.025,
+                              child: CircleAvatar(
                                   maxRadius: height * 0.022,
-                                ),
-                              )
-                            : CircleAvatar(
-                                backgroundColor: Colors.white,
-                                maxRadius: height * 0.025,
-                                child: CircleAvatar(
-                                    maxRadius: height * 0.022,
-                                    backgroundColor: Colors.white,
-                                    child: Center(
-                                      child: Text(
-                                        username[0].toUpperCase(),
-                                        textAlign: TextAlign.center,
-                                        style: const TextStyle(
-                                            color: Colors.black,
-                                            fontSize: 40,
-                                            fontStyle: FontStyle.italic),
-                                      ),
-                                    ))),
-                        SizedBox(
-                          height: height * 0.01,
-                        ),
-                        Text('$username',
-                            style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                                color: Colors.white))
-                      ],
-                    ),
+                                  backgroundColor: Colors.white,
+                                  child: Center(
+                                    child: Text(
+                                      username[0].toUpperCase(),
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 40,
+                                          fontStyle: FontStyle.italic),
+                                    ),
+                                  ))),
+                      SizedBox(
+                        height: height * 0.01,
+                      ),
+                      Text('$username',
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              color: Colors.white))
+                    ],
                   );
                 },
               ),
@@ -703,7 +697,7 @@ class _AdminPlayerEnded extends State<AdminPlayerEnded>
                                             song.name,
                                             style: const TextStyle(
                                               color: Colors.white,
-                                              fontSize: 18,
+                                              fontSize: 16,
                                             ),
                                           ),
                                           const SizedBox(
@@ -713,7 +707,7 @@ class _AdminPlayerEnded extends State<AdminPlayerEnded>
                                             song.artists.first,
                                             style: const TextStyle(
                                               color: Colors.grey,
-                                              fontSize: 14,
+                                              fontSize: 12,
                                             ),
                                           ),
                                         ]),

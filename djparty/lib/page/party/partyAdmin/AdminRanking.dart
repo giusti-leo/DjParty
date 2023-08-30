@@ -81,7 +81,7 @@ class _AdminRankingNotStarted extends State<AdminRankingNotStarted> {
               elevation: 0,
               borderRadius: 25,
               color: mainGreen,
-              child: const Wrap(
+              child: Wrap(
                 children: [
                   SizedBox(
                     width: 15,
@@ -498,7 +498,7 @@ class _AdminRankingStarted extends State<AdminRankingStarted> {
               elevation: 0,
               borderRadius: 25,
               color: mainGreen,
-              child: const Wrap(
+              child: Wrap(
                 children: [
                   SizedBox(
                     width: 15,
@@ -635,9 +635,9 @@ class _AdminRankingStarted extends State<AdminRankingStarted> {
                                             style: const TextStyle(
                                                 color: Colors.black),
                                           ),
-                                          SizedBox(
-                                            width: width * 0.015,
-                                          ),
+                                          // SizedBox(
+                                          //   width: width * 0.015,
+                                          // ),
                                         ]),
                                       ),
                                     ],
@@ -1069,9 +1069,6 @@ class _AdminRankingEnded extends State<AdminRankingEnded> {
                                       SizedBox(
                                         width: width * 0.2,
                                         child: Row(children: [
-                                          SizedBox(
-                                            width: width * 0.015,
-                                          ),
                                           Text(
                                             ' Score: ${currentUser.points}',
                                             style: const TextStyle(

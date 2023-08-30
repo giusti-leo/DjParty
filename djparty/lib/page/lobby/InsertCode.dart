@@ -26,7 +26,7 @@ class InsertCode extends StatefulWidget {
 class _InsertCodeState extends State<InsertCode> {
   final TextEditingController textController = TextEditingController();
   bool err = false;
-  String uid = FirebaseAuth.instance.currentUser!.uid;
+  //String uid = FirebaseAuth.instance.currentUser!.uid;
 
   Color mainGreen = const Color.fromARGB(228, 53, 191, 101);
   Color backGround = const Color.fromARGB(255, 35, 34, 34);
@@ -171,7 +171,7 @@ class _InsertCodeState extends State<InsertCode> {
 
                         widget.db
                             .collection("users")
-                            .doc(uid)
+                            .doc(widget.loggedUser.uid)
                             .get()
                             .then((value) {
                           Person person = Person.getTrackFromFirestore(value);

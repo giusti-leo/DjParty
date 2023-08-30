@@ -38,9 +38,8 @@ class _SignInState extends State<SignIn> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-
-  TextStyle styleHeading1 =
-      const TextStyle(fontSize: 50.0, fontWeight: FontWeight.bold, color: Colors.white);
+  TextStyle styleHeading1 = const TextStyle(
+      fontSize: 50.0, fontWeight: FontWeight.bold, color: Colors.white);
 
   @override
   void initState() {
@@ -100,7 +99,7 @@ class _SignInState extends State<SignIn> {
                       heading1('Registration', 0.0, 0.0),
                     ],
                   )
-                : const Stack(
+                : Stack(
                     children: [
                       Positioned(
                         bottom: 10,
@@ -273,7 +272,7 @@ class _SignInState extends State<SignIn> {
       elevation: 0,
       borderRadius: 25,
       color: mainGreen,
-      child: const Wrap(
+      child: Wrap(
         children: [
           Icon(
             FontAwesomeIcons.music,

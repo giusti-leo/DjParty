@@ -257,7 +257,7 @@ class _AdminTabPage extends State<AdminTabPage>
                             handleShare(widget.code);
                             Navigator.of(context).pop();
                           },
-                          child: const Row(
+                          child: Row(
                             children: [
                               Icon(Icons.share),
                               SizedBox(
@@ -298,7 +298,7 @@ class _AdminTabPage extends State<AdminTabPage>
                               }
                             });
                           },
-                          child: const Row(
+                          child: Row(
                             children: [
                               Icon(Icons.settings),
                               SizedBox(
@@ -860,7 +860,7 @@ class _AdminTabPage extends State<AdminTabPage>
                       elevation: 0,
                       borderRadius: 25,
                       color: mainGreen,
-                      child: const Wrap(
+                      child: Wrap(
                         children: [
                           Text("Save",
                               style: TextStyle(
@@ -1242,7 +1242,7 @@ class _AdminTabPage extends State<AdminTabPage>
               if (party.isEnded!) {
                 pause();
 
-                return const Column(
+                return Column(
                   children: [
                     SizedBox(
                       width: 30,
@@ -1268,7 +1268,7 @@ class _AdminTabPage extends State<AdminTabPage>
                   ],
                 );
               } else if (!party.isStarted!) {
-                return const Column(children: [
+                return Column(children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,

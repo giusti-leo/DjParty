@@ -626,12 +626,12 @@ class _GuestRankingEnded extends State<GuestRankingEnded> {
           height: height * 0.001,
         ),
         SizedBox(height: height * 0.65, child: rankingBuilder(context)),
-        SizedBox(
-          height: height * 0.01,
-        ),
-        const SizedBox(
-          height: 10,
-        ),
+        // SizedBox(
+        //   height: height * 0.01,
+        // ),
+        // const SizedBox(
+        //   height: 10,
+        // ),
       ]),
     );
   }

@@ -193,7 +193,7 @@ class _GuestTabPage extends State<GuestTabPage>
                         handleShare(widget.code);
                         Navigator.of(context).pop();
                       },
-                      child: const Row(
+                      child: Row(
                         children: [
                           Icon(Icons.share),
                           SizedBox(
@@ -554,7 +554,7 @@ class _GuestTabPage extends State<GuestTabPage>
               party = PartyStatus.getPartyFromFirestore(partySnap);
 
               if (party.isEnded!) {
-                return const Column(
+                return Column(
                   children: [
                     SizedBox(
                       width: 30,
@@ -580,7 +580,7 @@ class _GuestTabPage extends State<GuestTabPage>
                   ],
                 );
               } else if (!party.isStarted!) {
-                return const Column(children: [
+                return Column(children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,

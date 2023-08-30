@@ -237,7 +237,7 @@ class _HomeState extends State<Home> {
                                               fontSize: 20,
                                             ),
                                           ),
-                                          const Row(
+                                          Row(
                                             children: [
                                               Divider(height: 32),
                                             ],
@@ -289,7 +289,7 @@ class _HomeState extends State<Home> {
                                                         0.2,
                                                 elevation: 0,
                                                 borderRadius: 25,
-                                                child: const Wrap(
+                                                child: Wrap(
                                                   children: [
                                                     Center(
                                                       child: Text("Exit",
@@ -347,7 +347,7 @@ class _HomeState extends State<Home> {
                                                 elevation: 0,
                                                 borderRadius: 25,
                                                 color: mainGreen,
-                                                child: const Wrap(
+                                                child: Wrap(
                                                   children: [
                                                     Center(
                                                       child: Text("Share",
@@ -409,7 +409,7 @@ class _HomeState extends State<Home> {
                                                 elevation: 0,
                                                 borderRadius: 25,
                                                 color: mainGreen,
-                                                child: const Wrap(
+                                                child: Wrap(
                                                   children: [
                                                     Center(
                                                       child: Text("Join Party",
@@ -429,7 +429,7 @@ class _HomeState extends State<Home> {
                                               ),
                                             ],
                                           ),
-                                          const Row(
+                                          Row(
                                             children: [
                                               Divider(height: 32),
                                             ],

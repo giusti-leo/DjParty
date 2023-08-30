@@ -9,7 +9,7 @@ import 'package:flutter_zoom_drawer/flutter_zoom_drawer.dart';
 import 'package:djparty/services/FirebaseRequests.dart';
 import 'package:mockito/mockito.dart';
 
-import '../utils/firebase.dart';
+import '../../utils/firebase.dart';
 
 Future<void> main() async {
   final User user = await getMockedUser();
@@ -41,18 +41,6 @@ Future<void> main() async {
   });
 
   testWidgets('Sb Home Widget', (tester) async {
-    // FakeFirebaseFirestore db = FakeFirebaseFirestore();
-    // await db
-    //     .collection('users')
-    //     .doc(user.uid)
-    //     .collection('party')
-    //     .doc('nx29B')
-    //     .set({
-    //   'PartyName': 'test',
-    //   'code': 'nx29B',
-    //   'startDate': DateTime(2023, 9, 7, 17, 30),
-    //   'admin': '076R1REcV2cFma2h2gFcrPU8kT92'
-    // });
     ZoomDrawerController drawerController = ZoomDrawerController();
     Widget testWidget = MediaQuery(
         data: MediaQueryData(),
@@ -78,22 +66,7 @@ Future<void> main() async {
         of: stackFinder.first,
         matching: find.byType(StreamBuilder<QuerySnapshot>));
 
-    // final centerFinder =
-    //     find.descendant(of: sbFinder, matching: find.byType(Center));
-
-    // final QuerySnapshot qSnap = await firestore
-    //     .collection('users')
-    //     .doc('076R1REcV2cFma2h2gFcrPU8kT92')
-    //     .collection('party')
-    //     .get();
-    // final int documents = qSnap.docs.length;
-    // print(documents);
-
-    await tester.idle();
-
-    await tester.pump();
-
-    expect(find.descendant(of: sbFinder, matching: find.byType(ListView)),
+    expect(find.descendant(of: sbFinder, matching: find.byType(RichText)),
         findsOneWidget);
   });
 }

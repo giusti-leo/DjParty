@@ -11,7 +11,7 @@ import 'package:djparty/page/lobby/Home.dart';
 import 'package:flutter_zoom_drawer/flutter_zoom_drawer.dart';
 import 'package:djparty/services/FirebaseRequests.dart';
 
-import '../utils/firebase.dart';
+import '../../utils/firebase.dart';
 
 Future<void> main() async {
   late FakeFirebaseFirestore firestore;

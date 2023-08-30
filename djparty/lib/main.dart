@@ -25,6 +25,7 @@ class Main extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       home: MultiProvider(
         providers: [
           ChangeNotifierProvider(
@@ -43,8 +44,8 @@ class Main extends StatelessWidget {
           ),
         ],
         child: MaterialApp(
+          debugShowCheckedModeBanner: false,
           home: redirectHomeOrLogin(),
-          debugShowCheckedModeBanner: true,
         ),
       ),
     );

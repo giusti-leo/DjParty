@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:djparty/page/auth/Login.dart';
-import 'package:djparty/page/auth/SignUp.dart';
 
 void main() {
   testWidgets('LoginPage has a title', (tester) async {
@@ -10,15 +9,14 @@ void main() {
 
     await tester.pumpWidget(loginWidget);
 
-    // Create the Finders.
-    final appBarFinder = find.text('Create Dj Party account');
+    final appBarFinder = find.text('Dj Party');
 
-    expect(find.byType(Login), findsOneWidget);
+    expect(appBarFinder, findsOneWidget);
   });
 
   testWidgets('LoginPage try to log with email and password', (tester) async {
     Widget loginWidget = const MediaQuery(
-        data: MediaQueryData(), child: MaterialApp(home: SignIn()));
+        data: MediaQueryData(), child: MaterialApp(home: Login()));
 
     await tester.pumpWidget(loginWidget);
 
@@ -29,10 +27,7 @@ void main() {
 
     await tester.tap(signinBtnFinder);
 
-    // Create the Finders.
-    final appBarFinder = find.text('Create Dj Party account');
-
-    expect(find.byType(SignIn), findsOneWidget);
+    expect(find.byType(Login), findsOneWidget);
   });
 
   testWidgets('Google Login', (tester) async {

@@ -138,7 +138,7 @@ class _LoginState extends State<Login> {
                       heading1('Dj Party', 0.0, 75.0),
                     ],
                   )
-                : const Stack(
+                : Stack(
                     children: [
                       Positioned(
                         bottom: 10,
@@ -177,7 +177,7 @@ class _LoginState extends State<Login> {
           Container(
             alignment: const Alignment(1.0, 0.0),
             padding: const EdgeInsets.only(top: 10.0, left: 20.0),
-            child: const Padding(
+            child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 25.0),
               child: Row(
                 children: [
@@ -279,7 +279,7 @@ class _LoginState extends State<Login> {
       elevation: 0,
       borderRadius: 25,
       color: mainGreen,
-      child: const Wrap(
+      child: Wrap(
         children: [
           Icon(
             FontAwesomeIcons.music,
@@ -358,7 +358,7 @@ class _LoginState extends State<Login> {
       elevation: 0,
       borderRadius: 25,
       color: Colors.red,
-      child: const Wrap(
+      child: Wrap(
         children: [
           Icon(
             FontAwesomeIcons.google,
@@ -389,7 +389,7 @@ class _LoginState extends State<Login> {
       elevation: 0,
       borderRadius: 25,
       color: Colors.blue,
-      child: const Wrap(
+      child: Wrap(
         children: [
           Icon(
             FontAwesomeIcons.facebook,

@@ -137,7 +137,7 @@ class _insertPartyName extends State<GeneratorScreen> {
       elevation: 0,
       borderRadius: 25,
       color: mainGreen,
-      child: const Wrap(
+      child: Wrap(
         children: [
           Text(
             'Confirm',

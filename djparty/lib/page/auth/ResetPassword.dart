@@ -26,8 +26,8 @@ class _ResetPasswordState extends State<ResetPassword> {
   Color mainGreen = const Color.fromARGB(228, 53, 191, 101);
   Color backGround = const Color.fromARGB(255, 35, 34, 34);
 
-  TextStyle styleHeading1 =
-      const TextStyle(fontSize: 50.0, fontWeight: FontWeight.bold, color: Colors.white);
+  TextStyle styleHeading1 = const TextStyle(
+      fontSize: 50.0, fontWeight: FontWeight.bold, color: Colors.white);
 
   final TextEditingController _emailidController = TextEditingController();
 
@@ -74,7 +74,7 @@ class _ResetPasswordState extends State<ResetPassword> {
                       heading1('Reset', 25.0, 75.0),
                     ],
                   )
-                : const Stack(
+                : Stack(
                     children: [
                       Positioned(
                         bottom: 10,
@@ -138,7 +138,7 @@ class _ResetPasswordState extends State<ResetPassword> {
       elevation: 0,
       borderRadius: 25,
       color: mainGreen,
-      child: const Wrap(
+      child: Wrap(
         children: [
           Icon(
             FontAwesomeIcons.music,
