@@ -658,6 +658,30 @@ class _AdminPlayerEnded extends State<AdminPlayerEnded>
                       ));
                     }
 
+                    if (snapshot.data!.docs.toString() == '[]') {
+                      return const Center(
+                          child: Column(children: [
+                        SizedBox(
+                          height: 20,
+                        ),
+                        Text('The most voted song was: ',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.normal,
+                              color: Colors.white,
+                            )),
+                        SizedBox(
+                          height: 10,
+                        ),
+                        Text('No songs reproduced ',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.normal,
+                              color: Colors.white,
+                            )),
+                      ]));
+                    }
+
                     Track song =
                         Track.getTrackFromFirestore(snapshot.data!.docs[0]);
 
