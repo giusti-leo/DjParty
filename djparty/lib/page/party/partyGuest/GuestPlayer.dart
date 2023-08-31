@@ -443,7 +443,7 @@ class _GuestPlayerEnded extends State<GuestPlayerEnded>
                     }
 
                     if (snapshot.data!.docs.toString() == '[]') {
-                      return const Center(
+                      return Center(
                           child: Column(children: [
                         SizedBox(
                           height: 20,
