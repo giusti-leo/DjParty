@@ -79,6 +79,7 @@ dependencies:
   google_sign_in_mocks: ^0.3.0
   test: ^1.22.0
   firebase_core: ^2.15.0
+  fake_firebase_performance: ^1.0.0
     
 
 dev_dependencies:

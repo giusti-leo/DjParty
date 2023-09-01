@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:djparty/page/lobby/Home.dart';
 import 'package:flutter_zoom_drawer/flutter_zoom_drawer.dart';
-import 'package:djparty/services/FirebaseRequests.dart';
+import 'package:fake_firebase_performance/fake_firebase_performance.dart';
 import 'package:mockito/mockito.dart';
 
 import '../../utils/firebase.dart';
@@ -68,5 +68,48 @@ Future<void> main() async {
 
     expect(find.descendant(of: sbFinder, matching: find.byType(RichText)),
         findsOneWidget);
+  });
+
+  testWidgets('Sb Home Widget 2', (tester) async {
+    FakeFirebaseFirestore db = FakeFirebaseFirestore();
+    await db
+        .collection('users')
+        .doc(user.uid)
+        .collection('party')
+        .add({'partyName': 'test'});
+
+    await tester.pumpWidget(
+      Flexible(
+        child: StreamBuilder<QuerySnapshot>(
+          stream: firestore
+              .collection('users')
+              .doc(user.uid)
+              .collection("party")
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return const CircularProgressIndicator();
+            }
+
+            final documents = snapshot.data?.docs;
+            return ListView.builder(
+              itemCount: documents?.length,
+              itemBuilder: (context, index) {
+                final document = documents![index];
+                return ListTile(
+                  title: Text(document['partyName']),
+                );
+              },
+            );
+          },
+        ),
+      ),
+    );
+
+    await tester.idle();
+    await tester.pump(Duration.zero);
+
+    // Verify that the widget tree contains the expected data
+    expect(find.byType(StreamBuilder<QuerySnapshot>), findsOneWidget);
   });
 }
