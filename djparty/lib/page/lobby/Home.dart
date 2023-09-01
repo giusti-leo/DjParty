@@ -45,6 +45,10 @@ class _HomeState extends State<Home> {
   String myToken = "";
   Stream<QuerySnapshot>? parties;
 
+  Color mainGreen = const Color.fromARGB(228, 53, 191, 101);
+  Color backGround = const Color.fromARGB(255, 35, 34, 34);
+  Color alertColor = Colors.red;
+
   final RoundedLoadingButtonController partyController =
       RoundedLoadingButtonController();
   final RoundedLoadingButtonController exitController =
@@ -53,10 +57,6 @@ class _HomeState extends State<Home> {
       RoundedLoadingButtonController();
   final RoundedLoadingButtonController deleteController =
       RoundedLoadingButtonController();
-
-  Color mainGreen = const Color.fromARGB(228, 53, 191, 101);
-  Color backGround = const Color.fromARGB(255, 35, 34, 34);
-  Color alertColor = Colors.red;
 
   final key = GlobalKey();
   File? file;
@@ -73,9 +73,6 @@ class _HomeState extends State<Home> {
 
   @override
   void initState() {
-    partyController.reset();
-    exitController.reset();
-    shareController.reset();
     getData();
     super.didChangeDependencies();
   }
@@ -230,16 +227,14 @@ class _HomeState extends State<Home> {
                                     children: [
                                       Column(
                                         children: [
-                                          Text(
-                                            'Party Code : ${snapshot.data.docs[index]['code']}',
-                                            style: const TextStyle(
-                                              color: Colors.black,
-                                              fontSize: 20,
-                                            ),
+                                          HomeRow(
+                                            snapshot.data.docs[index]['code'],
                                           ),
                                           Row(
                                             children: [
-                                              Divider(height: 32),
+                                              Divider(
+                                                height: 32,
+                                              )
                                             ],
                                           ),
                                           Row(
@@ -431,7 +426,9 @@ class _HomeState extends State<Home> {
                                           ),
                                           Row(
                                             children: [
-                                              Divider(height: 32),
+                                              Divider(
+                                                height: 32,
+                                              )
                                             ],
                                           ),
                                         ],
@@ -1303,5 +1300,26 @@ class _HomeState extends State<Home> {
         });
       });
     });
+  }
+}
+
+class HomeRow extends StatelessWidget {
+  final String code;
+
+  HomeRow(this.code, {Key? key}) : super(key: key);
+
+  Color mainGreen = const Color.fromARGB(228, 53, 191, 101);
+  Color backGround = const Color.fromARGB(255, 35, 34, 34);
+  Color alertColor = Colors.red;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      'Party Code : ${code}',
+      style: const TextStyle(
+        color: Colors.black,
+        fontSize: 20,
+      ),
+    );
   }
 }

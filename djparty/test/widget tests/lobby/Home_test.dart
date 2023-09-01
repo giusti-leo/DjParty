@@ -69,4 +69,21 @@ Future<void> main() async {
     expect(find.descendant(of: sbFinder, matching: find.byType(RichText)),
         findsOneWidget);
   });
+
+  testWidgets('Test Content Expansion Tile', (tester) async {
+    String partyCode = '10AAa';
+
+    Widget testWidget = MediaQuery(
+        data: MediaQueryData(size: Size(1000, 1000)),
+        child: MaterialApp(
+            home: Material(
+                child: HomeRow(
+          partyCode,
+        ))));
+
+    await tester.pumpWidget(testWidget);
+
+    final finder = find.byType(Container);
+    expect(find.text('Party Code : 10AAa'), findsOneWidget);
+  });
 }
