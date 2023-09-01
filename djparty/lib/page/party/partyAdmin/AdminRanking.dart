@@ -144,122 +144,7 @@ class _AdminRankingNotStarted extends State<AdminRankingNotStarted> {
                         User currentUser = User.getTrackFromFirestore(user);
                         return Padding(
                             padding: const EdgeInsets.all(12),
-                            child: Card(
-                              elevation: 20,
-                              color: const Color.fromARGB(255, 215, 208, 208),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10.0),
-                              ),
-                              child: Column(
-                                children: [
-                                  const SizedBox(
-                                    height: 5,
-                                  ),
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.center,
-                                    children: [
-                                      SizedBox(
-                                        width: width * 0.5,
-                                        child: Row(children: [
-                                          SizedBox(width: width * 0.02),
-                                          (currentUser.imageUrl != '')
-                                              ? (height < width)
-                                                  ? CircleAvatar(
-                                                      backgroundColor:
-                                                          Colors.white,
-                                                      maxRadius: height * 0.02,
-                                                      child: CircleAvatar(
-                                                        backgroundColor:
-                                                            Colors.white,
-                                                        backgroundImage:
-                                                            NetworkImage(
-                                                                '${currentUser.imageUrl}'),
-                                                        maxRadius:
-                                                            height * 0.018,
-                                                      ),
-                                                    )
-                                                  : CircleAvatar(
-                                                      backgroundColor:
-                                                          Colors.white,
-                                                      maxRadius: height * 0.02,
-                                                      child: CircleAvatar(
-                                                        backgroundColor:
-                                                            Colors.white,
-                                                        backgroundImage:
-                                                            NetworkImage(
-                                                                '${currentUser.imageUrl}'),
-                                                        maxRadius:
-                                                            height * 0.018,
-                                                      ),
-                                                    )
-                                              : (height < width)
-                                                  ? CircleAvatar(
-                                                      backgroundColor:
-                                                          Colors.white,
-                                                      maxRadius: height * 0.02,
-                                                      child: CircleAvatar(
-                                                          maxRadius:
-                                                              height * 0.018,
-                                                          backgroundColor:
-                                                              Color(currentUser
-                                                                  .image!),
-                                                          child: Text(
-                                                            currentUser
-                                                                .username![0]
-                                                                .toUpperCase(),
-                                                            style: const TextStyle(
-                                                                color: Colors
-                                                                    .black,
-                                                                fontSize: 40,
-                                                                fontStyle:
-                                                                    FontStyle
-                                                                        .italic),
-                                                          )))
-                                                  : CircleAvatar(
-                                                      backgroundColor:
-                                                          Colors.white,
-                                                      maxRadius: height * 0.02,
-                                                      child: CircleAvatar(
-                                                          maxRadius:
-                                                              height * 0.018,
-                                                          backgroundColor:
-                                                              Color(currentUser
-                                                                  .image!),
-                                                          child: Text(
-                                                            currentUser
-                                                                .username![0]
-                                                                .toUpperCase(),
-                                                            style: const TextStyle(
-                                                                color: Colors
-                                                                    .black,
-                                                                fontSize: 40,
-                                                                fontStyle:
-                                                                    FontStyle
-                                                                        .italic),
-                                                          ))),
-                                          const Text(
-                                            '   ',
-                                            style:
-                                                TextStyle(color: Colors.black),
-                                          ),
-                                          Text(
-                                            currentUser.username.toString(),
-                                            style: const TextStyle(
-                                                color: Colors.black),
-                                          ),
-                                        ]),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(
-                                    height: 5,
-                                  ),
-                                ],
-                              ),
-                            ));
+                            child: NotStartedRankingRow(currentUser));
                       }),
                       itemCount: snapshot.data.docs.length)
                   : GridView.builder(
@@ -415,6 +300,105 @@ class _AdminRankingNotStarted extends State<AdminRankingNotStarted> {
         });
       });
     });
+  }
+}
+
+class NotStartedRankingRow extends StatelessWidget {
+  final User currentUser;
+
+  NotStartedRankingRow(this.currentUser, {Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    final height = MediaQuery.of(context).size.height;
+
+    return Card(
+      elevation: 20,
+      color: const Color.fromARGB(255, 215, 208, 208),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10.0),
+      ),
+      child: Column(
+        children: [
+          const SizedBox(
+            height: 5,
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              SizedBox(
+                width: width * 0.5,
+                child: Row(children: [
+                  SizedBox(width: width * 0.02),
+                  (currentUser.imageUrl != '')
+                      ? (height < width)
+                          ? CircleAvatar(
+                              backgroundColor: Colors.white,
+                              maxRadius: height * 0.02,
+                              child: CircleAvatar(
+                                backgroundColor: Colors.white,
+                                backgroundImage:
+                                    NetworkImage('${currentUser.imageUrl}'),
+                                maxRadius: height * 0.018,
+                              ),
+                            )
+                          : CircleAvatar(
+                              backgroundColor: Colors.white,
+                              maxRadius: height * 0.02,
+                              child: CircleAvatar(
+                                backgroundColor: Colors.white,
+                                backgroundImage:
+                                    NetworkImage('${currentUser.imageUrl}'),
+                                maxRadius: height * 0.018,
+                              ),
+                            )
+                      : (height < width)
+                          ? CircleAvatar(
+                              backgroundColor: Colors.white,
+                              maxRadius: height * 0.02,
+                              child: CircleAvatar(
+                                  maxRadius: height * 0.018,
+                                  backgroundColor: Color(currentUser.image!),
+                                  child: Text(
+                                    currentUser.username![0].toUpperCase(),
+                                    style: const TextStyle(
+                                        color: Colors.black,
+                                        fontSize: 40,
+                                        fontStyle: FontStyle.italic),
+                                  )))
+                          : CircleAvatar(
+                              backgroundColor: Colors.white,
+                              maxRadius: height * 0.02,
+                              child: CircleAvatar(
+                                  maxRadius: height * 0.018,
+                                  backgroundColor: Color(currentUser.image!),
+                                  child: Text(
+                                    currentUser.username![0].toUpperCase(),
+                                    style: const TextStyle(
+                                        color: Colors.black,
+                                        fontSize: 40,
+                                        fontStyle: FontStyle.italic),
+                                  ))),
+                  const Text(
+                    '   ',
+                    style: TextStyle(color: Colors.black),
+                  ),
+                  Text(
+                    currentUser.username.toString(),
+                    style: const TextStyle(color: Colors.black),
+                  ),
+                ]),
+              ),
+            ],
+          ),
+          const SizedBox(
+            height: 5,
+          ),
+        ],
+      ),
+    );
   }
 }
 
