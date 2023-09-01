@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:djparty/page/lobby/Home.dart';
 import 'package:flutter_zoom_drawer/flutter_zoom_drawer.dart';
-import 'package:fake_firebase_performance/fake_firebase_performance.dart';
 import 'package:mockito/mockito.dart';
 
 import '../../utils/firebase.dart';
