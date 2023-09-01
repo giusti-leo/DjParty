@@ -433,6 +433,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.4.1+1"
+  fake_firebase_performance:
+    dependency: "direct main"
+    description:
+      name: fake_firebase_performance
+      sha256: f83ddf1cf1af0ac8cf5dc00b80fbd6e4358393473f36ffc08febc8d0d5381dcc
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0"
   fake_firebase_security_rules:
     dependency: transitive
     description:
@@ -537,6 +545,30 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.2.3+1"
+  firebase_performance:
+    dependency: transitive
+    description:
+      name: firebase_performance
+      sha256: "86272e47beded7128bc2b8285670e78387728b20bd668a3c433bcb682e963e8f"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.9.2+4"
+  firebase_performance_platform_interface:
+    dependency: transitive
+    description:
+      name: firebase_performance_platform_interface
+      sha256: a296dba20e508ab8b8d1f424015a361e2129228e0335d67230c8fdb446637d19
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.4+4"
+  firebase_performance_web:
+    dependency: transitive
+    description:
+      name: firebase_performance_web
+      sha256: "8eae9e19fd067ca30b66ebf8ea0b47bd70a9fce66cbb288620418fe01d58e1af"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.4+4"
   firebase_storage:
     dependency: transitive
     description:

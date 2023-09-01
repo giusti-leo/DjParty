@@ -87,7 +87,7 @@ Future<FakeFirebaseFirestore> getFakeFirestoreInstance() async {
       .doc('076R1REcV2cFma2h2gFcrPU8kT92')
       .collection('party')
       .doc('nx29B')
-      .set({
+      .set(<String, dynamic>{
     'PartyName': 'test',
     'code': 'nx29B',
     'startDate': DateTime(2023, 9, 7, 17, 30),
