@@ -55,8 +55,8 @@ class _UserProfileState extends State<UserProfile> {
   }
 
   Future getData() async {
-    final sp = context.read<SignInProvider>();
-    sp.getDataFromSharedPreferences();
+    // final sp = context.read<SignInProvider>();
+    // sp.getDataFromSharedPreferences();
   }
 
   @override
