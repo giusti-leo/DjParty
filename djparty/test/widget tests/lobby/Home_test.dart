@@ -85,4 +85,64 @@ Future<void> main() async {
     final finder = find.byType(Container);
     expect(find.text('Party Code : 10AAa'), findsOneWidget);
   });
+
+  testWidgets('Test Content Expansion Mobile Button Rows', (tester) async {
+    String partyCode = '10AAa';
+    String admin = 'alberto';
+    ZoomDrawerController drawerController = new ZoomDrawerController();
+
+    Widget testWidget = MediaQuery(
+        data: MediaQueryData(size: Size(1000, 1000)),
+        child: MaterialApp(
+            home: Material(
+                child: MobileButtonRowHome(
+          partyCode,
+          admin,
+          user,
+          firestore,
+          drawerController,
+        ))));
+
+    await tester.pumpWidget(testWidget);
+
+    final finder = find.byType(Row);
+
+    // testa che esistano 3 RoundedLoadingButton Widget
+
+    // test che esista un Widget con testo 'Exit'
+
+    // test che esista un Widget con testo 'Share'
+
+    // test che esista un Widget con testo 'Join Party'
+  });
+
+  testWidgets('Test Content Expansion Tablet Button Rows', (tester) async {
+    String partyCode = '10AAa';
+    String admin = 'alberto';
+    ZoomDrawerController drawerController = new ZoomDrawerController();
+
+    Widget testWidget = MediaQuery(
+        data: MediaQueryData(size: Size(1000, 1000)),
+        child: MaterialApp(
+            home: Material(
+                child: TabletButtonRowHome(
+          partyCode,
+          admin,
+          user,
+          firestore,
+          drawerController,
+        ))));
+
+    await tester.pumpWidget(testWidget);
+
+    final finder = find.byType(Row);
+
+    // testa che esistano 3 RoundedLoadingButton Widget
+
+    // test che esista un Widget Icon di tipo Icons.delete
+
+    // test che esista un Widget Icon di tipo Icons.share
+
+    // test che esista un Widget Icon di tipo Icons.music_note
+  });
 }
