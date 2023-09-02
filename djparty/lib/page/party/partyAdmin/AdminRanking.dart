@@ -12,6 +12,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:rounded_loading_button/rounded_loading_button.dart';
 import 'package:spotify_sdk/spotify_sdk.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import 'package:logger/logger.dart';
 
@@ -182,8 +183,9 @@ class _AdminRankingNotStarted extends State<AdminRankingNotStarted> {
                                                     child: CircleAvatar(
                                                       backgroundColor:
                                                           Colors.white,
-                                                      backgroundImage: NetworkImage(
-                                                          '${currentUser.imageUrl}'),
+                                                      backgroundImage:
+                                                          CachedNetworkImageProvider(
+                                                              '${currentUser.imageUrl}'),
                                                       maxRadius: height * 0.018,
                                                     ),
                                                   )
@@ -194,8 +196,9 @@ class _AdminRankingNotStarted extends State<AdminRankingNotStarted> {
                                                     child: CircleAvatar(
                                                       backgroundColor:
                                                           Colors.white,
-                                                      backgroundImage: NetworkImage(
-                                                          '${currentUser.imageUrl}'),
+                                                      backgroundImage:
+                                                          CachedNetworkImageProvider(
+                                                              '${currentUser.imageUrl}'),
                                                       maxRadius: height * 0.018,
                                                     ),
                                                   )
@@ -339,8 +342,8 @@ class NotStartedRankingRow extends StatelessWidget {
                               maxRadius: height * 0.02,
                               child: CircleAvatar(
                                 backgroundColor: Colors.white,
-                                backgroundImage:
-                                    NetworkImage('${currentUser.imageUrl}'),
+                                backgroundImage: CachedNetworkImageProvider(
+                                    '${currentUser.imageUrl}'),
                                 maxRadius: height * 0.018,
                               ),
                             )
@@ -349,8 +352,8 @@ class NotStartedRankingRow extends StatelessWidget {
                               maxRadius: height * 0.02,
                               child: CircleAvatar(
                                 backgroundColor: Colors.white,
-                                backgroundImage:
-                                    NetworkImage('${currentUser.imageUrl}'),
+                                backgroundImage: CachedNetworkImageProvider(
+                                    '${currentUser.imageUrl}'),
                                 maxRadius: height * 0.018,
                               ),
                             )
@@ -463,11 +466,8 @@ class _AdminRankingStarted extends State<AdminRankingStarted> {
         children: [
           SizedBox(height: height * 0.05),
           SizedBox(
-            height: height * 0.50,
+            height: height * 0.45,
             child: rankingBuilder(context),
-          ),
-          SizedBox(
-            height: height * 0.01,
           ),
           SizedBox(
             width: MediaQuery.of(context).size.height * .3,
@@ -573,8 +573,9 @@ class _AdminRankingStarted extends State<AdminRankingStarted> {
                                                   child: CircleAvatar(
                                                     backgroundColor:
                                                         Colors.white,
-                                                    backgroundImage: NetworkImage(
-                                                        '${currentUser.imageUrl}'),
+                                                    backgroundImage:
+                                                        CachedNetworkImageProvider(
+                                                            '${currentUser.imageUrl}'),
                                                     maxRadius: height * 0.022,
                                                   ),
                                                 )
@@ -669,8 +670,9 @@ class _AdminRankingStarted extends State<AdminRankingStarted> {
                                                     child: CircleAvatar(
                                                       backgroundColor:
                                                           Colors.white,
-                                                      backgroundImage: NetworkImage(
-                                                          '${currentUser.imageUrl}'),
+                                                      backgroundImage:
+                                                          CachedNetworkImageProvider(
+                                                              '${currentUser.imageUrl}'),
                                                       maxRadius: height * 0.018,
                                                     ),
                                                   )
@@ -681,8 +683,9 @@ class _AdminRankingStarted extends State<AdminRankingStarted> {
                                                     child: CircleAvatar(
                                                       backgroundColor:
                                                           Colors.white,
-                                                      backgroundImage: NetworkImage(
-                                                          '${currentUser.imageUrl}'),
+                                                      backgroundImage:
+                                                          CachedNetworkImageProvider(
+                                                              '${currentUser.imageUrl}'),
                                                       maxRadius: height * 0.018,
                                                     ),
                                                   )
@@ -884,6 +887,96 @@ class _AdminRankingStarted extends State<AdminRankingStarted> {
   }
 }
 
+class StartedRankingRow extends StatelessWidget {
+  final User currentUser;
+
+  StartedRankingRow(this.currentUser, {Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    final height = MediaQuery.of(context).size.height;
+
+    return Card(
+      elevation: 20,
+      color: const Color.fromARGB(255, 215, 208, 208),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10.0),
+      ),
+      child: Column(
+        children: [
+          const SizedBox(
+            height: 5,
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              SizedBox(
+                width: width * 0.5,
+                child: Row(children: [
+                  SizedBox(width: width * 0.02),
+                  (currentUser.imageUrl != '')
+                      ? CircleAvatar(
+                          backgroundColor: Colors.white,
+                          maxRadius: height * 0.025,
+                          child: CircleAvatar(
+                            backgroundColor: Colors.white,
+                            backgroundImage: CachedNetworkImageProvider(
+                                '${currentUser.imageUrl}'),
+                            maxRadius: height * 0.022,
+                          ),
+                        )
+                      : CircleAvatar(
+                          backgroundColor: Colors.white,
+                          maxRadius: height * 0.025,
+                          child: CircleAvatar(
+                              maxRadius: height * 0.022,
+                              backgroundColor: Color(currentUser.image!),
+                              child: Text(
+                                currentUser.username![0].toUpperCase(),
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 40,
+                                    fontStyle: FontStyle.italic),
+                              ))),
+                  const Text(
+                    '   ',
+                    style: TextStyle(color: Colors.black),
+                  ),
+                  Text(
+                    currentUser.username.toString(),
+                    style: const TextStyle(color: Colors.black),
+                  ),
+                ]),
+              ),
+              SizedBox(
+                width: width * 0.2,
+                child: Row(children: [
+                  SizedBox(
+                    width: width * 0.015,
+                  ),
+                  Text(
+                    ' Score: ${currentUser.points}',
+                    style: const TextStyle(color: Colors.black),
+                  ),
+                  // SizedBox(
+                  //   width: width * 0.015,
+                  // ),
+                ]),
+              ),
+            ],
+          ),
+          const SizedBox(
+            height: 5,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class AdminRankingEnded extends StatefulWidget {
   String code;
   FirebaseFirestore db;
@@ -946,12 +1039,6 @@ class _AdminRankingEnded extends State<AdminRankingEnded> {
             height: height * 0.052,
           ),
           SizedBox(height: height * 0.55, child: rankingBuilder(context)),
-          SizedBox(
-            height: height * 0.01,
-          ),
-          const SizedBox(
-            height: 10,
-          ),
         ],
       ),
     );
@@ -1015,8 +1102,9 @@ class _AdminRankingEnded extends State<AdminRankingEnded> {
                                                   child: CircleAvatar(
                                                     backgroundColor:
                                                         Colors.white,
-                                                    backgroundImage: NetworkImage(
-                                                        '${currentUser.imageUrl}'),
+                                                    backgroundImage:
+                                                        CachedNetworkImageProvider(
+                                                            '${currentUser.imageUrl}'),
                                                     maxRadius: height * 0.022,
                                                   ),
                                                 )
@@ -1123,8 +1211,9 @@ class _AdminRankingEnded extends State<AdminRankingEnded> {
                                                     child: CircleAvatar(
                                                       backgroundColor:
                                                           Colors.white,
-                                                      backgroundImage: NetworkImage(
-                                                          '${currentUser.imageUrl}'),
+                                                      backgroundImage:
+                                                          CachedNetworkImageProvider(
+                                                              '${currentUser.imageUrl}'),
                                                       maxRadius: height * 0.018,
                                                     ),
                                                   )
@@ -1135,8 +1224,9 @@ class _AdminRankingEnded extends State<AdminRankingEnded> {
                                                     child: CircleAvatar(
                                                       backgroundColor:
                                                           Colors.white,
-                                                      backgroundImage: NetworkImage(
-                                                          '${currentUser.imageUrl}'),
+                                                      backgroundImage:
+                                                          CachedNetworkImageProvider(
+                                                              '${currentUser.imageUrl}'),
                                                       maxRadius: height * 0.018,
                                                     ),
                                                   )

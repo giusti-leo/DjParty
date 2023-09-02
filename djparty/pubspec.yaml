@@ -80,12 +80,14 @@ dependencies:
   test: ^1.22.0
   firebase_core: ^2.15.0
   fake_firebase_performance: ^1.0.0
+  cached_network_image: ^3.2.3
     
 
 dev_dependencies:
   flutter_launcher_icons: "^0.13.1"
   flutter_test:
     sdk: flutter
+  nock: ^1.1.2
 
 
 

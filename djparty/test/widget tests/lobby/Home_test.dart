@@ -3,10 +3,12 @@ import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:djparty/page/lobby/Home.dart';
 import 'package:flutter_zoom_drawer/flutter_zoom_drawer.dart';
 import 'package:mockito/mockito.dart';
+import 'package:rounded_loading_button/rounded_loading_button.dart';
 
 import '../../utils/firebase.dart';
 
@@ -107,13 +109,13 @@ Future<void> main() async {
 
     final finder = find.byType(Row);
 
-    // testa che esistano 3 RoundedLoadingButton Widget
+    expect(find.byType(RoundedLoadingButton), findsNWidgets(3));
 
-    // test che esista un Widget con testo 'Exit'
+    expect(find.text('Exit'), findsOneWidget);
 
-    // test che esista un Widget con testo 'Share'
+    expect(find.text('Share'), findsOneWidget);
 
-    // test che esista un Widget con testo 'Join Party'
+    expect(find.text('Join Party'), findsOneWidget);
   });
 
   testWidgets('Test Content Expansion Tablet Button Rows', (tester) async {
@@ -135,14 +137,9 @@ Future<void> main() async {
 
     await tester.pumpWidget(testWidget);
 
-    final finder = find.byType(Row);
+    final finder = find.byType(Icon);
 
-    // testa che esistano 3 RoundedLoadingButton Widget
-
-    // test che esista un Widget Icon di tipo Icons.delete
-
-    // test che esista un Widget Icon di tipo Icons.share
-
-    // test che esista un Widget Icon di tipo Icons.music_note
+    expect(find.byType(RoundedLoadingButton), findsNWidgets(3));
+    expect(find.byType(Icon), findsNWidgets(3));
   });
 }

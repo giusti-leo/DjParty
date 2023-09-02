@@ -40,9 +40,8 @@ class _GuestRankingNotStarted extends State<GuestRankingNotStarted> {
     return Center(
       child: Column(
         children: [
-          const SizedBox(height: 20),
           SizedBox(
-            height: height * 0.6,
+            height: height * 0.55,
             child: rankingBuilder(context),
           ),
           SizedBox(
@@ -625,7 +624,7 @@ class _GuestRankingEnded extends State<GuestRankingEnded> {
         SizedBox(
           height: height * 0.001,
         ),
-        SizedBox(height: height * 0.65, child: rankingBuilder(context)),
+        SizedBox(height: height * 0.55, child: rankingBuilder(context)),
         // SizedBox(
         //   height: height * 0.01,
         // ),

@@ -230,7 +230,7 @@ class _HomeState extends State<Home> {
                                           HomeRow(
                                             snapshot.data.docs[index]['code'],
                                           ),
-                                          const Row(
+                                          Row(
                                             children: [
                                               Divider(
                                                 height: 32,
@@ -244,7 +244,7 @@ class _HomeState extends State<Home> {
                                             widget.db,
                                             widget.drawerController,
                                           ),
-                                          const Row(
+                                          Row(
                                             children: [
                                               Divider(
                                                 height: 32,
@@ -860,7 +860,7 @@ class MobileButtonRowHome extends StatelessWidget {
               : MediaQuery.of(context).size.width * 0.2,
           elevation: 0,
           borderRadius: 25,
-          child: const Wrap(
+          child: Wrap(
             children: [
               Center(
                 child: Text("Exit",
@@ -891,7 +891,7 @@ class MobileButtonRowHome extends StatelessWidget {
           elevation: 0,
           borderRadius: 25,
           color: mainGreen,
-          child: const Wrap(
+          child: Wrap(
             children: [
               Center(
                 child: Text("Share",
@@ -926,7 +926,7 @@ class MobileButtonRowHome extends StatelessWidget {
           elevation: 0,
           borderRadius: 25,
           color: mainGreen,
-          child: const Wrap(
+          child: Wrap(
             children: [
               Center(
                 child: Text("Join Party",
