@@ -1,14 +1,10 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:djparty/page/lobby/HomePage.dart';
+import 'package:djparty/page/lobby/UserProfile.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:djparty/page/lobby/Home.dart';
 import 'package:flutter_zoom_drawer/flutter_zoom_drawer.dart';
-import 'package:djparty/services/FirebaseRequests.dart';
-import 'package:mockito/mockito.dart';
 
 import '../../utils/firebase.dart';
 
@@ -20,14 +16,20 @@ Future<void> main() async {
     await Firebase.initializeApp();
   });
 
-  testWidgets('display user name', (tester) async {
+  testWidgets('Page has a title', (tester) async {
+    ZoomDrawerController drawerController = ZoomDrawerController();
     Widget testWidget = MediaQuery(
         data: MediaQueryData(),
-        child: MaterialApp(home: HomePage(loggedUser: user, db: firestore)));
+        child: MaterialApp(
+            home: UserProfile(
+                drawerController: drawerController,
+                loggedUser: user,
+                db: firestore)));
 
     await tester.pumpWidget(testWidget);
 
-    final nameFinder = find.text('P');
-    expect(nameFinder, findsOneWidget);
+    final appBarFinder = find.text('Profile');
+
+    expect(appBarFinder, findsOneWidget);
   });
 }
