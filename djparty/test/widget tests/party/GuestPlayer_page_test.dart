@@ -42,7 +42,7 @@ Future<void> main() async {
       await tester.pumpWidget(testWidget);
       expect(
           find.text(
-              'Songs in the Queue will be reproduced\n when the party will start.\n Wait the admin starts the party!'),
+              'Songs in the Queue will be reproduced\nwhen the party will start.\nWait the admin starts the party!'),
           findsOneWidget);
     });
   });

@@ -1068,16 +1068,14 @@ class _AdminTabPage extends State<AdminTabPage>
           'Streamings': FieldValue.increment(1)
         });
 
-        for (var element in track.likes) {
-          var pathUserPoint = widget.db
-              .collection('parties')
-              .doc(widget.code)
-              .collection('members')
-              .doc(element);
-          batch.update(pathUserPoint, {
-            'points': FieldValue.increment(1),
-          });
-        }
+        var pathUserPoint = widget.db
+            .collection('parties')
+            .doc(widget.code)
+            .collection('members')
+            .doc(track.admin);
+        batch.update(pathUserPoint, {
+          'points': FieldValue.increment(1),
+        });
 
         batch.commit();
       } else {
@@ -1125,6 +1123,15 @@ class _AdminTabPage extends State<AdminTabPage>
             'running': false,
             'pause': false,
             'resume': false
+          });
+
+          var pathUserPoint = widget.db
+              .collection('parties')
+              .doc(widget.code)
+              .collection('members')
+              .doc(track.admin);
+          batch.update(pathUserPoint, {
+            'points': FieldValue.increment(1),
           });
 
           var pathParty = widget.db

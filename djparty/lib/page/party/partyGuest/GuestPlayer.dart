@@ -64,7 +64,7 @@ class _GuestPlayerNotStarted extends State<GuestPlayerNotStarted>
         child: Center(
             child: Column(
           children: [
-            const SizedBox(height: 50),
+            //const SizedBox(height: 50),
             SizedBox(
               width: 250,
               height: 250,

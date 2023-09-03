@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:djparty/Icons/c_d_icons.dart';
 import 'package:djparty/entities/Party.dart';
 import 'package:djparty/entities/Track.dart';
@@ -963,5 +964,137 @@ class _SongLists extends State<SongLists> {
         }
       },
     );
+  }
+}
+
+class QueueRow extends StatelessWidget {
+  final Track currentTrack;
+  User loggedUser;
+  FirebaseFirestore db;
+
+  QueueRow(this.currentTrack, this.loggedUser, this.db, {Key? key})
+      : super(key: key);
+
+  Color mainGreen = const Color.fromARGB(228, 53, 191, 101);
+  Color backGround = const Color.fromARGB(255, 35, 34, 34);
+  Color alertColor = Colors.red;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(children: [
+      Expanded(
+        child: ListView.builder(
+            itemCount: 1,
+            itemBuilder: (BuildContext context, int index) {
+              return Column(
+                children: [
+                  ListTile(
+                    tileColor: backGround,
+                    title: Text(currentTrack.name,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        )),
+                    subtitle: Text(currentTrack.artists[0],
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          color: Color.fromARGB(255, 134, 132, 132),
+                        )),
+                    leading: Image(
+                      image: CachedNetworkImageProvider(currentTrack.images),
+                      fit: BoxFit.cover,
+                      height: 60,
+                      width: 60,
+                    ),
+                    trailing: Icon(
+                        userLikeSong(currentTrack)
+                            ? Icons.favorite
+                            : Icons.favorite_border,
+                        color: userLikeSong(currentTrack)
+                            ? mainGreen
+                            : Colors.white),
+                    onTap: () {},
+                  ),
+                  Text(
+                    'Like: ${currentTrack.likes.length}',
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  const Divider(
+                    color: Colors.white24,
+                    height: 1,
+                  ),
+                ],
+              );
+            }),
+      )
+    ]);
+  }
+
+  bool userLikeSong(Track track) {
+    return (track.likes.contains(loggedUser.uid));
+  }
+}
+
+class QueueRowNotVoting extends StatelessWidget {
+  final Track currentTrack;
+  User loggedUser;
+  FirebaseFirestore db;
+
+  QueueRowNotVoting(this.currentTrack, this.loggedUser, this.db, {Key? key})
+      : super(key: key);
+
+  Color mainGreen = const Color.fromARGB(228, 53, 191, 101);
+  Color backGround = const Color.fromARGB(255, 35, 34, 34);
+  Color alertColor = Colors.red;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(children: [
+      Expanded(
+        child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: 1,
+            itemBuilder: (BuildContext context, int index) {
+              return Column(
+                children: [
+                  ListTile(
+                    title: Text(currentTrack.name,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        )),
+                    subtitle: Text(currentTrack.artists[0],
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          color: Color.fromARGB(255, 134, 132, 132),
+                        )),
+                    leading: Image(
+                      image: CachedNetworkImageProvider(currentTrack.images),
+                      fit: BoxFit.cover,
+                      height: 60,
+                      width: 60,
+                    ),
+                  ),
+                  Text(
+                    'votes: ${currentTrack.likes.length}',
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  const Divider(
+                    color: Colors.white24,
+                    height: 1,
+                  )
+                ],
+              );
+            }),
+      )
+    ]);
+  }
+
+  bool userLikeSong(Track track) {
+    return (track.likes.contains(loggedUser.uid));
   }
 }

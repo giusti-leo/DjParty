@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:djparty/page/auth/SignUp.dart';
 
 void main() {
-  testWidgets('LoginPage has a title', (tester) async {
+  testWidgets('SignUpPage has a title', (tester) async {
     Widget loginWidget = const MediaQuery(
         data: MediaQueryData(), child: MaterialApp(home: SignIn()));
 
@@ -15,7 +15,7 @@ void main() {
     expect(appBarFinder, findsOneWidget);
   });
 
-  testWidgets('LoginPage try to log with email and password', (tester) async {
+  testWidgets('SignUpPage try to log with email and password', (tester) async {
     Widget loginWidget = const MediaQuery(
         data: MediaQueryData(), child: MaterialApp(home: SignIn()));
 

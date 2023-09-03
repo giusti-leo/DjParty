@@ -757,7 +757,7 @@ class _AdminPlayerEnded extends State<AdminPlayerEnded>
                         Track.getTrackFromFirestore(snapshot.data!.docs[0]);
 
                     return SizedBox(
-                      height: height * 0.15,
+                      height: height * 0.30,
                       width: width * 0.7,
                       child: Column(
                         children: [
@@ -767,9 +767,9 @@ class _AdminPlayerEnded extends State<AdminPlayerEnded>
                                 fontWeight: FontWeight.normal,
                                 color: Colors.white,
                               )),
-                          const SizedBox(
-                            height: 10,
-                          ),
+                          // const SizedBox(
+                          //   height: 10,
+                          // ),
                           (isMobile)
                               ? Column(
                                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -795,9 +795,9 @@ class _AdminPlayerEnded extends State<AdminPlayerEnded>
                                               fontSize: 16,
                                             ),
                                           ),
-                                          const SizedBox(
-                                            height: 10,
-                                          ),
+                                          // const SizedBox(
+                                          //   height: 10,
+                                          // ),
                                           Text(
                                             song.artists.first,
                                             style: const TextStyle(
