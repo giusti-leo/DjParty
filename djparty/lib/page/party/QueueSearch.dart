@@ -675,7 +675,10 @@ class _QueueSearch extends State<QueueSearch> {
                       context, 'Sorry, the party is ended!', alertColor);
                 } else {
                   if (value == false) {
-                    fr.addSongToFirebase(currentTrack, widget.code).then(
+                    fr
+                        .addSongToFirebase(
+                            currentTrack, widget.code, widget.loggedUser.uid)
+                        .then(
                       (value) {
                         if (fr.hasError) {
                           displayToastMessage(

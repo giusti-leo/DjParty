@@ -126,7 +126,7 @@ void main() async {
     FirebaseRequests fr = FirebaseRequests(db: firestore);
     Track testTrack = Track(['A'], 'spotify:track:5H2kfeMoJQIlSQSTHjJ5f5',
         ['artists'], 'images', 'test', user.uid, 10000, Timestamp.now(), true);
-    await fr.addSongToFirebase(testTrack, 'nx29B');
+    await fr.addSongToFirebase(testTrack, 'nx29B', user.uid);
     final QuerySnapshot snap = await firestore
         .collection('parties')
         .doc('nx29B')

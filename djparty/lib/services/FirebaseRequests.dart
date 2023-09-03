@@ -1181,14 +1181,14 @@ class FirebaseRequests extends ChangeNotifier {
     }
   }
 
-  Future addSongToFirebase(Track track, String code) async {
+  Future addSongToFirebase(Track track, String code, String Admin) async {
     try {
       var batch = db.batch();
       var pathVoting =
           db.collection('parties').doc(code).collection('queue').doc(track.uri);
 
       batch.set(pathVoting, {
-        'admin': admin,
+        'admin': Admin,
         'songName': track.name,
         'uri': track.uri,
         'votes': [],

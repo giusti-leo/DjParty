@@ -530,7 +530,7 @@ class _GuestRankingStarted extends State<GuestRankingStarted> {
                                             width: width * 0.015,
                                           ),
                                           Text(
-                                            ' Score: ${currentUser.points}',
+                                            ' Score: ${currentUser.points! ~/ 4}',
                                             style: const TextStyle(
                                                 color: Colors.black),
                                           ),
@@ -760,7 +760,7 @@ class StartedRankingRow extends StatelessWidget {
                     width: width * 0.015,
                   ),
                   Text(
-                    ' Score: ${currentUser.points}',
+                    ' Score: ${currentUser.points! ~/ 4}',
                     style: const TextStyle(color: Colors.black),
                   ),
                   // SizedBox(
@@ -925,7 +925,7 @@ class _GuestRankingEnded extends State<GuestRankingEnded> {
                                             width: width * 0.015,
                                           ),
                                           Text(
-                                            ' Score: ${currentUser.points}',
+                                            ' Score: ${currentUser.points! ~/ 4}',
                                             style: const TextStyle(
                                                 color: Colors.black),
                                           ),

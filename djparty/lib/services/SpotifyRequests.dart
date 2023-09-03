@@ -174,13 +174,14 @@ class SpotifyRequests extends ChangeNotifier {
 
   Future<void> addSongsToPlaylist(String code) async {
     var db = FirebaseFirestore.instance.collection('parties').doc(code);
-    var queue = db.collection('queue').orderBy("timestamp");
+    var queue =
+        db.collection('queue').where('inQueue', isEqualTo: false).limit(100);
 
     QuerySnapshot productCollection = await queue.get();
     int productCount = productCollection.size;
 
-    await queue.snapshots().listen((snapshot) {
-      snapshot.docs.forEach((doc) => addItemToPlaylist(doc['uri']));
+    queue.snapshots().listen((snapshot) {
+      snapshot.docs.forEach((doc) async => await addItemToPlaylist(doc['uri']));
     });
 
     // for (int index = 0; index <= productCount; index++) {
