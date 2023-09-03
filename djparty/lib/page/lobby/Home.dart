@@ -89,7 +89,7 @@ class _HomeState extends State<Home> {
         appBar: AppBar(
           backgroundColor: backGround,
           leading: InkWell(
-              child: const Icon(Icons.menu),
+              child: Icon(Icons.menu),
               onTap: (() => widget.drawerController.toggle!())),
           title: const Text(
             'DjParty',
@@ -237,12 +237,192 @@ class _HomeState extends State<Home> {
                                               )
                                             ],
                                           ),
-                                          MobileButtonRowHome(
-                                            snapshot.data.docs[index]['code'],
-                                            snapshot.data.docs[index]['admin'],
-                                            widget.loggedUser,
-                                            widget.db,
-                                            widget.drawerController,
+                                          Row(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.center,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              const SizedBox(
+                                                width: 10,
+                                              ),
+                                              RoundedLoadingButton(
+                                                controller: exitController,
+                                                successColor: mainGreen,
+                                                color: mainGreen,
+                                                onPressed: () {
+                                                  exitController.reset();
+                                                  if (snapshot.data.docs[index]
+                                                          ['admin'] ==
+                                                      widget.loggedUser.uid) {
+                                                    showAdminAlert(
+                                                        context,
+                                                        snapshot.data
+                                                                .docs[index]
+                                                            ['code']);
+                                                  } else {
+                                                    showNormalUserAlert(
+                                                        context,
+                                                        snapshot.data
+                                                                .docs[index]
+                                                            ['code']);
+                                                  }
+                                                },
+                                                width: (MediaQuery.of(context)
+                                                            .size
+                                                            .width >
+                                                        MediaQuery.of(context)
+                                                            .size
+                                                            .height)
+                                                    ? MediaQuery.of(context)
+                                                            .size
+                                                            .height *
+                                                        0.2
+                                                    : MediaQuery.of(context)
+                                                            .size
+                                                            .width *
+                                                        0.2,
+                                                elevation: 0,
+                                                borderRadius: 25,
+                                                child: Wrap(
+                                                  children: [
+                                                    Center(
+                                                      child: Text("Exit",
+                                                          style: TextStyle(
+                                                              color:
+                                                                  Colors.white,
+                                                              fontSize: 14,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w500)),
+                                                    )
+                                                  ],
+                                                ),
+                                              ),
+                                              SizedBox(
+                                                width: (MediaQuery.of(context)
+                                                            .size
+                                                            .width >
+                                                        MediaQuery.of(context)
+                                                            .size
+                                                            .height)
+                                                    ? MediaQuery.of(context)
+                                                            .size
+                                                            .height *
+                                                        0.07
+                                                    : MediaQuery.of(context)
+                                                            .size
+                                                            .width *
+                                                        0.07,
+                                              ),
+                                              RoundedLoadingButton(
+                                                onPressed: () async {
+                                                  handleShare(
+                                                    snapshot.data
+                                                        .docs[index]['code']
+                                                        .toString(),
+                                                  );
+                                                },
+                                                controller: shareController,
+                                                successColor: mainGreen,
+                                                width: (MediaQuery.of(context)
+                                                            .size
+                                                            .width >
+                                                        MediaQuery.of(context)
+                                                            .size
+                                                            .height)
+                                                    ? MediaQuery.of(context)
+                                                            .size
+                                                            .height *
+                                                        0.2
+                                                    : MediaQuery.of(context)
+                                                            .size
+                                                            .width *
+                                                        0.2,
+                                                elevation: 0,
+                                                borderRadius: 25,
+                                                color: mainGreen,
+                                                child: Wrap(
+                                                  children: [
+                                                    Center(
+                                                      child: Text("Share",
+                                                          style: TextStyle(
+                                                              color:
+                                                                  Colors.white,
+                                                              fontSize: 14,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w500)),
+                                                    )
+                                                  ],
+                                                ),
+                                              ),
+                                              Row(
+                                                children: [
+                                                  SizedBox(
+                                                    width: (MediaQuery.of(
+                                                                    context)
+                                                                .size
+                                                                .width >
+                                                            MediaQuery.of(
+                                                                    context)
+                                                                .size
+                                                                .height)
+                                                        ? MediaQuery.of(context)
+                                                                .size
+                                                                .height *
+                                                            0.07
+                                                        : MediaQuery.of(context)
+                                                                .size
+                                                                .width *
+                                                            0.07,
+                                                  )
+                                                ],
+                                              ),
+                                              RoundedLoadingButton(
+                                                onPressed: () {
+                                                  handleJoinLobby(snapshot
+                                                      .data.docs[index]['code']
+                                                      .toString());
+                                                },
+                                                controller: partyController,
+                                                successColor: mainGreen,
+                                                width: (MediaQuery.of(context)
+                                                            .size
+                                                            .width >
+                                                        MediaQuery.of(context)
+                                                            .size
+                                                            .height)
+                                                    ? MediaQuery.of(context)
+                                                            .size
+                                                            .height *
+                                                        0.2
+                                                    : MediaQuery.of(context)
+                                                            .size
+                                                            .width *
+                                                        0.2,
+                                                elevation: 0,
+                                                borderRadius: 25,
+                                                color: mainGreen,
+                                                child: Wrap(
+                                                  children: [
+                                                    Center(
+                                                      child: Text("Join Party",
+                                                          style: TextStyle(
+                                                              color:
+                                                                  Colors.white,
+                                                              fontSize: 14,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w500)),
+                                                    )
+                                                  ],
+                                                ),
+                                              ),
+                                              const SizedBox(
+                                                width: 10,
+                                              ),
+                                            ],
                                           ),
                                           Row(
                                             children: [
@@ -265,9 +445,8 @@ class _HomeState extends State<Home> {
                             ));
                       })
                   : GridView.builder(
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 4),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 4),
                       itemBuilder: (_, index) {
                         var tmp = snapshot.data.docs[index]['startDate'];
 
@@ -342,13 +521,351 @@ class _HomeState extends State<Home> {
                                             height: height * 0.01,
                                           ),
                                           SizedBox(
-                                              child: TabletButtonRowHome(
-                                            snapshot.data.docs[index]['code'],
-                                            snapshot.data.docs[index]['admin'],
-                                            widget.loggedUser,
-                                            widget.db,
-                                            widget.drawerController,
-                                          )),
+                                            child: Row(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.center,
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                RoundedLoadingButton(
+                                                  controller: exitController,
+                                                  successColor: mainGreen,
+                                                  color: mainGreen,
+                                                  onPressed: () {
+                                                    exitController.reset();
+                                                    if (snapshot.data
+                                                                .docs[index]
+                                                            ['admin'] ==
+                                                        widget.loggedUser.uid) {
+                                                      showAdminAlert(
+                                                          context,
+                                                          snapshot.data
+                                                                  .docs[index]
+                                                              ['code']);
+                                                    } else {
+                                                      showNormalUserAlert(
+                                                          context,
+                                                          snapshot.data
+                                                                  .docs[index]
+                                                              ['code']);
+                                                    }
+                                                  },
+                                                  height: (MediaQuery.of(
+                                                                  context)
+                                                              .size
+                                                              .width >
+                                                          MediaQuery.of(context)
+                                                              .size
+                                                              .height)
+                                                      ? MediaQuery.of(context)
+                                                              .size
+                                                              .height *
+                                                          0.03
+                                                      : MediaQuery.of(context)
+                                                              .size
+                                                              .width *
+                                                          0.03,
+                                                  width: (MediaQuery.of(context)
+                                                              .size
+                                                              .width >
+                                                          MediaQuery.of(context)
+                                                              .size
+                                                              .height)
+                                                      ? MediaQuery.of(context)
+                                                              .size
+                                                              .height *
+                                                          0.015
+                                                      : MediaQuery.of(context)
+                                                              .size
+                                                              .width *
+                                                          0.015,
+                                                  elevation: 0,
+                                                  borderRadius: 25,
+                                                  child: Wrap(
+                                                    children: [
+                                                      SizedBox(
+                                                        width: (MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .width >
+                                                                MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .height)
+                                                            ? MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .height *
+                                                                0.015
+                                                            : MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .width *
+                                                                0.015,
+                                                      ),
+                                                      const Center(
+                                                        child: Icon(
+                                                          Icons.delete,
+                                                          color: Colors.white,
+                                                          size: 25.0,
+                                                        ),
+                                                      ),
+                                                      SizedBox(
+                                                        width: (MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .width >
+                                                                MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .height)
+                                                            ? MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .height *
+                                                                0.015
+                                                            : MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .width *
+                                                                0.015,
+                                                      )
+                                                    ],
+                                                  ),
+                                                ),
+                                                SizedBox(
+                                                  height: height * 0.015,
+                                                ),
+                                                SizedBox(
+                                                  width: (MediaQuery.of(context)
+                                                              .size
+                                                              .width >
+                                                          MediaQuery.of(context)
+                                                              .size
+                                                              .height)
+                                                      ? MediaQuery.of(context)
+                                                              .size
+                                                              .height *
+                                                          0.02
+                                                      : MediaQuery.of(context)
+                                                              .size
+                                                              .width *
+                                                          0.005,
+                                                ),
+                                                RoundedLoadingButton(
+                                                  onPressed: () async {
+                                                    handleShare(
+                                                      snapshot.data
+                                                          .docs[index]['code']
+                                                          .toString(),
+                                                    );
+                                                  },
+                                                  controller: shareController,
+                                                  successColor: mainGreen,
+                                                  height: (MediaQuery.of(
+                                                                  context)
+                                                              .size
+                                                              .width >
+                                                          MediaQuery.of(context)
+                                                              .size
+                                                              .height)
+                                                      ? MediaQuery.of(context)
+                                                              .size
+                                                              .height *
+                                                          0.03
+                                                      : MediaQuery.of(context)
+                                                              .size
+                                                              .width *
+                                                          0.03,
+                                                  width: (MediaQuery.of(context)
+                                                              .size
+                                                              .width >
+                                                          MediaQuery.of(context)
+                                                              .size
+                                                              .height)
+                                                      ? MediaQuery.of(context)
+                                                              .size
+                                                              .height *
+                                                          0.015
+                                                      : MediaQuery.of(context)
+                                                              .size
+                                                              .width *
+                                                          0.015,
+                                                  elevation: 0,
+                                                  borderRadius: 25,
+                                                  color: mainGreen,
+                                                  child: Wrap(
+                                                    children: [
+                                                      SizedBox(
+                                                        width: (MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .width >
+                                                                MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .height)
+                                                            ? MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .height *
+                                                                0.015
+                                                            : MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .width *
+                                                                0.015,
+                                                      ),
+                                                      const Center(
+                                                        child: Icon(
+                                                          Icons.share,
+                                                          color: Colors.white,
+                                                          size: 25.0,
+                                                        ),
+                                                      ),
+                                                      SizedBox(
+                                                        width: (MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .width >
+                                                                MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .height)
+                                                            ? MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .height *
+                                                                0.015
+                                                            : MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .width *
+                                                                0.015,
+                                                      )
+                                                    ],
+                                                  ),
+                                                ),
+                                                Row(
+                                                  children: [
+                                                    SizedBox(
+                                                      width: (MediaQuery.of(
+                                                                      context)
+                                                                  .size
+                                                                  .width >
+                                                              MediaQuery.of(
+                                                                      context)
+                                                                  .size
+                                                                  .height)
+                                                          ? MediaQuery.of(
+                                                                      context)
+                                                                  .size
+                                                                  .height *
+                                                              0.015
+                                                          : MediaQuery.of(
+                                                                      context)
+                                                                  .size
+                                                                  .width *
+                                                              0.005,
+                                                    )
+                                                  ],
+                                                ),
+                                                RoundedLoadingButton(
+                                                  onPressed: () {
+                                                    handleJoinLobby(snapshot
+                                                        .data
+                                                        .docs[index]['code']
+                                                        .toString());
+                                                  },
+                                                  controller: partyController,
+                                                  successColor: mainGreen,
+                                                  height: (MediaQuery.of(
+                                                                  context)
+                                                              .size
+                                                              .width >
+                                                          MediaQuery.of(context)
+                                                              .size
+                                                              .height)
+                                                      ? MediaQuery.of(context)
+                                                              .size
+                                                              .height *
+                                                          0.03
+                                                      : MediaQuery.of(context)
+                                                              .size
+                                                              .width *
+                                                          0.03,
+                                                  width: (MediaQuery.of(context)
+                                                              .size
+                                                              .width >
+                                                          MediaQuery.of(context)
+                                                              .size
+                                                              .height)
+                                                      ? MediaQuery.of(context)
+                                                              .size
+                                                              .height *
+                                                          0.015
+                                                      : MediaQuery.of(context)
+                                                              .size
+                                                              .width *
+                                                          0.015,
+                                                  elevation: 0,
+                                                  borderRadius: 25,
+                                                  color: mainGreen,
+                                                  child: Wrap(
+                                                    children: [
+                                                      SizedBox(
+                                                        width: (MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .width >
+                                                                MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .height)
+                                                            ? MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .height *
+                                                                0.015
+                                                            : MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .width *
+                                                                0.015,
+                                                      ),
+                                                      const Center(
+                                                        child: Icon(
+                                                          Icons.music_note,
+                                                          color: Colors.white,
+                                                          size: 25.0,
+                                                        ),
+                                                      ),
+                                                      SizedBox(
+                                                        width: (MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .width >
+                                                                MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .height)
+                                                            ? MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .height *
+                                                                0.015
+                                                            : MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .width *
+                                                                0.015,
+                                                      )
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
                                         ],
                                       )
                                     ],
@@ -412,7 +929,7 @@ class _HomeState extends State<Home> {
     });
   }
 
-  void showNormalUserAlert(BuildContext contextU, String party) {
+  void showNormalUserAlert(BuildContext context, String party) {
     showDialog(
         context: context,
         builder: (context) {
@@ -455,7 +972,7 @@ class _HomeState extends State<Home> {
                       child: ElevatedButton(
                         onPressed: () {
                           Navigator.of(context).pop();
-                          handleExitNormalUser(party, contextU);
+                          handleExitNormalUser(party);
                         },
                         style: ElevatedButton.styleFrom(
                           primary: Colors.black,
@@ -734,7 +1251,7 @@ class _HomeState extends State<Home> {
     });
   }
 
-  Future handleExitNormalUser(String code, BuildContext context) async {
+  Future handleExitNormalUser(String code) async {
     final sp = context.read<SignInProvider>();
     final ip = context.read<InternetProvider>();
     final FirebaseRequests fp = FirebaseRequests(db: widget.db);
