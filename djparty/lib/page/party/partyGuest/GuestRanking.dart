@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:djparty/entities/User.dart';
 import 'package:djparty/page/auth/Login.dart';
@@ -272,6 +273,105 @@ class _GuestRankingNotStarted extends State<GuestRankingNotStarted> {
                   style: TextStyle(color: Colors.white),
                 );
         });
+  }
+}
+
+class NotStartedRankingRow extends StatelessWidget {
+  final User currentUser;
+
+  NotStartedRankingRow(this.currentUser, {Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    final height = MediaQuery.of(context).size.height;
+
+    return Card(
+      elevation: 20,
+      color: const Color.fromARGB(255, 215, 208, 208),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10.0),
+      ),
+      child: Column(
+        children: [
+          const SizedBox(
+            height: 5,
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              SizedBox(
+                width: width * 0.5,
+                child: Row(children: [
+                  SizedBox(width: width * 0.02),
+                  (currentUser.imageUrl != '')
+                      ? (height < width)
+                          ? CircleAvatar(
+                              backgroundColor: Colors.white,
+                              maxRadius: height * 0.02,
+                              child: CircleAvatar(
+                                backgroundColor: Colors.white,
+                                backgroundImage: CachedNetworkImageProvider(
+                                    '${currentUser.imageUrl}'),
+                                maxRadius: height * 0.018,
+                              ),
+                            )
+                          : CircleAvatar(
+                              backgroundColor: Colors.white,
+                              maxRadius: height * 0.02,
+                              child: CircleAvatar(
+                                backgroundColor: Colors.white,
+                                backgroundImage: CachedNetworkImageProvider(
+                                    '${currentUser.imageUrl}'),
+                                maxRadius: height * 0.018,
+                              ),
+                            )
+                      : (height < width)
+                          ? CircleAvatar(
+                              backgroundColor: Colors.white,
+                              maxRadius: height * 0.02,
+                              child: CircleAvatar(
+                                  maxRadius: height * 0.018,
+                                  backgroundColor: Color(currentUser.image!),
+                                  child: Text(
+                                    currentUser.username![0].toUpperCase(),
+                                    style: const TextStyle(
+                                        color: Colors.black,
+                                        fontSize: 40,
+                                        fontStyle: FontStyle.italic),
+                                  )))
+                          : CircleAvatar(
+                              backgroundColor: Colors.white,
+                              maxRadius: height * 0.02,
+                              child: CircleAvatar(
+                                  maxRadius: height * 0.018,
+                                  backgroundColor: Color(currentUser.image!),
+                                  child: Text(
+                                    currentUser.username![0].toUpperCase(),
+                                    style: const TextStyle(
+                                        color: Colors.black,
+                                        fontSize: 40,
+                                        fontStyle: FontStyle.italic),
+                                  ))),
+                  const Text(
+                    '   ',
+                    style: TextStyle(color: Colors.black),
+                  ),
+                  Text(
+                    currentUser.username.toString(),
+                    style: const TextStyle(color: Colors.black),
+                  ),
+                ]),
+              ),
+            ],
+          ),
+          const SizedBox(
+            height: 5,
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -586,6 +686,96 @@ class _GuestRankingStarted extends State<GuestRankingStarted> {
                   style: TextStyle(color: Colors.white),
                 );
         });
+  }
+}
+
+class StartedRankingRow extends StatelessWidget {
+  final User currentUser;
+
+  StartedRankingRow(this.currentUser, {Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    final height = MediaQuery.of(context).size.height;
+
+    return Card(
+      elevation: 20,
+      color: const Color.fromARGB(255, 215, 208, 208),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10.0),
+      ),
+      child: Column(
+        children: [
+          const SizedBox(
+            height: 5,
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              SizedBox(
+                width: width * 0.5,
+                child: Row(children: [
+                  SizedBox(width: width * 0.02),
+                  (currentUser.imageUrl != '')
+                      ? CircleAvatar(
+                          backgroundColor: Colors.white,
+                          maxRadius: height * 0.025,
+                          child: CircleAvatar(
+                            backgroundColor: Colors.white,
+                            backgroundImage: CachedNetworkImageProvider(
+                                '${currentUser.imageUrl}'),
+                            maxRadius: height * 0.022,
+                          ),
+                        )
+                      : CircleAvatar(
+                          backgroundColor: Colors.white,
+                          maxRadius: height * 0.025,
+                          child: CircleAvatar(
+                              maxRadius: height * 0.022,
+                              backgroundColor: Color(currentUser.image!),
+                              child: Text(
+                                currentUser.username![0].toUpperCase(),
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 40,
+                                    fontStyle: FontStyle.italic),
+                              ))),
+                  const Text(
+                    '   ',
+                    style: TextStyle(color: Colors.black),
+                  ),
+                  Text(
+                    currentUser.username.toString(),
+                    style: const TextStyle(color: Colors.black),
+                  ),
+                ]),
+              ),
+              SizedBox(
+                width: width * 0.2,
+                child: Row(children: [
+                  SizedBox(
+                    width: width * 0.015,
+                  ),
+                  Text(
+                    ' Score: ${currentUser.points}',
+                    style: const TextStyle(color: Colors.black),
+                  ),
+                  // SizedBox(
+                  //   width: width * 0.015,
+                  // ),
+                ]),
+              ),
+            ],
+          ),
+          const SizedBox(
+            height: 5,
+          ),
+        ],
+      ),
+    );
   }
 }
 

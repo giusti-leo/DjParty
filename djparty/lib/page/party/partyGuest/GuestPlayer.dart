@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:djparty/Icons/c_d_icons.dart';
 import 'package:djparty/entities/Track.dart';
 import 'package:djparty/page/auth/Login.dart';
@@ -34,8 +35,8 @@ class _GuestPlayerNotStarted extends State<GuestPlayerNotStarted>
   bool isPaused = false;
 
   Future getData() async {
-    final sr = context.read<SpotifyRequests>();
-    sr.getUserId();
+    // final sr = context.read<SpotifyRequests>();
+    // sr.getUserId();
   }
 
   @override
@@ -59,7 +60,7 @@ class _GuestPlayerNotStarted extends State<GuestPlayerNotStarted>
         height: height * 0.052,
       ),
       SizedBox(
-        height: height * 0.6,
+        height: height * 0.5,
         child: Center(
             child: Column(
           children: [
@@ -68,7 +69,7 @@ class _GuestPlayerNotStarted extends State<GuestPlayerNotStarted>
               width: 250,
               height: 250,
               child: Image.asset(
-                'assets/images/logo.png',
+                'assets/images/logo.jpg',
                 width: 400,
                 height: 400,
                 colorBlendMode: BlendMode.hardLight,
@@ -84,9 +85,6 @@ class _GuestPlayerNotStarted extends State<GuestPlayerNotStarted>
                 textAlign: TextAlign.center,
                 maxLines: 5,
               ),
-            ),
-            const SizedBox(
-              height: 20,
             ),
           ],
         )),
@@ -180,7 +178,7 @@ class _GuestPlayerSongRunning extends State<GuestPlayerSongRunning>
                     width: 250,
                     height: 250,
                     child: Image.asset(
-                      'assets/images/logo.png',
+                      'assets/images/logo.jpg',
                       width: 400,
                       height: 400,
                       colorBlendMode: BlendMode.hardLight,
@@ -581,5 +579,75 @@ class _GuestPlayerEnded extends State<GuestPlayerEnded>
 
     displayToastMessage(
         context, 'Playlist named DjParty_${widget.code} created!', mainGreen);
+  }
+}
+
+class GuestPlayerDisplayStarted extends StatelessWidget {
+  final Song song;
+  GuestPlayerDisplayStarted(this.song, {Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        const SizedBox(height: 50),
+        (song.uri != '')
+            ? SizedBox(
+                width: 250,
+                height: 250,
+                child: Image(image: CachedNetworkImageProvider(song.images)))
+            : SizedBox(
+                width: 250,
+                height: 250,
+                child: Image.asset(
+                  'assets/images/logo.jpg',
+                  width: 400,
+                  height: 400,
+                  colorBlendMode: BlendMode.hardLight,
+                ),
+              ),
+        const SizedBox(
+          height: 10,
+        ),
+        (song.uri != '')
+            ? Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                    Text(
+                      song.name,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 10,
+                    ),
+                    Text(
+                      song.artists.first,
+                      style: const TextStyle(
+                        color: Colors.grey,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ])
+            : Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                    Text(
+                      'No Music in reprodution',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                      ),
+                    ),
+                  ]),
+        const SizedBox(
+          height: 20,
+        ),
+      ],
+    );
   }
 }

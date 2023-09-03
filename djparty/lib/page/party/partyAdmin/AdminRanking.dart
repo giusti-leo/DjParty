@@ -1038,7 +1038,7 @@ class _AdminRankingEnded extends State<AdminRankingEnded> {
           SizedBox(
             height: height * 0.052,
           ),
-          SizedBox(height: height * 0.55, child: rankingBuilder(context)),
+          SizedBox(height: height * 0.45, child: rankingBuilder(context)),
         ],
       ),
     );
